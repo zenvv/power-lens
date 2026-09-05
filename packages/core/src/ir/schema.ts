@@ -145,6 +145,15 @@ export const CanvasAppSchema = z.object({
   dataSources: z.array(DataSourceSchema),
   variables: z.array(VariableUsageSchema),
   theme: z.record(z.string(), z.string()).optional(),
+  /**
+   * Added after the initial spec draft — Src/App.pa.yaml's own OnStart had
+   * nowhere to live (FORMAT-NOTES.md section 5.1), which matters for the
+   * future PL005 health check rule ("OnStart acima de N linhas"). `theme`
+   * above is left untouched: the spec never clarified whether it means the
+   * raw Theme formula or a resolved palette, and this only had evidence for
+   * OnStart.
+   */
+  onStart: ExpressionSchema.optional(),
 });
 export type CanvasApp = z.infer<typeof CanvasAppSchema>;
 

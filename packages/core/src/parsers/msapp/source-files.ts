@@ -1,19 +1,21 @@
 import { parse as parseYaml } from "yaml";
-import type { Component, Diagnostic, Screen } from "../../ir/index.js";
-import { mapRoot } from "./controls.js";
-import type { RawComponentFile, RawScreenFile } from "./raw-shapes.js";
+import type { Component, Diagnostic, Expression, Screen } from "../../ir/index.js";
+import { mapExpression, mapRoot } from "./controls.js";
+import type { RawAppFile, RawComponentFile, RawScreenFile } from "./raw-shapes.js";
 import { readText } from "../zip.js";
 
 /**
  * Confirmed empirically (docs/FORMAT-NOTES.md section 1.3): exactly one
  * screen, or one component, per Src/*.pa.yaml file. Src/App.pa.yaml (root
- * key "App") and Src/_EditorState.pa.yaml carry nothing representable in
- * the current CanvasApp IR shape — see FORMAT-NOTES section 5.
+ * key "App") carries the app-level OnStart, extracted below — everything
+ * else in it (Theme, other app-level properties) and
+ * Src/_EditorState.pa.yaml still have nowhere to go in the current
+ * CanvasApp IR shape — see FORMAT-NOTES section 5.
  */
 export function parseSourceFiles(
   entries: Record<string, Uint8Array>,
   diagnostics: Diagnostic[],
-): { screens: Screen[]; components: Component[] } {
+): { screens: Screen[]; components: Component[]; appOnStart?: Expression | undefined } {
   const srcPaths = Object.keys(entries)
     .filter((path) => /^Src\/.*\.pa\.yaml$/i.test(path))
     .sort();
@@ -21,6 +23,7 @@ export function parseSourceFiles(
   const screens: Screen[] = [];
   const components: Component[] = [];
   let screenOrder = 0;
+  let appOnStart: Expression | undefined;
 
   for (const path of srcPaths) {
     const text = readText(entries, path);
@@ -43,7 +46,15 @@ export function parseSourceFiles(
       continue;
     }
 
-    const record = parsed as RawScreenFile & RawComponentFile;
+    const record = parsed as RawScreenFile & RawComponentFile & RawAppFile;
+
+    if (record.App) {
+      const onStartValue = record.App.Properties?.OnStart;
+      if (onStartValue !== undefined) {
+        appOnStart = mapExpression(onStartValue);
+      }
+      continue;
+    }
 
     if (record.Screens) {
       for (const [screenName, def] of Object.entries(record.Screens)) {
@@ -77,5 +88,5 @@ export function parseSourceFiles(
     });
   }
 
-  return { screens, components };
+  return { screens, components, appOnStart };
 }

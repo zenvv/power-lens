@@ -439,13 +439,14 @@ lê. O parser do Power Lens hoje infere a ordem pela ordem alfabética dos arqui
 com mais de uma tela para confirmar se a ordem real vem de algum outro arquivo do pacote
 (candidatos não verificados: `Header.json`, `Controls/*.json`).
 
-**[LACUNA nova]** `Src/App.pa.yaml` (propriedades de app: `OnStart`, `Theme`) não tem
-representação no `CanvasApp` da spec — `theme` é `Record<string,string>` (strings puras,
-não `Expression`) e não existe nenhum campo para `OnStart` do app. Isso é relevante porque
-a regra de health check `PL005` ("`OnStart` acima de N linhas", spec seção 7) precisa
-inspecionar exatamente esse `OnStart`. O parser atual lê `Src/App.pa.yaml` só o suficiente
-pra não quebrar, mas **descarta o conteúdo** — não inventei um campo novo na IR sem
-alinhar antes. Precisa de uma decisão de design antes da Fase 4 (health check).
+**[RESOLVIDO]** `Src/App.pa.yaml` — `OnStart` do app agora tem representação:
+`CanvasApp.onStart?: Expression`, populado pelo parser (mesmo tratamento de
+literal/formula/references que qualquer outra propriedade), com teste cobrindo inclusive a
+extração de variável (`Set(glb, ...)`) e de referências dentro dele. `theme` continua sem
+receber o formato bruto do app (`=PowerAppsTheme`) — não havia evidência de qual era o
+formato pretendido do campo já existente na spec (fórmula bruta vs. paleta resolvida), e
+mudar o significado de um campo já definido sem necessidade concreta não parecia a decisão
+certa. Documentado em `docs/IR.md`.
 
 ## 5. O que isso muda no design do IR (observação, não implementação)
 

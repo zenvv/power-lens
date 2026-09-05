@@ -187,6 +187,21 @@ describe("parseMsapp — app metadata", () => {
     expect(app.id).toBe("11111111-1111-1111-1111-111111111111");
     expect(app.name).toBe("Sample App");
   });
+
+  it("extracts the app-level OnStart from Src/App.pa.yaml, including its references", () => {
+    const doc = parseFixture();
+    const app = doc.artifacts.find((a) => a.kind === "canvasApp");
+    if (app?.kind !== "canvasApp") throw new Error("expected canvasApp artifact");
+
+    expect(app.onStart?.kind).toBe("formula");
+    expect(app.onStart?.raw).toContain("Set(glb");
+
+    // Set(glb, ...) in App.pa.yaml's OnStart should register "glb" as a
+    // variable usage, the same way a Set() inside a control's formula would.
+    expect(app.variables).toContainEqual({ name: "glb", kind: "variable" });
+    expect(app.onStart?.references).toContainEqual({ kind: "function", name: "Set" });
+    expect(app.onStart?.references).toContainEqual({ kind: "variable", name: "glb" });
+  });
 });
 
 describe("parseMsapp — output validity", () => {

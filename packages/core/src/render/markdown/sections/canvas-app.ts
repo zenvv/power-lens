@@ -10,6 +10,10 @@ export function renderCanvasAppSection(app: CanvasApp): string {
   lines.push(`- **Variáveis/coleções:** ${app.variables.length}`);
   lines.push("");
 
+  if (app.onStart) {
+    lines.push("### OnStart do app", "", "```", app.onStart.raw, "```", "");
+  }
+
   if (app.dataSources.length > 0) {
     lines.push("### Fontes de dados", "");
     for (const dataSource of app.dataSources) {

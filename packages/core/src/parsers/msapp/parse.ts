@@ -1,7 +1,7 @@
 import { createEmptyDocument, type CanvasApp, type Diagnostic, type PowerLensDocument } from "../../ir/index.js";
 import { parseAppMetadata } from "./app-metadata.js";
 import { parseDataSources } from "./data-sources.js";
-import { extractVariableUsages } from "./references.js";
+import { extractReferences, extractVariableUsages } from "./references.js";
 import { parseSourceFiles } from "./source-files.js";
 import { collectControlNames, collectFormulaBodies, finalizeReferences } from "./walk.js";
 import { findInnerMsappEntry, hasDirectMsappShape, unzipNormalized } from "../zip.js";
@@ -75,7 +75,7 @@ export function parseMsapp(bytes: Uint8Array, source: MsappSource): PowerLensDoc
     }
   }
 
-  const { screens, components } = parseSourceFiles(entries, diagnostics);
+  const { screens, components, appOnStart } = parseSourceFiles(entries, diagnostics);
   const dataSources = parseDataSources(entries, diagnostics);
   const fallbackName = source.fileName.replace(/\.msapp$/i, "");
   const { id, name } = parseAppMetadata(entries, fallbackName, diagnostics);
@@ -84,19 +84,27 @@ export function parseMsapp(bytes: Uint8Array, source: MsappSource): PowerLensDoc
   const screenNames = new Set(screens.map((screen) => screen.name));
   const dataSourceNames = new Set(dataSources.map((dataSource) => dataSource.name));
   const formulaBodies = collectFormulaBodies(screens, components);
+  if (appOnStart?.kind === "formula") {
+    formulaBodies.push(appOnStart.raw.slice(1));
+  }
   const variables = extractVariableUsages(formulaBodies);
   const variableNames = new Set(
     variables.filter((v) => v.kind === "variable" || v.kind === "contextVariable").map((v) => v.name),
   );
   const collectionNames = new Set(variables.filter((v) => v.kind === "collection").map((v) => v.name));
 
-  finalizeReferences(screens, components, {
+  const referenceContext = {
     controlNames,
     screenNames,
     dataSourceNames,
     variableNames,
     collectionNames,
-  });
+  };
+
+  finalizeReferences(screens, components, referenceContext);
+  if (appOnStart?.kind === "formula") {
+    appOnStart.references = extractReferences(appOnStart.raw.slice(1), referenceContext);
+  }
 
   const canvasApp: CanvasApp = {
     kind: "canvasApp",
@@ -106,6 +114,7 @@ export function parseMsapp(bytes: Uint8Array, source: MsappSource): PowerLensDoc
     components,
     dataSources,
     variables,
+    ...(appOnStart ? { onStart: appOnStart } : {}),
   };
 
   document.artifacts = [canvasApp];

@@ -26,6 +26,12 @@ export type RawComponentFile = {
   ComponentDefinitions?: Record<string, RawScreenOrComponentDef>;
 };
 
+export type RawAppFile = {
+  App?: {
+    Properties?: Record<string, unknown>;
+  };
+};
+
 export type RawDataSourceEntry = {
   Name?: string;
   Type?: string;

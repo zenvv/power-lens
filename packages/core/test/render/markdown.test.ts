@@ -26,6 +26,12 @@ describe("renderMarkdown", () => {
     expect(md).toContain("Pedidos");
   });
 
+  it("renders the app-level OnStart when present", () => {
+    const md = renderMarkdown(parseFixtureDoc());
+    expect(md).toContain("### OnStart do app");
+    expect(md).toContain("Set(glb");
+  });
+
   it("renders the control tree with type annotations", () => {
     const md = renderMarkdown(parseFixtureDoc());
     expect(md).toContain("**HeaderContainer** _(GroupContainer)_");
