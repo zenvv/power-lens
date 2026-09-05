@@ -1,5 +1,6 @@
 import { useCallback, useState } from "react";
 import type { Diagnostic } from "@power-lens/core";
+import { Button } from "@/components/ui/button";
 import { Dropzone } from "./components/Dropzone.js";
 import { DocumentView } from "./components/DocumentView.js";
 import { analyzeFile, type AnalysisResult } from "./lib/analyze.js";
@@ -42,50 +43,30 @@ export function App() {
 
   return (
     <main
-      style={{
-        minHeight: "100vh",
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: state.status === "parsed" ? "flex-start" : "center",
-        gap: "1.5rem",
-        padding: "3rem 1rem",
-        fontFamily: "system-ui, sans-serif",
-        background: "#0f0f10",
-        color: "#e6e6e6",
-      }}
+      className={
+        "flex min-h-screen flex-col items-center gap-6 bg-background px-4 py-12 text-foreground " +
+        (state.status === "parsed" ? "justify-start" : "justify-center")
+      }
     >
-      <h1 style={{ margin: 0 }}>Power Lens</h1>
+      <h1 className="font-heading text-3xl font-semibold">Power Lens</h1>
 
       {(state.status === "idle" || state.status === "loading") && (
         <Dropzone onFile={onFile} disabled={state.status === "loading"} />
       )}
 
       {state.status === "unrecognized" && (
-        <div style={{ width: "min(560px, 90vw)", display: "flex", flexDirection: "column", gap: "1rem" }}>
-          <p>
+        <div className="flex w-[min(560px,90vw)] flex-col gap-4">
+          <p className="text-sm">
             Não consegui reconhecer <strong>{state.fileName}</strong> como um arquivo suportado.
           </p>
-          <ul>
+          <ul className="list-disc pl-5 text-sm text-muted-foreground">
             {state.diagnostics.map((d, i) => (
               <li key={i}>{d.message}</li>
             ))}
           </ul>
-          <button
-            type="button"
-            onClick={onReset}
-            style={{
-              background: "#27272a",
-              color: "#e6e6e6",
-              border: "1px solid #3a3a3d",
-              borderRadius: "8px",
-              padding: "0.5rem 1rem",
-              cursor: "pointer",
-              alignSelf: "flex-start",
-            }}
-          >
+          <Button variant="outline" className="self-start" onClick={onReset}>
             Tentar outro arquivo
-          </button>
+          </Button>
         </div>
       )}
 

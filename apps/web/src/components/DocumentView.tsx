@@ -1,16 +1,21 @@
 import { useMemo } from "react";
-import { buildContextPack, renderMarkdown, type PowerLensDocument } from "@power-lens/core";
-import { downloadBytes } from "../lib/download.js";
+import { buildContextPack, renderMarkdown, type Diagnostic, type PowerLensDocument } from "@power-lens/core";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Separator } from "@/components/ui/separator";
+import { downloadBytes } from "@/lib/download";
 
 type DocumentViewProps = {
   document: PowerLensDocument;
   onReset: () => void;
 };
 
-const SEVERITY_COLOR: Record<string, string> = {
-  error: "#f87171",
-  warning: "#fbbf24",
-  info: "#7dd3fc",
+const SEVERITY_VARIANT: Record<Diagnostic["severity"], "destructive" | "secondary" | "outline"> = {
+  error: "destructive",
+  warning: "secondary",
+  info: "outline",
 };
 
 export function DocumentView({ document, onReset }: DocumentViewProps) {
@@ -30,76 +35,65 @@ export function DocumentView({ document, onReset }: DocumentViewProps) {
   };
 
   return (
-    <div style={{ width: "min(920px, 92vw)", display: "flex", flexDirection: "column", gap: "1.5rem" }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+    <div className="flex w-[min(920px,92vw)] flex-col gap-6">
+      <div className="flex items-start justify-between gap-4">
         <div>
-          <h2 style={{ margin: 0 }}>{document.source.fileName}</h2>
-          <p style={{ margin: "0.25rem 0 0", opacity: 0.7 }}>
-            {document.source.detectedFormat} · {document.artifacts.length} artefato(s) · {document.diagnostics.length} diagnóstico(s)
+          <h2 className="text-lg font-semibold">{document.source.fileName}</h2>
+          <p className="text-sm text-muted-foreground">
+            {document.source.detectedFormat} · {document.artifacts.length} artefato(s) · {document.diagnostics.length}{" "}
+            diagnóstico(s)
           </p>
         </div>
-        <button type="button" onClick={onReset} style={buttonStyle}>
+        <Button variant="outline" onClick={onReset}>
           Analisar outro arquivo
-        </button>
+        </Button>
       </div>
 
-      <div style={{ display: "flex", gap: "0.75rem", flexWrap: "wrap" }}>
-        <button type="button" onClick={onDownloadMarkdown} style={buttonStyle}>
-          Baixar documentação (.md)
-        </button>
-        <button type="button" onClick={onDownloadIr} style={buttonStyle}>
+      <div className="flex flex-wrap gap-2">
+        <Button onClick={onDownloadMarkdown}>Baixar documentação (.md)</Button>
+        <Button variant="secondary" onClick={onDownloadIr}>
           Baixar IR (ir.json)
-        </button>
-        <button type="button" onClick={onDownloadContextPack} style={buttonStyle}>
+        </Button>
+        <Button variant="secondary" onClick={onDownloadContextPack}>
           Baixar pacote de contexto (.zip)
-        </button>
+        </Button>
       </div>
 
       {document.diagnostics.length > 0 && (
-        <section>
-          <h3 style={{ marginBottom: "0.5rem" }}>Diagnósticos</h3>
-          <ul style={{ listStyle: "none", margin: 0, padding: 0, display: "flex", flexDirection: "column", gap: "0.4rem" }}>
-            {document.diagnostics.map((diagnostic, index) => (
-              <li
-                key={`${diagnostic.code}-${index}`}
-                style={{
-                  borderLeft: `3px solid ${SEVERITY_COLOR[diagnostic.severity] ?? "#888"}`,
-                  paddingLeft: "0.75rem",
-                }}
-              >
-                <strong>{diagnostic.code}</strong> ({diagnostic.severity}) — {diagnostic.message}
-                {diagnostic.path && <div style={{ opacity: 0.6, fontSize: "0.85em" }}>{diagnostic.path}</div>}
-              </li>
-            ))}
-          </ul>
-        </section>
+        <Card>
+          <CardHeader>
+            <CardTitle>Diagnósticos</CardTitle>
+            <CardDescription>Problemas estruturais encontrados durante a análise.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ul className="flex flex-col gap-3">
+              {document.diagnostics.map((diagnostic, index) => (
+                <li key={`${diagnostic.code}-${index}`}>
+                  <div className="flex items-center gap-2">
+                    <Badge variant={SEVERITY_VARIANT[diagnostic.severity]}>{diagnostic.severity}</Badge>
+                    <span className="font-mono text-xs text-muted-foreground">{diagnostic.code}</span>
+                  </div>
+                  <p className="mt-1 text-sm">{diagnostic.message}</p>
+                  {diagnostic.path && <p className="mt-0.5 text-xs text-muted-foreground">{diagnostic.path}</p>}
+                  {index < document.diagnostics.length - 1 && <Separator className="mt-3" />}
+                </li>
+              ))}
+            </ul>
+          </CardContent>
+        </Card>
       )}
 
-      <section>
-        <h3 style={{ marginBottom: "0.5rem" }}>Documentação gerada</h3>
-        <pre
-          style={{
-            whiteSpace: "pre-wrap",
-            background: "#18181a",
-            padding: "1rem",
-            borderRadius: "8px",
-            maxHeight: "60vh",
-            overflow: "auto",
-          }}
-        >
-          {markdown}
-        </pre>
-      </section>
+      <Card>
+        <CardHeader>
+          <CardTitle>Documentação gerada</CardTitle>
+          <CardDescription>Exportação Markdown determinística, sem IA.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <ScrollArea className="h-[60vh] rounded-lg border bg-muted/30 p-4">
+            <pre className="font-mono text-sm whitespace-pre-wrap">{markdown}</pre>
+          </ScrollArea>
+        </CardContent>
+      </Card>
     </div>
   );
 }
-
-const buttonStyle: React.CSSProperties = {
-  background: "#27272a",
-  color: "#e6e6e6",
-  border: "1px solid #3a3a3d",
-  borderRadius: "8px",
-  padding: "0.5rem 1rem",
-  cursor: "pointer",
-  fontSize: "0.9rem",
-};

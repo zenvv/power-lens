@@ -50,6 +50,11 @@ formato (já extraído em `docs/FORMAT-NOTES.md`). Está no `.gitignore`.
   Node e no browser), `apps/web` (viewer, Vite + React + TypeScript).
 - Zip: `fflate`. YAML: `yaml` (eemeli). Validação do IR: `zod`, com schema como fonte de
   verdade e tipos TS derivados via `z.infer`. Testes: Vitest.
+- UI: Tailwind CSS v4 (`@tailwindcss/vite`, CSS-first config em `src/index.css`, sem
+  `tailwind.config.js`) + shadcn/ui (`apps/web/components.json`, preset "Nova", tema
+  neutral com CSS variables e dark mode via classe `.dark` na tag `<html>`). Componentes
+  gerados ficam em `apps/web/src/components/ui/`; usar `npx shadcn@latest add <componente>`
+  de dentro de `apps/web/` para adicionar novos, em vez de escrever do zero à mão.
 
 ## Padrão de commits
 
