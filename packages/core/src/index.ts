@@ -1,1 +1,2 @@
-export const CORE_VERSION = "0.1.0";
+export { CORE_VERSION } from "./version.js";
+export * from "./ir/index.js";
