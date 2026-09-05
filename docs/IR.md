@@ -38,6 +38,9 @@ spec §7) precisa inspecionar exatamente esse valor. `theme` (já presente na sp
 pretendido seja a fórmula bruta (`=PowerAppsTheme`) versus uma paleta já resolvida, então
 não decidi isso sem necessidade.
 
+Um sétimo, `FlowNode.branch`, veio da implementação do parser de fluxo (Fase 2) — ver
+seção "`CloudFlow`" abaixo.
+
 ## Estrutura geral
 
 ```
@@ -77,6 +80,7 @@ existentes se organizaram, para não colidir com as futuras regras `PL001`–`PL
 - `PL1xx`: parser de `.msapp` (`parsers/msapp/`).
 - `PL2xx`: detector de formato (`detect/`).
 - `PL3xx`: parser de solution (`parsers/solution/`).
+- `PL4xx`: parser de fluxo (`parsers/flow/`).
 
 ## `Artifact` — união discriminada por `kind`
 
@@ -118,12 +122,29 @@ Produzido por `parsers/solution/` a partir de `solution.xml`. Schema do arquivo 
 **não verificado contra um arquivo real** (`docs/FORMAT-NOTES.md` §2) — trate `version` e
 `publisher` como best-effort.
 
-### `CloudFlow`, `DataModel`, `Report` (`kind: "cloudFlow" | "dataModel" | "report"`)
+### `CloudFlow` (`kind: "cloudFlow"`)
+
+Produzido por `parsers/flow/` (Fase 2) a partir de um `definition.json`, bare ou embrulhado
+em `{ properties: { definition: {...} } }`. Schema de origem é o Logic Apps Workflow
+Definition Language **publicamente documentado**, não verificado contra um arquivo real
+deste projeto (`docs/FORMAT-NOTES.md` §4) — nível de confiança maior que o de `solution.xml`
+(schema conhecido e estável), mas ainda uma suposição.
+
+`FlowNode.branch?: string` foi adicionado depois do rascunho original da spec: `parentId`
+sozinho não diz de qual lado de um `If` (`"true"`/`"false"`) ou qual `case` de um `Switch`
+uma action aninhada veio, e o DAG renderer precisa disso pra desenhar branches lado a lado.
+Fica de fora (`undefined`) para filhos de `Scope`/`Foreach`, que só têm um branch possível.
+
+`connectorName` (em `FlowNode` e por extensão `CloudFlow.connections`) é best-effort —
+extraído de `inputs.host.apiId`/`connectionName` quando presente, deixado `undefined`
+quando a forma não bate, nunca adivinhado.
+
+### `DataModel`, `Report` (`kind: "dataModel" | "report"`)
 
 Definidos no schema, com renderer Markdown pronto para eles, mas **nenhum parser produz
-esses artefatos ainda** — são Fase 2 (`CloudFlow`) e Fase 3 (`DataModel`, `Report`) do
-roadmap. Existirem no schema desde já é intencional: um renderer deve trabalhar a partir do
-formato da união, não da cobertura atual dos parsers.
+esses artefatos ainda** — são Fase 3 do roadmap. Existirem no schema desde já é
+intencional: um renderer deve trabalhar a partir do formato da união, não da cobertura
+atual dos parsers.
 
 ## Validação
 

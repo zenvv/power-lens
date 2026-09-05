@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { downloadBytes } from "@/lib/download";
+import { FlowDagView } from "@/components/flow/FlowDagView";
 
 type DocumentViewProps = {
   document: PowerLensDocument;
@@ -20,6 +21,7 @@ const SEVERITY_VARIANT: Record<Diagnostic["severity"], "destructive" | "secondar
 
 export function DocumentView({ document, onReset }: DocumentViewProps) {
   const markdown = useMemo(() => renderMarkdown(document), [document]);
+  const flows = useMemo(() => document.artifacts.filter((a) => a.kind === "cloudFlow"), [document]);
 
   const onDownloadMarkdown = () => {
     downloadBytes(markdown, `${document.source.fileName}.summary.md`, "text/markdown");
@@ -35,7 +37,7 @@ export function DocumentView({ document, onReset }: DocumentViewProps) {
   };
 
   return (
-    <div className="flex w-[min(920px,92vw)] flex-col gap-6">
+    <div className="flex w-[min(1100px,95vw)] flex-col gap-6">
       <div className="flex items-start justify-between gap-4">
         <div>
           <h2 className="text-lg font-semibold">{document.source.fileName}</h2>
@@ -58,6 +60,21 @@ export function DocumentView({ document, onReset }: DocumentViewProps) {
           Baixar pacote de contexto (.zip)
         </Button>
       </div>
+
+      {flows.map((flow) => (
+        <Card key={flow.id}>
+          <CardHeader>
+            <CardTitle>Fluxo: {flow.name}</CardTitle>
+            <CardDescription>
+              Gatilho: {flow.trigger.name} · {flow.actions.length} ação(ões) · role a roda pra dar zoom, clique nos
+              grupos pra recolher
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <FlowDagView flow={flow} />
+          </CardContent>
+        </Card>
+      ))}
 
       {document.diagnostics.length > 0 && (
         <Card>

@@ -375,39 +375,57 @@ Todos **[FATO]**, com onde foram encontrados:
    um Canvas App — o `References/DataSources.json` do `.msapp` embutido usa o mesmo
    `ApiId`/`Type` pattern do SharePoint, ou um totalmente diferente (`shared_commondataservice`?)?
 
-**Cloud Flow / `definition.json` (bloqueia o parser de fluxo da Fase 2):**
+**Cloud Flow / `definition.json` — atualização pós-Fase 2:**
 
-6. Qual o shape real de `actions`, `trigger`, e `runAfter` dentro de
-   `Microsoft.Flow/flows/<guid>/definition.json`? A spec assume que "`actions` + `runAfter`
-   já é um DAG" (seção 6) — isso é uma suposição razoável dado que é o formato conhecido de
-   Logic Apps/Power Automate, mas não foi verificado contra um arquivo real neste projeto.
-7. Como um `Scope`/`If`/`Foreach` aninha suas ações filhas — chave `actions` aninhada
-   dentro da própria action, ou lista chapada com `parentId` (como a spec assume no
-   `FlowNode.parentId`)?
-8. `apisMap.json` e `connectionsMap.json` (irmãos de `definition.json`) guardam o quê
-   exatamente — são só um índice de displayName→connectorId, ou têm mais metadata útil
-   para o `ConnectionRef` do IR?
+O parser de fluxo (`packages/core/src/parsers/flow/`) foi implementado com base no schema
+**publicamente documentado** do Azure Logic Apps Workflow Definition Language (que o Power
+Automate reaproveita) — isso é uma fonte bem mais sólida do que uma suposição às cegas
+(é o mesmo schema usado por `$schema` em todo `definition.json` real que já vi citado),
+mas **ainda não foi confirmado contra um `Microsoft.Flow/flows/<guid>/definition.json`
+real deste projeto**. Perguntas 6 e 7 abaixo estão, na prática, respondidas pelo schema
+público — meu nível de confiança nelas subiu bastante — mas continuam como "verificar
+contra arquivo real" até eu abrir um de verdade:
+
+6. **[SUPOSIÇÃO fundamentada em documentação pública, não em arquivo do projeto]** `actions`
+   e `triggers` são objetos indexados por nome (não listas), e cada action tem
+   `runAfter: Record<nomeDaActionAnterior, string[]>` — é isso que o parser assume.
+7. **[SUPOSIÇÃO fundamentada em documentação pública]** `If` aninha as ações do branch
+   verdadeiro em `actions`, do branch falso em `else.actions`; `Switch` usa
+   `cases.<nome>.actions` e `default.actions`; `Scope`/`Foreach` usam `actions` direto. O
+   parser assume que `runAfter` só referencia irmãos dentro do mesmo nível de aninhamento
+   (nunca uma action de outro escopo) — isso é uma regra real do Logic Apps, não invenção
+   minha, mas vale confirmar que o Power Automate não tem nenhuma variação aqui.
+8. `apisMap.json` e `connectionsMap.json` (irmãos de `definition.json`) continuam não
+   abertos — o parser de conector (`extractConnectorName`) só olha `inputs.host.apiId`/
+   `connectionName` dentro do próprio `definition.json`, sem cruzar com esses arquivos.
+   Pode ser que eles tenham metadata melhor para `CloudFlow.connections` do que o que dá
+   pra extrair só do `definition.json`.
+9. Um `Workflows/*.json` dentro de uma **solution** de verdade tem o mesmo shape de um
+   `Microsoft.Flow/flows/<guid>/definition.json` de export avulso? O parser de solution
+   agora tenta rodar o parser de fluxo em cada `Workflows/*.json` encontrado (em vez de só
+   avisar que existe), e degrada para diagnóstico por arquivo se o shape não bater — mas
+   isso continua sendo uma suposição de continuidade de formato entre dois contextos
+   diferentes (solution vs. export avulso de app), não uma confirmação.
 
 **`.msapp` — pontas soltas mesmo com o app real disponível:**
 
-9. Um único arquivo `Src/Components/*.pa.yaml` pode conter **múltiplos** componentes sob
-   `ComponentDefinitions:`, ou é sempre 1:1 como as telas? (o app analisado só tinha 1
-   componente — regra "1 por arquivo" foi validada para telas, não para componentes.)
-10. Como aparece um **parâmetro/propriedade customizada de componente** (component
+10. Um único arquivo `Src/Components/*.pa.yaml` pode conter **múltiplos** componentes sob
+    `ComponentDefinitions:`, ou é sempre 1:1 como as telas? (o app analisado só tinha 1
+    componente — regra "1 por arquivo" foi validada para telas, não para componentes.)
+11. Como aparece um **parâmetro/propriedade customizada de componente** (component
     property/input/output) na definição do componente? Isso não apareceu no componente
     `NAVBAR` observado (ou não foi usado por ele) e é importante para o `Component` do IR.
-11. `Controls/*.json` e `Components/*.json` (formato antigo, hoje aparentemente cache) —
+12. `Controls/*.json` e `Components/*.json` (formato antigo, hoje aparentemente cache) —
     ainda têm alguma informação que não está em `Src/*.pa.yaml`, ou são 100% redundantes e
     seguros de ignorar no parser novo?
-12. A tag YAML `=` — a lib `yaml` (eemeli) usada em JS tem o mesmo problema com valor vazio
-    que o `PyYAML` teve, ou trata diferente? Precisa validar no primeiro teste do parser.
-13. `Src/_EditorState.pa.yaml` é seguro ignorar sempre, ou existe algum caso (ex. ordem de
+13. ~~A tag YAML `=`...~~ **[RESOLVIDO, ver seção 5.1]** — a lib `yaml` não tem esse problema.
+14. `Src/_EditorState.pa.yaml` é seguro ignorar sempre, ou existe algum caso (ex. ordem de
     telas no navegador do Studio) em que ele carrega informação que não está em nenhum
     outro lugar?
 
 **Power BI (`.pbit`/`.pbip`/`.pbix`) — zero cobertura no CMPA:**
 
-14. Nenhum fato disponível aqui; o corpus do CMPA não toca Power BI. `DataModelSchema`
+15. Nenhum fato disponível aqui; o corpus do CMPA não toca Power BI. `DataModelSchema`
     (TMSL) e `DataMashup` precisam ser explorados do zero contra um `.pbit` real antes da
     Fase 3.
 
