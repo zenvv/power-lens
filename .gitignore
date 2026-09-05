@@ -1,0 +1,22 @@
+# Reference material — read-only, never committed
+reference/
+
+# Real-world fixtures — may contain client data, never committed
+fixtures/real/
+
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+build/
+
+# Env / local config
+.env
+.env.local
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
