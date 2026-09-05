@@ -1,0 +1,21 @@
+{
+  "DataSources": [
+    {
+      "Name": "Pedidos",
+      "Type": "ConnectedDataSourceInfo",
+      "DatasetName": "https://contoso.sharepoint.com/sites/Corp/compras",
+      "TableName": "328fc949-0000-0000-0000-000000000000",
+      "ApiId": "/providers/microsoft.powerapps/apis/shared_sharepointonline"
+    },
+    {
+      "Name": "NF_ENVIAR_EMAIL",
+      "Type": "ServiceInfo",
+      "ApiId": "/providers/microsoft.powerapps/apis/shared_logicflows"
+    },
+    {
+      "Name": "ComboBoxSample",
+      "Type": "StaticDataSourceInfo",
+      "ApiId": ""
+    }
+  ]
+}

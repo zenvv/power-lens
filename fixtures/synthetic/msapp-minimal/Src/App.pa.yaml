@@ -1,0 +1,11 @@
+# Power Apps YAML (Preview)
+# YAML source code below should only be used to review changes made to
+# your app in source control and for minor edits (Preview). Use Power Apps
+# Studio to make major changes to your app.
+# Schema: https://go.microsoft.com/fwlink/?linkid=2304907
+
+App:
+  Properties:
+    OnStart: |+
+      =Set(glb, {ready: true});
+    Theme: =PowerAppsTheme

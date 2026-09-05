@@ -1,0 +1,15 @@
+# Power Apps YAML (Preview)
+# YAML source code below should only be used to review changes made to
+# your app in source control and for minor edits (Preview). Use Power Apps
+# Studio to make major changes to your app.
+# Schema: https://go.microsoft.com/fwlink/?linkid=2304907
+
+ComponentDefinitions:
+  NavBar:
+    Properties:
+      Height: =60
+    Children:
+      - HomeLink:
+          Control: Label@2.5.1
+          Properties:
+            Text: ="Home"

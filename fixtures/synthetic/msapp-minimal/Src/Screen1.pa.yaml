@@ -1,0 +1,36 @@
+# Power Apps YAML (Preview)
+# YAML source code below should only be used to review changes made to
+# your app in source control and for minor edits (Preview). Use Power Apps
+# Studio to make major changes to your app.
+# Schema: https://go.microsoft.com/fwlink/?linkid=2304907
+
+Screens:
+  Screen1:
+    Properties:
+      Fill: =RGBA(255, 255, 255, 1)
+      OnVisible: =
+    Children:
+      - HeaderContainer:
+          Control: GroupContainer@1.5.0
+          Variant: AutoLayout
+          Properties:
+            Width: =Parent.Width
+            PaddingTop: =
+          Children:
+            - Title1:
+                Control: Label@2.5.1
+                Properties:
+                  Text: ="Bem-vindo"
+                  Color: =RGBA(0, 0, 0, 1)
+            - SubmitButton:
+                Control: Button@0.0.45
+                Properties:
+                  Text: ="Enviar"
+                  OnSelect: |+
+                    =Patch(Pedidos, Defaults(Pedidos), {Titulo: Title1.Text}); Set(varEnviado, true); Navigate(Screen1)
+      - NavBar1:
+          Control: CanvasComponent
+          ComponentName: NavBar
+          Properties:
+            X: =0
+            Y: =0

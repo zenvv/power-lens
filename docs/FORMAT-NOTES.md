@@ -413,6 +413,40 @@ Todos **[FATO]**, com onde foram encontrados:
 
 ---
 
+## 5.1 Atualização pós-Prompt 4 — respostas e novos achados
+
+**Pergunta 12 respondida [FATO]**: a lib `yaml` (eemeli) usada em JS/TS **não** tem o
+problema do PyYAML com `Prop: =`. Ela segue YAML 1.2 e trata `=` sozinho como string
+literal comum (`"="`), sem exigir nenhum construtor customizado. Confirmado rodando
+`YAML.parse("PaddingTop: =\n")` diretamente. Ou seja, o workaround do CMPA (seção 1.5) é
+uma particularidade do PyYAML/YAML 1.1 e **não precisa ser portado**.
+
+**[FATO] Novo achado, descoberto construindo a fixture sintética**: uma fórmula que
+contém um literal de registro com dois-pontos (ex. `{Titulo: Title1.Text}`) **não pode**
+ser escrita como escalar de uma linha em YAML — `Titulo:` seguido de espaço é ambíguo com
+sintaxe de mapeamento, e o parser rejeita com `Nested mappings are not allowed in compact
+mappings`. Formulas assim só são válidas em `.pa.yaml` como block scalar (`|+`/`|-`), do
+mesmo jeito que `OnStart` já era. **Implicação**: qualquer fórmula "grande o suficiente"
+para ter um registro inline provavelmente já vem como block scalar no arquivo real; um
+parser que só soubesse ler escalar de uma linha quebraria em qualquer app de verdade que
+use `Patch(ds, Defaults(ds), {Campo: valor})` numa única linha — o que é extremamente
+comum. Vale testar isso especificamente contra um `.msapp` real assim que houver um
+disponível (ver seção 4).
+
+**[LACUNA nova]** Onde fica a ordem real das telas? Não está em nenhum lugar que o CMPA
+lê. O parser do Power Lens hoje infere a ordem pela ordem alfabética dos arquivos
+`Src/*.pa.yaml` e emite um diagnóstico `info` avisando disso. Precisa de um `.msapp` real
+com mais de uma tela para confirmar se a ordem real vem de algum outro arquivo do pacote
+(candidatos não verificados: `Header.json`, `Controls/*.json`).
+
+**[LACUNA nova]** `Src/App.pa.yaml` (propriedades de app: `OnStart`, `Theme`) não tem
+representação no `CanvasApp` da spec — `theme` é `Record<string,string>` (strings puras,
+não `Expression`) e não existe nenhum campo para `OnStart` do app. Isso é relevante porque
+a regra de health check `PL005` ("`OnStart` acima de N linhas", spec seção 7) precisa
+inspecionar exatamente esse `OnStart`. O parser atual lê `Src/App.pa.yaml` só o suficiente
+pra não quebrar, mas **descarta o conteúdo** — não inventei um campo novo na IR sem
+alinhar antes. Precisa de uma decisão de design antes da Fase 4 (health check).
+
 ## 5. O que isso muda no design do IR (observação, não implementação)
 
 Registrando aqui para a fase de implementação do IR (Prompt 3), sem escrever código agora:
