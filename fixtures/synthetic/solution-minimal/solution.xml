@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ImportExportXml version="9.2.0.0" SolutionPackageVersion="9.2" languagecode="1033" generatedBy="CrmLive">
+  <SolutionManifest>
+    <UniqueName>SampleSolution</UniqueName>
+    <LocalizedNames>
+      <LocalizedName description="Sample Solution" languagecode="1033" />
+    </LocalizedNames>
+    <Version>1.0.0.0</Version>
+    <Managed>0</Managed>
+    <Publisher>
+      <UniqueName>samplepublisher</UniqueName>
+      <LocalizedNames>
+        <LocalizedName description="Sample Publisher" languagecode="1033" />
+      </LocalizedNames>
+    </Publisher>
+    <RootComponents>
+      <RootComponent type="80" schemaName="SampleApp" behavior="0" />
+    </RootComponents>
+  </SolutionManifest>
+</ImportExportXml>

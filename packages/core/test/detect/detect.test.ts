@@ -16,7 +16,6 @@ describe("detectFormat", () => {
   it("detects a solution zip by the presence of solution.xml", () => {
     const bytes = zipSync({
       "solution.xml": new TextEncoder().encode("<ImportExportXml><SolutionManifest/></ImportExportXml>"),
-      "[Content_Types].xml": new TextEncoder().encode("<Types/>"),
     });
     const result = detectFormat(bytes, "MySolution_1_0_0_0.zip");
     expect(result.format).toBe("solution");
