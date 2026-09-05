@@ -101,6 +101,13 @@ export function detectFormat(bytes: Uint8Array, fileName: string): DetectionResu
     return { format: "msapp", diagnostics: [] };
   }
 
+  // Studio's actual export is an outer wrapper zip around the real .msapp —
+  // docs/FORMAT-NOTES.md section 1.1. Recognize it by the presence of any
+  // *.msapp entry; parseMsapp() does the actual unwrapping.
+  if ([...names].some((name) => /\.msapp$/i.test(name))) {
+    return { format: "msapp", diagnostics: [] };
+  }
+
   const hasDataModelSchema = names.has("DataModelSchema");
   const hasDataModel = names.has("DataModel");
   if (hasDataModelSchema && !hasDataModel) {

@@ -1,4 +1,5 @@
 import { resolve } from "node:path";
+import { zipSync } from "fflate";
 import { describe, expect, it } from "vitest";
 import { validateDocument } from "../../src/ir/index.js";
 import { parseMsapp } from "../../src/parsers/msapp/index.js";
@@ -10,6 +11,42 @@ function parseFixture() {
   const bytes = zipFixtureDir(FIXTURE_DIR);
   return parseMsapp(bytes, { fileName: "sample-app.msapp", fileSize: bytes.byteLength });
 }
+
+describe("parseMsapp — Studio export package wrapper", () => {
+  it("unwraps the outer Microsoft.PowerApps export package to find the real .msapp", () => {
+    const innerMsappBytes = zipFixtureDir(FIXTURE_DIR);
+    const outerBytes = zipSync({
+      "manifest.json": new TextEncoder().encode("{}"),
+      "Microsoft.PowerApps/apps/12345/12345.json": new TextEncoder().encode("{}"),
+      "Microsoft.PowerApps/apps/12345/Nabc-document.msapp": innerMsappBytes,
+      "Microsoft.Flow/flows/manifest.json": new TextEncoder().encode("{}"),
+      "Microsoft.Flow/flows/def-guid/definition.json": new TextEncoder().encode("{}"),
+    });
+
+    const doc = parseMsapp(outerBytes, { fileName: "Export_20260101.zip", fileSize: outerBytes.byteLength });
+
+    const app = doc.artifacts.find((a) => a.kind === "canvasApp");
+    expect(app?.kind).toBe("canvasApp");
+    if (app?.kind === "canvasApp") {
+      expect(app.screens[0]?.name).toBe("Screen1");
+    }
+
+    expect(doc.diagnostics.some((d) => d.code === "PL109")).toBe(true);
+    expect(doc.diagnostics.some((d) => d.code === "PL112")).toBe(true);
+    expect(validateDocument(doc).ok).toBe(true);
+  });
+
+  it("reports an error when multiple .msapp entries make the package ambiguous", () => {
+    const innerMsappBytes = zipFixtureDir(FIXTURE_DIR);
+    const outerBytes = zipSync({
+      "Microsoft.PowerApps/apps/1/a.msapp": innerMsappBytes,
+      "Microsoft.PowerApps/apps/2/b.msapp": innerMsappBytes,
+    });
+
+    const doc = parseMsapp(outerBytes, { fileName: "Weird.zip", fileSize: outerBytes.byteLength });
+    expect(doc.diagnostics.some((d) => d.code === "PL110")).toBe(true);
+  });
+});
 
 describe("parseMsapp — screens", () => {
   it("finds exactly one screen with the expected name", () => {

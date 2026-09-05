@@ -21,6 +21,16 @@ describe("detectFormat", () => {
     expect(result.format).toBe("solution");
   });
 
+  it("detects a Power Apps Studio export package (outer wrapper zip) as msapp", () => {
+    const bytes = zipSync({
+      "manifest.json": new TextEncoder().encode("{}"),
+      "Microsoft.PowerApps/apps/12345/Nabc-document.msapp": zipFixtureDir(MSAPP_FIXTURE_DIR),
+      "Microsoft.Flow/flows/manifest.json": new TextEncoder().encode("{}"),
+    });
+    const result = detectFormat(bytes, "BELLOARAMADOS-LOGISTICA_20260817174143.zip");
+    expect(result.format).toBe("msapp");
+  });
+
   it("detects a bare flow definition.json by its top-level keys", () => {
     const bytes = new TextEncoder().encode(
       JSON.stringify({ definition: { triggers: {}, actions: {} } }),
