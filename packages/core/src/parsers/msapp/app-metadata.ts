@@ -1,6 +1,6 @@
 import type { Diagnostic } from "../../ir/index.js";
 import type { RawPropertiesFile } from "./raw-shapes.js";
-import { readText } from "./zip.js";
+import { readText } from "../zip.js";
 
 const PROPERTIES_PATH = "Properties.json";
 

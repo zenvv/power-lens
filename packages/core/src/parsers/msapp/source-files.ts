@@ -2,7 +2,7 @@ import { parse as parseYaml } from "yaml";
 import type { Component, Diagnostic, Screen } from "../../ir/index.js";
 import { mapRoot } from "./controls.js";
 import type { RawComponentFile, RawScreenFile } from "./raw-shapes.js";
-import { readText } from "./zip.js";
+import { readText } from "../zip.js";
 
 /**
  * Confirmed empirically (docs/FORMAT-NOTES.md section 1.3): exactly one

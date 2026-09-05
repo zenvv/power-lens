@@ -4,7 +4,7 @@ import { parseDataSources } from "./data-sources.js";
 import { extractVariableUsages } from "./references.js";
 import { parseSourceFiles } from "./source-files.js";
 import { collectControlNames, collectFormulaBodies, finalizeReferences } from "./walk.js";
-import { unzipNormalized } from "./zip.js";
+import { unzipNormalized } from "../zip.js";
 
 export type MsappSource = {
   fileName: string;

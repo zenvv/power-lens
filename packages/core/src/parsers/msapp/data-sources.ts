@@ -1,6 +1,6 @@
 import type { DataSource, Diagnostic } from "../../ir/index.js";
 import type { RawDataSourcesFile } from "./raw-shapes.js";
-import { readText } from "./zip.js";
+import { readText } from "../zip.js";
 
 const DATA_SOURCES_PATH = "References/DataSources.json";
 
