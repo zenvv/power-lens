@@ -173,6 +173,16 @@ export const FlowNodeSchema = z.object({
   parentId: z.string().optional(),
   runAfter: z.array(RunAfterSchema),
   summary: z.string().optional(),
+  /**
+   * Added while implementing the Fase 2 flow parser — not in the original
+   * spec draft. `parentId` alone can't distinguish which side of a branch a
+   * nested action belongs to (an If's true vs. false actions, or which
+   * Switch case), which the DAG renderer needs to lay branches out side by
+   * side (spec section 7). Values used by the parser: "true"/"false" for an
+   * If's branches, a case name for a Switch, or omitted for a plain
+   * Scope/Foreach child (there's only one branch to be in).
+   */
+  branch: z.string().optional(),
 });
 export type FlowNode = z.infer<typeof FlowNodeSchema>;
 

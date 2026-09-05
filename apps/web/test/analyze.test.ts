@@ -46,15 +46,31 @@ describe("analyzeFile", () => {
     expect(result.status).toBe("unrecognized");
   });
 
-  it("flags a detected-but-unimplemented format instead of throwing", async () => {
-    const file = new File(
-      [new TextEncoder().encode(JSON.stringify({ definition: { triggers: {}, actions: {} } }))],
-      "definition.json",
-    );
+  it("detects and parses a flow definition.json end to end", async () => {
+    const flowBytes = readFileSync(resolve(__dirname, "../../../fixtures/synthetic/flow-minimal/definition.json"));
+    const file = new File([flowBytes], "definition.json", { type: "application/json" });
+
     const result = await analyzeFile(file);
+
     expect(result.status).toBe("parsed");
     if (result.status !== "parsed") return;
     expect(result.document.source.detectedFormat).toBe("flow");
+    const flow = result.document.artifacts.find((a) => a.kind === "cloudFlow");
+    expect(flow?.kind).toBe("cloudFlow");
+    if (flow?.kind === "cloudFlow") {
+      expect(flow.trigger.name).toBe("When_an_item_is_created");
+    }
+  });
+
+  it("flags a detected-but-unimplemented format instead of throwing", async () => {
+    // A zip with no recognizable internal signature falls back to the file
+    // extension (detectFormat's PL203 path) rather than to "undefined".
+    const zipBytes = zipSync({ "readme.txt": new TextEncoder().encode("hello") });
+    const file = new File([zipBytes], "report.pbit", { type: "application/octet-stream" });
+    const result = await analyzeFile(file);
+    expect(result.status).toBe("parsed");
+    if (result.status !== "parsed") return;
+    expect(result.document.source.detectedFormat).toBe("pbit");
     expect(result.document.diagnostics.some((d) => d.code === "PL210")).toBe(true);
   });
 });

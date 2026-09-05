@@ -8,6 +8,7 @@ import { zipFixtureDir } from "../helpers/zip-fixture.js";
 
 const SOLUTION_XML_PATH = resolve(__dirname, "../../../../fixtures/synthetic/solution-minimal/solution.xml");
 const MSAPP_FIXTURE_DIR = resolve(__dirname, "../../../../fixtures/synthetic/msapp-minimal");
+const FLOW_FIXTURE_PATH = resolve(__dirname, "../../../../fixtures/synthetic/flow-minimal/definition.json");
 
 function buildSolutionZip(options?: { includeApp?: boolean; includeWorkflow?: boolean; includeCustomizations?: boolean }) {
   const files: Record<string, Uint8Array> = {
@@ -18,7 +19,7 @@ function buildSolutionZip(options?: { includeApp?: boolean; includeWorkflow?: bo
     files["CanvasApps/SampleApp.msapp"] = zipFixtureDir(MSAPP_FIXTURE_DIR);
   }
   if (options?.includeWorkflow) {
-    files["Workflows/SomeFlow-1.json"] = new TextEncoder().encode("{}");
+    files["Workflows/SomeFlow-1.json"] = readFileSync(FLOW_FIXTURE_PATH);
   }
   if (options?.includeCustomizations) {
     files["customizations.xml"] = new TextEncoder().encode("<ImportExportXml/>");
@@ -75,14 +76,21 @@ describe("parseSolution — embedded canvas apps", () => {
   });
 });
 
-describe("parseSolution — out-of-phase content", () => {
-  it("notes Workflows/*.json presence without attempting to parse it", () => {
+describe("parseSolution — embedded flows", () => {
+  it("parses Workflows/*.json via the flow parser and includes it as an artifact", () => {
     const bytes = buildSolutionZip({ includeWorkflow: true });
     const doc = parseSolution(bytes, { fileName: "SampleSolution.zip", fileSize: bytes.byteLength });
 
-    expect(doc.diagnostics.some((d) => d.code === "PL305")).toBe(true);
+    const flow = doc.artifacts.find((a) => a.kind === "cloudFlow");
+    expect(flow?.kind).toBe("cloudFlow");
+    if (flow?.kind === "cloudFlow") {
+      expect(flow.trigger.name).toBe("When_an_item_is_created");
+      expect(flow.actions).toHaveLength(6);
+    }
   });
+});
 
+describe("parseSolution — out-of-phase content", () => {
   it("notes customizations.xml presence without attempting to parse it", () => {
     const bytes = buildSolutionZip({ includeCustomizations: true });
     const doc = parseSolution(bytes, { fileName: "SampleSolution.zip", fileSize: bytes.byteLength });

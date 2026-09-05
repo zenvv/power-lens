@@ -1,0 +1,76 @@
+{
+  "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+  "contentVersion": "1.0.0.0",
+  "triggers": {
+    "When_an_item_is_created": {
+      "type": "OpenApiConnection",
+      "inputs": {
+        "host": {
+          "apiId": "/providers/microsoft.powerapps/apis/shared_sharepointonline",
+          "connectionName": "shared_sharepointonline"
+        },
+        "parameters": {
+          "dataset": "https://contoso.sharepoint.com/sites/Corp/compras",
+          "table": "Ordens de Compra"
+        }
+      }
+    }
+  },
+  "actions": {
+    "Condition": {
+      "type": "If",
+      "expression": {
+        "and": [{ "greater": ["@triggerBody()?['Total']", 1000] }]
+      },
+      "actions": {
+        "Send_an_email": {
+          "type": "OpenApiConnection",
+          "inputs": {
+            "host": {
+              "apiId": "/providers/microsoft.powerapps/apis/shared_office365",
+              "connectionName": "shared_office365"
+            }
+          },
+          "runAfter": {}
+        }
+      },
+      "else": {
+        "actions": {
+          "Terminate": {
+            "type": "Terminate",
+            "inputs": { "runStatus": "Cancelled" },
+            "runAfter": {}
+          }
+        }
+      },
+      "runAfter": {}
+    },
+    "Scope": {
+      "type": "Scope",
+      "actions": {
+        "Compose": {
+          "type": "Compose",
+          "inputs": "@triggerBody()",
+          "runAfter": {}
+        }
+      },
+      "runAfter": {
+        "Condition": ["Succeeded"]
+      }
+    },
+    "Final_step": {
+      "type": "OpenApiConnection",
+      "description": "Atualiza o status final do item na lista",
+      "inputs": {
+        "host": {
+          "apiId": "/providers/microsoft.powerapps/apis/shared_sharepointonline",
+          "connectionName": "shared_sharepointonline"
+        }
+      },
+      "runAfter": {
+        "Scope": ["Succeeded", "Skipped"]
+      }
+    }
+  },
+  "outputs": {}
+}

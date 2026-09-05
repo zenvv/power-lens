@@ -25,7 +25,13 @@ function looksLikeFlowDefinition(bytes: Uint8Array): boolean {
   try {
     const text = new TextDecoder("utf-8").decode(bytes);
     const parsed = JSON.parse(text) as Record<string, unknown>;
-    return "definition" in parsed || "actions" in parsed || "trigger" in parsed;
+    if ("triggers" in parsed || "actions" in parsed) return true;
+    const properties = parsed["properties"];
+    return (
+      typeof properties === "object" &&
+      properties !== null &&
+      "definition" in (properties as Record<string, unknown>)
+    );
   } catch {
     return false;
   }

@@ -11,7 +11,8 @@ export function renderCloudFlowSection(flow: CloudFlow): string {
   if (flow.actions.length > 0) {
     lines.push("### Ações", "");
     for (const action of flow.actions) {
-      const parent = action.parentId ? ` (dentro de ${action.parentId})` : "";
+      const branch = action.branch ? `, branch "${action.branch}"` : "";
+      const parent = action.parentId ? ` (dentro de ${action.parentId}${branch})` : "";
       const summary = action.summary ? ` — ${action.summary}` : "";
       lines.push(`- **${action.name}** _(${action.type})_${parent}${summary}`);
     }

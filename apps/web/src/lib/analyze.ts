@@ -1,6 +1,7 @@
 import {
   createEmptyDocument,
   detectFormat,
+  parseFlow,
   parseMsapp,
   parseSolution,
   type Diagnostic,
@@ -35,6 +36,12 @@ export async function analyzeFile(file: File): Promise<AnalysisResult> {
 
   if (detection.format === "solution") {
     const document = parseSolution(bytes, source);
+    document.diagnostics = [...detection.diagnostics, ...document.diagnostics];
+    return { status: "parsed", document };
+  }
+
+  if (detection.format === "flow") {
+    const document = parseFlow(bytes, source);
     document.diagnostics = [...detection.diagnostics, ...document.diagnostics];
     return { status: "parsed", document };
   }

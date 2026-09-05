@@ -31,11 +31,17 @@ describe("detectFormat", () => {
     expect(result.format).toBe("msapp");
   });
 
-  it("detects a bare flow definition.json by its top-level keys", () => {
-    const bytes = new TextEncoder().encode(
-      JSON.stringify({ definition: { triggers: {}, actions: {} } }),
-    );
+  it("detects a bare flow definition.json by its top-level triggers/actions keys", () => {
+    const bytes = new TextEncoder().encode(JSON.stringify({ triggers: {}, actions: {} }));
     const result = detectFormat(bytes, "definition.json");
+    expect(result.format).toBe("flow");
+  });
+
+  it("detects a flow-package-wrapped definition (properties.definition) as flow", () => {
+    const bytes = new TextEncoder().encode(
+      JSON.stringify({ properties: { definition: { triggers: {}, actions: {} } } }),
+    );
+    const result = detectFormat(bytes, "MyFlow.json");
     expect(result.format).toBe("flow");
   });
 
