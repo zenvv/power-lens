@@ -5,5 +5,6 @@ export { parseSolution, type SolutionSource } from "./parsers/solution/index.js"
 export { parseFlow, type FlowSource } from "./parsers/flow/index.js";
 export { parsePbit, type PbitSource } from "./parsers/powerbi/index.js";
 export { detectFormat, type DetectionResult } from "./detect/index.js";
-export { renderMarkdown, buildContextPack } from "./render/index.js";
+export { renderMarkdown, buildContextPack, resolveScreenLayout, resolveControlLayout } from "./render/index.js";
+export type { Resolved, ResolvedControl } from "./render/index.js";
 export { runHealthChecks, HEALTH_CHECK_RULES, type HealthCheckRule } from "./rules/index.js";

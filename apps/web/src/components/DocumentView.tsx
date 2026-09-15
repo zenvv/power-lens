@@ -8,6 +8,7 @@ import { FlowDagView } from "@/components/flow/FlowDagView";
 import { MerView } from "@/components/mer/MerView";
 import { MeasuresPanel } from "@/components/mer/MeasuresPanel";
 import { DiagnosticsPanel } from "@/components/DiagnosticsPanel";
+import { WireframeView } from "@/components/wireframe/WireframeView";
 
 type DocumentViewProps = {
   document: PowerLensDocument;
@@ -18,6 +19,7 @@ export function DocumentView({ document, onReset }: DocumentViewProps) {
   const markdown = useMemo(() => renderMarkdown(document), [document]);
   const flows = useMemo(() => document.artifacts.filter((a) => a.kind === "cloudFlow"), [document]);
   const models = useMemo(() => document.artifacts.filter((a) => a.kind === "dataModel"), [document]);
+  const canvasApps = useMemo(() => document.artifacts.filter((a) => a.kind === "canvasApp"), [document]);
 
   const onDownloadMarkdown = () => {
     downloadBytes(markdown, `${document.source.fileName}.summary.md`, "text/markdown");
@@ -89,6 +91,21 @@ export function DocumentView({ document, onReset }: DocumentViewProps) {
             <div className="h-[70vh] w-full shrink-0 rounded-lg border lg:w-70">
               <MeasuresPanel measures={model.measures} />
             </div>
+          </CardContent>
+        </Card>
+      ))}
+
+      {canvasApps.map((app) => (
+        <Card key={app.id}>
+          <CardHeader>
+            <CardTitle>Wireframe: {app.name}</CardTitle>
+            <CardDescription>
+              Blueprint estático por tela — valores literais/aritmética constante são resolvidos, o resto vira
+              placeholder tracejado marcado como dinâmico. Não é uma simulação fiel do app rodando.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <WireframeView app={app} />
           </CardContent>
         </Card>
       ))}
