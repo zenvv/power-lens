@@ -1,32 +1,40 @@
+/**
+ * Direção do redesign (referência: Power Platform admin center).
+ * THESIS: navegação lateral persistente por seção, não uma página de import
+ * separada — "importar arquivo" é só o primeiro item da mesma navegação.
+ * OWN-WORLD: rail claro com grupos (`sidebar-*` tokens já existentes),
+ * barra superior compacta e sólida, cards de métrica em fileira no Resumo.
+ * STORY: usuário chega, importa (com feedback rápido de leitura), navega
+ * pelas seções do documento; trocar de arquivo com algo já carregado passa
+ * por confirmação, porque descarta a visualização atual.
+ * FORM: fixado pelo brief do usuário (screenshots do admin center) — sem
+ * sorteio de conceito.
+ */
 import { useCallback, useState } from "react";
-import type { Diagnostic } from "@power-lens/core";
-import { Button } from "@/components/ui/button";
-import { Dropzone } from "./components/Dropzone.js";
-import { DocumentView } from "./components/DocumentView.js";
-import { analyzeFile, type AnalysisResult } from "./lib/analyze.js";
 import Navbar from "./components/nav/Navbar.js";
-
-type State =
-  | { status: "idle" }
-  | { status: "loading" }
-  | { status: "unrecognized"; fileName: string; diagnostics: Diagnostic[] }
-  | { status: "parsed"; result: Extract<AnalysisResult, { status: "parsed" }> };
+import { Sidebar, type SectionId } from "./components/nav/Sidebar.js";
+import { HomeSection } from "./components/HomeSection.js";
+import { DocumentView } from "./components/DocumentView.js";
+import { ConfirmDialog } from "./components/ConfirmDialog.js";
+import { analyzeFile } from "./lib/analyze.js";
+import type { AppState } from "./lib/app-state.js";
 
 export function App() {
-  const [state, setState] = useState<State>({ status: "idle" });
+  const [state, setState] = useState<AppState>({ status: "idle" });
+  const [activeSection, setActiveSection] = useState<SectionId>("home");
+  const [confirmImportOpen, setConfirmImportOpen] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const onFile = useCallback((file: File) => {
-    setState({ status: "loading" });
+    setState({ status: "loading", fileName: file.name });
     analyzeFile(file)
       .then((result) => {
         if (result.status === "unrecognized") {
-          setState({
-            status: "unrecognized",
-            fileName: result.fileName,
-            diagnostics: result.diagnostics,
-          });
+          setState({ status: "unrecognized", fileName: result.fileName, diagnostics: result.diagnostics });
+          setActiveSection("home");
         } else {
           setState({ status: "parsed", result });
+          setActiveSection("summary");
         }
       })
       .catch((err: unknown) => {
@@ -41,48 +49,62 @@ export function App() {
             },
           ],
         });
+        setActiveSection("home");
       });
   }, []);
 
-  const onReset = useCallback(() => setState({ status: "idle" }), []);
+  const resetToIdle = useCallback(() => {
+    setState({ status: "idle" });
+    setActiveSection("home");
+  }, []);
+
+  const onRequestImport = useCallback(() => {
+    if (state.status === "parsed") setConfirmImportOpen(true);
+  }, [state.status]);
+
+  const document = state.status === "parsed" ? state.result.document : null;
 
   return (
-    <main className="flex min-h-screen flex-col bg-background text-foreground">
+    <main className="flex h-screen flex-col bg-background text-foreground">
       <Navbar
-        document={state.status === "parsed" ? state.result.document : null}
-        onReset={onReset}
+        document={document}
+        onOpenDiagnostics={() => setActiveSection("diagnostics")}
+        onToggleSidebar={() => setSidebarOpen((v) => !v)}
       />
 
-      <div className="mx-auto flex w-full max-w-[1800px] flex-1 flex-col px-6 py-8 sm:px-8">
-        {(state.status === "idle" || state.status === "loading") && (
-          <div className="flex flex-1 flex-col items-center justify-center">
-            <Dropzone onFile={onFile} disabled={state.status === "loading"} />
-          </div>
-        )}
+      <div className="flex min-h-0 flex-1">
+        <Sidebar
+          document={document}
+          activeSection={activeSection}
+          onSectionChange={setActiveSection}
+          onRequestImport={onRequestImport}
+          mobileOpen={sidebarOpen}
+          onMobileClose={() => setSidebarOpen(false)}
+        />
 
-        {state.status === "unrecognized" && (
-          <div className="flex flex-1 flex-col items-center justify-center">
-            <div className="flex w-[min(560px,90vw)] flex-col gap-4">
-              <p className="text-sm">
-                Não consegui reconhecer <strong>{state.fileName}</strong> como
-                um arquivo suportado.
-              </p>
-              <ul className="list-disc pl-5 text-sm text-muted-foreground">
-                {state.diagnostics.map((d, i) => (
-                  <li key={i}>{d.message}</li>
-                ))}
-              </ul>
-              <Button variant="outline" className="self-start" onClick={onReset}>
-                Tentar outro arquivo
-              </Button>
-            </div>
+        <div className="min-w-0 flex-1 overflow-y-auto">
+          <div className="mx-auto flex w-full max-w-[1600px] flex-1 flex-col px-6 py-6">
+            {document ? (
+              <DocumentView document={document} activeSection={activeSection} />
+            ) : (
+              <HomeSection state={state} onFile={onFile} onRetry={resetToIdle} />
+            )}
           </div>
-        )}
-
-        {state.status === "parsed" && (
-          <DocumentView document={state.result.document} />
-        )}
+        </div>
       </div>
+
+      <ConfirmDialog
+        open={confirmImportOpen}
+        onOpenChange={setConfirmImportOpen}
+        title="Importar outro arquivo?"
+        description={
+          state.status === "parsed"
+            ? `Isso descarta a análise atual de "${state.result.document.source.fileName}" e volta pra tela de importação. Nada fica salvo entre análises.`
+            : "Isso descarta a análise atual e volta pra tela de importação."
+        }
+        confirmLabel="Importar outro arquivo"
+        onConfirm={resetToIdle}
+      />
     </main>
   );
 }
