@@ -60,3 +60,24 @@ formato (já extraído em `docs/FORMAT-NOTES.md`). Está no `.gitignore`.
 
 Mensagens curtas, no imperativo, descrevendo o quê e por quê — não narrar o processo.
 Um commit por incremento coerente (ex.: "Add IR schema for CanvasApp", não "WIP").
+
+## CI/CD e changelog
+
+1. **Changelog por incremento.** Toda feature nova ou alterada gera um arquivo em
+   `docs/changelog/AAAA-MM-DD-slug.md` (ver `docs/changelog/README.md` pro formato).
+   Escrito em português, como o resto da documentação. Cobre o quê, por quê, decisões
+   tomadas (inclusive respostas a perguntas feitas durante o incremento) e arquivos
+   principais tocados.
+2. **Sync frequente.** Cada incremento coerente = commit + push imediato pra `main`,
+   sem pedir confirmação a cada vez. A ideia é sincronizar com o remoto com frequência,
+   não acumular trabalho local.
+3. **Gate local antes de commitar.** Rodar `pnpm typecheck` e `pnpm test` (na raiz)
+   antes de cada commit que toque código. Isso estende a regra "teste antes de
+   implementação" pra também cobrir "não commitar com teste ou typecheck quebrado".
+4. **CI remoto como rede de segurança.** `.github/workflows/ci.yml` roda typecheck,
+   testes e build em push pra `main` e em qualquer PR. Ele existe pra pegar o que o
+   gate local eventualmente deixar passar — não substitui rodar localmente antes.
+5. **Changelog alimenta o blueprint final.** O acúmulo de `docs/changelog/*.md` é a
+   fonte primária pra eventualmente escrever um resumo/blueprint consolidado do
+   projeto. Não precisa existir esse resumo agora — só manter o changelog completo o
+   suficiente pra ele poder ser escrito depois sem precisar minerar `git log`.
