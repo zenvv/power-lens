@@ -67,6 +67,8 @@ export function MerView({ model }: MerViewProps) {
     [nodes, onToggle],
   );
 
+  // TODO: exportar este diagrama como PNG/SVG. Mesmo pedido do FlowDagView —
+  // resolver os dois juntos com a mesma abordagem quando for implementado.
   return (
     <div style={{ height: "70vh" }} className="rounded-lg border bg-background/50">
       <ReactFlow

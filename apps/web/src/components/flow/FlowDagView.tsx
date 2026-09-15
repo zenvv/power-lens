@@ -42,6 +42,9 @@ export function FlowDagView({ flow }: FlowDagViewProps) {
     [nodes, onToggle],
   );
 
+  // TODO: exportar este diagrama como PNG/SVG. Pedido do usuário depois de ver
+  // o DAG renderizado — @xyflow/react tem getNodesBounds/getViewportForBounds
+  // prontos pra isso, falta só o botão e a serialização do canvas.
   return (
     <div style={{ height: "70vh" }} className="rounded-lg border bg-background/50">
       <ReactFlow
