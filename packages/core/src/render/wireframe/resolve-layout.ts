@@ -181,14 +181,37 @@ function tryResolveRgba(body: string): string | undefined {
 
 // ── Resolução por propriedade ──────────────────────────────────────────────
 
-function resolveNumeric(expr: Expression | undefined): Resolved<number> {
+/**
+ * Tamanho de tela assumido quando não há como saber o real (nada no IR hoje
+ * carrega Width/Height do app — `Src/App.pa.yaml` nunca foi inspecionado
+ * pra isso, ver docs/FORMAT-NOTES.md). 1366×768 é o formato "tablet"
+ * (paisagem) mais comum do Power Apps Studio. Decisão explícita do usuário:
+ * viewport fixo por enquanto, em vez de tentar parsear o tamanho real.
+ */
+export const DEFAULT_CANVAS_WIDTH = 1366;
+export const DEFAULT_CANVAS_HEIGHT = 768;
+
+/** Tamanho resolvido do pai mais próximo, usado só pra substituir
+ * `Parent.Width`/`Parent.Height` antes de avaliar aritmética constante —
+ * não é um mecanismo geral de resolução de identificador (`Self.X`,
+ * `ThisItem...` etc. continuam virando "dynamic", de propósito). */
+export type LayoutContext = { parentWidth?: number; parentHeight?: number };
+
+function substituteParentSize(raw: string, context: LayoutContext): string {
+  let result = raw;
+  if (context.parentWidth !== undefined) result = result.replace(/\bParent\.Width\b/g, String(context.parentWidth));
+  if (context.parentHeight !== undefined) result = result.replace(/\bParent\.Height\b/g, String(context.parentHeight));
+  return result;
+}
+
+function resolveNumeric(expr: Expression | undefined, context: LayoutContext = {}): Resolved<number> {
   if (!expr) return { status: "absent" };
   if (expr.kind === "literal") {
     return typeof expr.literal === "number"
       ? { status: "resolved", value: expr.literal }
       : { status: "dynamic", raw: expr.raw };
   }
-  const value = evalConstantArithmetic(expr.raw.slice(1));
+  const value = evalConstantArithmetic(substituteParentSize(expr.raw.slice(1), context));
   return value === undefined ? { status: "dynamic", raw: expr.raw } : { status: "resolved", value };
 }
 
@@ -209,34 +232,131 @@ function resolveColor(expr: Expression | undefined): Resolved<string> {
   return { status: "dynamic", raw: expr.raw };
 }
 
+function resolveBoolean(expr: Expression | undefined, defaultWhenAbsent: boolean): Resolved<boolean> {
+  if (!expr) return { status: "resolved", value: defaultWhenAbsent };
+  if (expr.kind === "literal" && typeof expr.literal === "boolean") {
+    return { status: "resolved", value: expr.literal };
+  }
+  return { status: "dynamic", raw: expr.raw };
+}
+
+/**
+ * `BorderStyle`, `LayoutDirection` e as demais propriedades de layout do
+ * AutoLayout são referências a membro de enum do Power Fx (ex.
+ * `=BorderStyle.None`, confirmado em docs/FORMAT-NOTES.md seção 1.4) — uma
+ * `Expression` de `kind: "formula"`, não um literal, então precisa do mesmo
+ * tratamento especial que `tryResolveRgba` dá pra `Fill`.
+ */
+function resolveEnumMember(expr: Expression | undefined, enumName: string): Resolved<string> {
+  if (!expr) return { status: "absent" };
+  if (expr.kind === "literal" && typeof expr.literal === "string") {
+    return { status: "resolved", value: expr.literal };
+  }
+  if (expr.kind === "formula") {
+    const match = new RegExp(`^${enumName}\\.([A-Za-z0-9_]+)$`).exec(expr.raw.slice(1).trim());
+    if (match) return { status: "resolved", value: match[1]! };
+  }
+  return { status: "dynamic", raw: expr.raw };
+}
+
 // ── Árvore de layout resolvida ─────────────────────────────────────────────
+
+/** Só populado quando `variant === "AutoLayout"` — as demais telas/controles
+ * usam posicionamento livre (X/Y), onde essas propriedades não existem. */
+export type ResolvedAutoLayout = {
+  direction: Resolved<string>;
+  gap: Resolved<number>;
+  align: Resolved<string>;
+  justify: Resolved<string>;
+  paddingTop: Resolved<number>;
+  paddingRight: Resolved<number>;
+  paddingBottom: Resolved<number>;
+  paddingLeft: Resolved<number>;
+};
 
 export type ResolvedControl = {
   name: string;
   type: string;
+  variant?: string;
   x: Resolved<number>;
   y: Resolved<number>;
   width: Resolved<number>;
   height: Resolved<number>;
   text: Resolved<string>;
   fill: Resolved<string>;
+  color: Resolved<string>;
+  fontSize: Resolved<number>;
+  bold: Resolved<boolean>;
+  borderColor: Resolved<string>;
+  borderThickness: Resolved<number>;
+  borderStyle: Resolved<string>;
+  visible: Resolved<boolean>;
+  layout?: ResolvedAutoLayout;
   children: ResolvedControl[];
 };
 
-export function resolveControlLayout(control: Control): ResolvedControl {
+export function resolveControlLayout(control: Control, context: LayoutContext = {}): ResolvedControl {
+  const width = resolveNumeric(control.properties["Width"], context);
+  const height = resolveNumeric(control.properties["Height"], context);
+  const isAutoLayout = control.variant === "AutoLayout";
+
+  // Propaga Width/Height pros filhos como o Parent.Width/Height deles: valor
+  // resolvido usa ele mesmo; "absent" (a maioria dos containers/telas nunca
+  // declara Width — o tamanho vem de fora) herda o Parent.Width ambiente,
+  // já que não é um caso de fórmula que falhou, é simplesmente não ter
+  // fórmula nenhuma; só "dynamic" (uma fórmula que existe mas não dá pra
+  // resolver) não propaga nada — não dá pra saber, então os filhos que
+  // dependem dela também viram "dynamic" em vez de herdar um número
+  // adivinhado (degradação honesta em vez de propagar um valor errado).
+  const childParentWidth = width.status === "resolved" ? width.value : width.status === "absent" ? context.parentWidth : undefined;
+  const childParentHeight =
+    height.status === "resolved" ? height.value : height.status === "absent" ? context.parentHeight : undefined;
+  const childContext: LayoutContext = {
+    ...(childParentWidth !== undefined ? { parentWidth: childParentWidth } : {}),
+    ...(childParentHeight !== undefined ? { parentHeight: childParentHeight } : {}),
+  };
+
   return {
     name: control.name,
     type: control.type,
-    x: resolveNumeric(control.properties["X"]),
-    y: resolveNumeric(control.properties["Y"]),
-    width: resolveNumeric(control.properties["Width"]),
-    height: resolveNumeric(control.properties["Height"]),
+    ...(control.variant ? { variant: control.variant } : {}),
+    x: resolveNumeric(control.properties["X"], context),
+    y: resolveNumeric(control.properties["Y"], context),
+    width,
+    height,
     text: resolveText(control.properties["Text"]),
     fill: resolveColor(control.properties["Fill"]),
-    children: control.children.map(resolveControlLayout),
+    color: resolveColor(control.properties["Color"]),
+    fontSize: resolveNumeric(control.properties["Size"], context),
+    bold: resolveBoolean(control.properties["Bold"], false),
+    borderColor: resolveColor(control.properties["BorderColor"]),
+    borderThickness: resolveNumeric(control.properties["BorderThickness"], context),
+    borderStyle: resolveEnumMember(control.properties["BorderStyle"], "BorderStyle"),
+    visible: resolveBoolean(control.properties["Visible"], true),
+    ...(isAutoLayout
+      ? {
+          layout: {
+            direction: resolveEnumMember(control.properties["LayoutDirection"], "LayoutDirection"),
+            gap: resolveNumeric(control.properties["LayoutGap"], context),
+            align: resolveEnumMember(control.properties["LayoutAlignItems"], "LayoutAlignItems"),
+            justify: resolveEnumMember(control.properties["LayoutJustifyContent"], "LayoutJustifyContent"),
+            paddingTop: resolveNumeric(control.properties["PaddingTop"], context),
+            paddingRight: resolveNumeric(control.properties["PaddingRight"], context),
+            paddingBottom: resolveNumeric(control.properties["PaddingBottom"], context),
+            paddingLeft: resolveNumeric(control.properties["PaddingLeft"], context),
+          },
+        }
+      : {}),
+    children: control.children.map((child) => resolveControlLayout(child, childContext)),
   };
 }
 
+/**
+ * Semeia o contexto com o viewport padrão (`DEFAULT_CANVAS_WIDTH/HEIGHT`) —
+ * é o que faz `Width: =Parent.Width`, o padrão em praticamente todo
+ * container real (docs/FORMAT-NOTES.md seção 1.4), resolver pra um número de
+ * verdade em vez de cair em "dynamic" já no primeiro nível da árvore.
+ */
 export function resolveScreenLayout(screen: Screen): ResolvedControl {
-  return resolveControlLayout(screen.root);
+  return resolveControlLayout(screen.root, { parentWidth: DEFAULT_CANVAS_WIDTH, parentHeight: DEFAULT_CANVAS_HEIGHT });
 }

@@ -1,7 +1,6 @@
 import { useMemo, useState } from "react";
-import { resolveScreenLayout, type CanvasApp } from "@power-lens/core";
+import { resolveScreenLayout, DEFAULT_CANVAS_WIDTH, DEFAULT_CANVAS_HEIGHT, type CanvasApp } from "@power-lens/core";
 import { Button } from "@/components/ui/button";
-import { computeCanvasSize } from "@/lib/wireframe-canvas";
 import { ControlBox } from "./ControlBox";
 
 type WireframeViewProps = {
@@ -18,10 +17,6 @@ export function WireframeView({ app }: WireframeViewProps) {
   const selectedScreen = sortedScreens.find((s) => s.name === selectedName) ?? sortedScreens[0];
 
   const resolved = useMemo(() => (selectedScreen ? resolveScreenLayout(selectedScreen) : undefined), [selectedScreen]);
-  const canvasSize = useMemo(
-    () => (resolved ? computeCanvasSize(resolved) : { width: 400, height: 300 }),
-    [resolved],
-  );
 
   if (!selectedScreen || !resolved) {
     return <p className="text-sm text-muted-foreground">Nenhuma tela pra mostrar.</p>;
@@ -46,8 +41,8 @@ export function WireframeView({ app }: WireframeViewProps) {
         <div
           className="relative mx-auto flex flex-col rounded-sm border bg-background p-1 shadow-sm"
           style={{
-            width: canvasSize.width,
-            height: canvasSize.height,
+            width: DEFAULT_CANVAS_WIDTH,
+            height: DEFAULT_CANVAS_HEIGHT,
             background: resolved.fill.status === "resolved" ? resolved.fill.value : undefined,
           }}
         >

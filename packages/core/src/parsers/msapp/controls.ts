@@ -98,6 +98,7 @@ export function mapControl(name: string, node: RawControlNode, diagnostics: Diag
   return {
     name,
     type: resolveControlType(node),
+    ...(node.Variant ? { variant: node.Variant } : {}),
     properties: mapProperties(node.Properties),
     children: mapChildren(node.Children, diagnostics),
   };

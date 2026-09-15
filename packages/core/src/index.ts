@@ -11,6 +11,8 @@ export {
   buildPromptMd,
   resolveScreenLayout,
   resolveControlLayout,
+  DEFAULT_CANVAS_WIDTH,
+  DEFAULT_CANVAS_HEIGHT,
 } from "./render/index.js";
-export type { Resolved, ResolvedControl } from "./render/index.js";
+export type { Resolved, ResolvedControl, ResolvedAutoLayout, LayoutContext } from "./render/index.js";
 export { runHealthChecks, HEALTH_CHECK_RULES, type HealthCheckRule } from "./rules/index.js";

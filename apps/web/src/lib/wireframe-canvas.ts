@@ -1,10 +1,8 @@
-import type { ResolvedControl } from "@power-lens/core";
+import type { CSSProperties } from "react";
+import type { Resolved, ResolvedAutoLayout } from "@power-lens/core";
 
 export const PLACEHOLDER_WIDTH = 160;
 export const PLACEHOLDER_HEIGHT = 32;
-export const MIN_CANVAS_WIDTH = 400;
-export const MIN_CANVAS_HEIGHT = 300;
-export const CANVAS_PADDING = 24;
 
 /**
  * Um container `AutoLayout` (cada vez mais o padrão no Studio moderno) não
@@ -17,36 +15,53 @@ export const CANVAS_PADDING = 24;
  * navegador), só os que têm alguma posição (resolvida ou dinâmica) usam
  * posicionamento absoluto.
  */
-export function hasDeclaredPosition(control: ResolvedControl): boolean {
+export function hasDeclaredPosition(control: { x: Resolved<number>; y: Resolved<number> }): boolean {
   return control.x.status !== "absent" || control.y.status !== "absent";
 }
 
-function extent(control: ResolvedControl): { right: number; bottom: number } {
-  const x = control.x.status === "resolved" ? control.x.value : 0;
-  const y = control.y.status === "resolved" ? control.y.value : 0;
-  const width = control.width.status === "resolved" ? control.width.value : PLACEHOLDER_WIDTH;
-  const height = control.height.status === "resolved" ? control.height.value : PLACEHOLDER_HEIGHT;
-  return { right: x + width, bottom: y + height };
+function resolvedValue<T>(r: Resolved<T>): T | undefined {
+  return r.status === "resolved" ? r.value : undefined;
 }
 
+const ALIGN_ITEMS: Record<string, string> = {
+  Start: "flex-start",
+  Center: "center",
+  End: "flex-end",
+  Stretch: "stretch",
+};
+
+const JUSTIFY_CONTENT: Record<string, string> = {
+  Start: "flex-start",
+  Center: "center",
+  End: "flex-end",
+  SpaceBetween: "space-between",
+  SpaceAround: "space-around",
+  SpaceEvenly: "space-evenly",
+};
+
 /**
- * A tela em si quase nunca tem Width/Height resolvíveis (o canvas do app
- * é definido fora da árvore de controles) — o tamanho do wireframe é
- * inferido da extensão dos filhos diretos posicionados absolutamente, com
- * um piso mínimo. Filhos sem posição declarada (fluxo normal) não entram
- * nessa conta — o navegador já dimensiona o canvas em torno deles.
+ * Nomes de propriedade do AutoLayout (`LayoutDirection`, `LayoutAlignItems`
+ * etc.) inferidos da documentação pública do Power Apps, não confirmados
+ * contra um `.msapp` real — docs/FORMAT-NOTES.md só confirma `BorderStyle`
+ * e `Width: =Parent.Width` nesse container. Um membro de enum fora do mapa
+ * (nome errado ou valor não previsto) cai no default do CSS em vez de
+ * quebrar o layout.
  */
-export function computeCanvasSize(root: ResolvedControl): { width: number; height: number } {
-  let maxRight = 0;
-  let maxBottom = 0;
-  for (const child of root.children) {
-    if (!hasDeclaredPosition(child)) continue;
-    const { right, bottom } = extent(child);
-    maxRight = Math.max(maxRight, right);
-    maxBottom = Math.max(maxBottom, bottom);
-  }
+export function autoLayoutStyle(layout: ResolvedAutoLayout): CSSProperties {
+  const direction = resolvedValue(layout.direction);
+  const align = resolvedValue(layout.align);
+  const justify = resolvedValue(layout.justify);
+
   return {
-    width: Math.max(MIN_CANVAS_WIDTH, maxRight + CANVAS_PADDING),
-    height: Math.max(MIN_CANVAS_HEIGHT, maxBottom + CANVAS_PADDING),
+    display: "flex",
+    flexDirection: direction === "Horizontal" ? "row" : "column",
+    flexWrap: direction === "Horizontal" ? "wrap" : undefined,
+    gap: resolvedValue(layout.gap),
+    alignItems: align ? ALIGN_ITEMS[align] : undefined,
+    justifyContent: justify ? JUSTIFY_CONTENT[justify] : undefined,
+    paddingTop: resolvedValue(layout.paddingTop),
+    paddingRight: resolvedValue(layout.paddingRight),
+    paddingBottom: resolvedValue(layout.paddingBottom),
+    paddingLeft: resolvedValue(layout.paddingLeft),
   };
 }

@@ -76,6 +76,14 @@ export type Expression = z.infer<typeof ExpressionSchema>;
 type ControlShape = {
   name: string;
   type: string;
+  /**
+   * Layout variant sibling to `Control:`/`Properties:` in the raw YAML (ex.
+   * "AutoLayout") — docs/FORMAT-NOTES.md seção 1.4: presente em todo
+   * container observado. Não é uma Expression (não é Power Fx, é metadado
+   * de layout do próprio Studio), por isso fica solto em vez de dentro de
+   * `properties`.
+   */
+  variant?: string | undefined;
   properties: Record<string, Expression>;
   children: ControlShape[];
 };
@@ -84,6 +92,7 @@ export const ControlSchema: z.ZodType<ControlShape> = z.lazy(() =>
   z.object({
     name: z.string(),
     type: z.string(),
+    variant: z.string().optional(),
     properties: z.record(z.string(), ExpressionSchema),
     children: z.array(ControlSchema),
   }),

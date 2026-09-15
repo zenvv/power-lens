@@ -95,6 +95,24 @@ describe("parseMsapp — control tree", () => {
     const navBarInstance = app.screens[0]?.root.children.find((c) => c.name === "NavBar1");
     expect(navBarInstance?.type).toBe("NavBar");
   });
+
+  it("captures a container's layout Variant (e.g. AutoLayout)", () => {
+    const doc = parseFixture();
+    const app = doc.artifacts.find((a) => a.kind === "canvasApp");
+    if (app?.kind !== "canvasApp") throw new Error("expected canvasApp artifact");
+
+    const header = app.screens[0]?.root.children.find((c) => c.name === "HeaderContainer");
+    expect(header?.variant).toBe("AutoLayout");
+  });
+
+  it("leaves variant undefined for a control that doesn't declare one", () => {
+    const doc = parseFixture();
+    const app = doc.artifacts.find((a) => a.kind === "canvasApp");
+    if (app?.kind !== "canvasApp") throw new Error("expected canvasApp artifact");
+
+    const title = app.screens[0]?.root.children[0]?.children[0];
+    expect(title?.variant).toBeUndefined();
+  });
 });
 
 describe("parseMsapp — properties as Expression", () => {
