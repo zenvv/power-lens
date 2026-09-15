@@ -4,7 +4,15 @@ import {
   renderMarkdown,
   type PowerLensDocument,
 } from "@power-lens/core";
-import { AppWindow, Database, FileText, LayoutDashboard, TriangleAlert, Workflow } from "lucide-react";
+import {
+  AppWindow,
+  Database,
+  FileText,
+  LayoutDashboard,
+  Sparkles,
+  TriangleAlert,
+  Workflow,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -24,6 +32,7 @@ import { MerView } from "@/components/mer/MerView";
 import { MeasuresPanel } from "@/components/mer/MeasuresPanel";
 import { DiagnosticsPanel } from "@/components/DiagnosticsPanel";
 import { WireframeView } from "@/components/wireframe/WireframeView";
+import { AiExplanationCard } from "@/components/ai/AiExplanationCard";
 
 type DocumentViewProps = {
   document: PowerLensDocument;
@@ -57,10 +66,12 @@ function ArtifactTabs<T extends { id: string; name: string }>({
   return (
     <Tabs defaultValue={items[0]!.id} className="gap-4">
       <div className="overflow-x-auto">
-        <TabsList className="w-max">
+        <TabsList variant={"line"} className="w-max">
           {items.map((item) => (
             <TabsTrigger key={item.id} value={item.id} title={item.name}>
-              <span className="max-w-48 truncate">{shortArtifactName(item.name)}</span>
+              <span className="max-w-48 truncate">
+                {shortArtifactName(item.name)}
+              </span>
             </TabsTrigger>
           ))}
         </TabsList>
@@ -101,7 +112,7 @@ function SidebarLink({
       className={cn(
         "flex items-center gap-2 rounded-lg px-3 py-2 text-left text-sm font-medium transition-colors",
         active
-          ? "bg-primary/10 text-primary"
+          ? "bg-sidebar-primary/20 text-sidebar-primary hover:bg-sidebar-accent"
           : "text-muted-foreground hover:bg-muted hover:text-foreground",
       )}
     >
@@ -214,158 +225,185 @@ export function DocumentView({ document }: DocumentViewProps) {
           icon={FileText}
           label="Documentação"
         />
+
+        <SidebarLink
+          active={activeSection === "ai"}
+          onClick={() => setActiveSection("ai")}
+          icon={Sparkles}
+          label="Explicação por IA"
+        />
       </nav>
 
       <div className="min-w-0 flex-1">
-      <Tabs value={activeSection} onValueChange={setActiveSection}>
-        <TabsContent value="summary" className="flex flex-col gap-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Resumo estrutural</CardTitle>
-              <CardDescription>
-                {document.source.detectedFormat} · {formatBytes(document.source.fileSize)} · analisado em{" "}
-                {new Date(document.source.parsedAt).toLocaleString("pt-BR")} · parser {document.source.parserVersion}
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="flex flex-wrap gap-6">
-              <div>
-                <p className="text-xl font-semibold">{document.artifacts.length}</p>
-                <p className="text-xs text-muted-foreground">artefato(s)</p>
-              </div>
-              <div>
-                <p className="text-xl font-semibold">{flows.length}</p>
-                <p className="text-xs text-muted-foreground">fluxo(s)</p>
-              </div>
-              <div>
-                <p className="text-xl font-semibold">{models.length}</p>
-                <p className="text-xs text-muted-foreground">modelo(s) de dados</p>
-              </div>
-              <div>
-                <p className="text-xl font-semibold">{canvasApps.length}</p>
-                <p className="text-xs text-muted-foreground">canvas app(s)</p>
-              </div>
-              <div>
-                <p className="text-xl font-semibold">{document.diagnostics.length}</p>
-                <p className="text-xs text-muted-foreground">
-                  diagnóstico(s) — {severityCounts.error} erro(s), {severityCounts.warning} aviso(s),{" "}
-                  {severityCounts.info} info
-                </p>
-              </div>
-            </CardContent>
-          </Card>
+        <Tabs value={activeSection} onValueChange={setActiveSection}>
+          <TabsContent value="summary" className="flex flex-col gap-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>Resumo estrutural</CardTitle>
+                <CardDescription>
+                  {document.source.detectedFormat} ·{" "}
+                  {formatBytes(document.source.fileSize)} · analisado em{" "}
+                  {new Date(document.source.parsedAt).toLocaleString("pt-BR")} ·
+                  parser {document.source.parserVersion}
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="flex flex-wrap gap-6">
+                <div>
+                  <p className="text-xl font-semibold">
+                    {document.artifacts.length}
+                  </p>
+                  <p className="text-xs text-muted-foreground">artefato(s)</p>
+                </div>
+                <div>
+                  <p className="text-xl font-semibold">{flows.length}</p>
+                  <p className="text-xs text-muted-foreground">fluxo(s)</p>
+                </div>
+                <div>
+                  <p className="text-xl font-semibold">{models.length}</p>
+                  <p className="text-xs text-muted-foreground">
+                    modelo(s) de dados
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xl font-semibold">{canvasApps.length}</p>
+                  <p className="text-xs text-muted-foreground">canvas app(s)</p>
+                </div>
+                <div>
+                  <p className="text-xl font-semibold">
+                    {document.diagnostics.length}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    diagnóstico(s) — {severityCounts.error} erro(s),{" "}
+                    {severityCounts.warning} aviso(s), {severityCounts.info}{" "}
+                    info
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Exportar</CardTitle>
-              <CardDescription>Tudo gerado no navegador, nada sai da sua máquina.</CardDescription>
-            </CardHeader>
-            <CardContent className="flex flex-wrap gap-2">
-              <Button onClick={onDownloadMarkdown}>Baixar documentação (.md)</Button>
-              <Button variant="secondary" onClick={onDownloadIr}>
-                Baixar IR (ir.json)
-              </Button>
-              <Button variant="secondary" onClick={onDownloadContextPack}>
-                Baixar pacote de contexto (.zip)
-              </Button>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {flows.length > 0 && (
-          <TabsContent value="flows">
-            <ArtifactTabs items={flows}>
-              {(flow) => (
-                <Card>
-                  <CardHeader>
-                    <CardTitle>{shortArtifactName(flow.name)}</CardTitle>
-                    <CardDescription>
-                      Gatilho: {flow.trigger.name} · {flow.actions.length} ação(ões) ·
-                      role a roda pra dar zoom, clique nos grupos pra recolher
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <FlowDagView flow={flow} />
-                  </CardContent>
-                </Card>
-              )}
-            </ArtifactTabs>
+            <Card>
+              <CardHeader>
+                <CardTitle>Exportar</CardTitle>
+                <CardDescription>
+                  Tudo gerado no navegador, nada sai da sua máquina.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="flex flex-wrap gap-2">
+                <Button onClick={onDownloadMarkdown}>
+                  Baixar documentação (.md)
+                </Button>
+                <Button variant="secondary" onClick={onDownloadIr}>
+                  Baixar IR (ir.json)
+                </Button>
+                <Button variant="secondary" onClick={onDownloadContextPack}>
+                  Baixar pacote de contexto (.zip)
+                </Button>
+              </CardContent>
+            </Card>
           </TabsContent>
-        )}
 
-        {models.length > 0 && (
-          <TabsContent value="models">
-            <ArtifactTabs items={models}>
-              {(model) => (
-                <Card>
-                  <CardHeader>
-                    <CardTitle>{shortArtifactName(model.name)}</CardTitle>
-                    <CardDescription>
-                      {model.tables.length} tabela(s) · {model.relationships.length}{" "}
-                      relacionamento(s) · {model.measures.length} medida(s) · role a
-                      roda pra dar zoom, clique no cabeçalho da tabela pra recolher as
-                      colunas, arraste pra reorganizar (posição fica salva)
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="flex flex-col gap-4 lg:flex-row">
-                    <div className="min-w-0 flex-1">
-                      <MerView model={model} />
-                    </div>
-                    <div className="h-[70vh] w-full shrink-0 rounded-lg border lg:w-70">
-                      <MeasuresPanel measures={model.measures} />
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
-            </ArtifactTabs>
+          {flows.length > 0 && (
+            <TabsContent value="flows">
+              <ArtifactTabs items={flows}>
+                {(flow) => (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>{shortArtifactName(flow.name)}</CardTitle>
+                      <CardDescription>
+                        Gatilho: {flow.trigger.name} · {flow.actions.length}{" "}
+                        ação(ões) · role a roda pra dar zoom, clique nos grupos
+                        pra recolher
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <FlowDagView flow={flow} />
+                    </CardContent>
+                  </Card>
+                )}
+              </ArtifactTabs>
+            </TabsContent>
+          )}
+
+          {models.length > 0 && (
+            <TabsContent value="models">
+              <ArtifactTabs items={models}>
+                {(model) => (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>{shortArtifactName(model.name)}</CardTitle>
+                      <CardDescription>
+                        {model.tables.length} tabela(s) ·{" "}
+                        {model.relationships.length} relacionamento(s) ·{" "}
+                        {model.measures.length} medida(s) · role a roda pra dar
+                        zoom, clique no cabeçalho da tabela pra recolher as
+                        colunas, arraste pra reorganizar (posição fica salva)
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="flex flex-col gap-4 lg:flex-row">
+                      <div className="min-w-0 flex-1">
+                        <MerView model={model} />
+                      </div>
+                      <div className="h-[70vh] w-full shrink-0 rounded-lg border lg:w-70">
+                        <MeasuresPanel measures={model.measures} />
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+              </ArtifactTabs>
+            </TabsContent>
+          )}
+
+          {canvasApps.length > 0 && (
+            <TabsContent value="apps">
+              <ArtifactTabs items={canvasApps}>
+                {(app) => (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>{shortArtifactName(app.name)}</CardTitle>
+                      <CardDescription>
+                        Blueprint estático por tela — valores
+                        literais/aritmética constante são resolvidos, o resto
+                        vira placeholder tracejado marcado como dinâmico. Não é
+                        uma simulação fiel do app rodando.
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <WireframeView app={app} />
+                    </CardContent>
+                  </Card>
+                )}
+              </ArtifactTabs>
+            </TabsContent>
+          )}
+
+          {document.diagnostics.length > 0 && (
+            <TabsContent value="diagnostics">
+              <DiagnosticsPanel diagnostics={document.diagnostics} />
+            </TabsContent>
+          )}
+
+          <TabsContent value="docs">
+            <Card>
+              <CardHeader>
+                <CardTitle>Documentação gerada</CardTitle>
+                <CardDescription>
+                  Exportação Markdown determinística, sem IA.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ScrollArea className="h-[65vh] rounded-lg border bg-muted/30 p-4">
+                  <pre className="font-mono text-sm whitespace-pre-wrap">
+                    {markdown}
+                  </pre>
+                </ScrollArea>
+              </CardContent>
+            </Card>
           </TabsContent>
-        )}
 
-        {canvasApps.length > 0 && (
-          <TabsContent value="apps">
-            <ArtifactTabs items={canvasApps}>
-              {(app) => (
-                <Card>
-                  <CardHeader>
-                    <CardTitle>{shortArtifactName(app.name)}</CardTitle>
-                    <CardDescription>
-                      Blueprint estático por tela — valores literais/aritmética
-                      constante são resolvidos, o resto vira placeholder tracejado
-                      marcado como dinâmico. Não é uma simulação fiel do app rodando.
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <WireframeView app={app} />
-                  </CardContent>
-                </Card>
-              )}
-            </ArtifactTabs>
+          <TabsContent value="ai">
+            <AiExplanationCard document={document} />
           </TabsContent>
-        )}
-
-        {document.diagnostics.length > 0 && (
-          <TabsContent value="diagnostics">
-            <DiagnosticsPanel diagnostics={document.diagnostics} />
-          </TabsContent>
-        )}
-
-        <TabsContent value="docs">
-          <Card>
-            <CardHeader>
-              <CardTitle>Documentação gerada</CardTitle>
-              <CardDescription>
-                Exportação Markdown determinística, sem IA.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <ScrollArea className="h-[65vh] rounded-lg border bg-muted/30 p-4">
-                <pre className="font-mono text-sm whitespace-pre-wrap">
-                  {markdown}
-                </pre>
-              </ScrollArea>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+        </Tabs>
       </div>
     </div>
   );

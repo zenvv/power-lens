@@ -4,7 +4,13 @@ import { renderMarkdown } from "./markdown/index.js";
 
 const encoder = new TextEncoder();
 
-function buildPromptMd(document: PowerLensDocument): string {
+/**
+ * Exportado (não só usado internamente por `buildContextPack`) pra o BYOK
+ * (spec seção 9) reusar exatamente as mesmas instruções — a chamada
+ * automática ao provedor é só a versão automatizada de "cole PROMPT.md e
+ * ir.json num LLM".
+ */
+export function buildPromptMd(document: PowerLensDocument): string {
   return `# Instruções para o LLM
 
 Você recebeu um pacote de contexto gerado pelo Power Lens sobre o arquivo
