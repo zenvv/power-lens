@@ -25,6 +25,19 @@ export function readText(entries: Record<string, Uint8Array>, path: string): str
   return data ? decoder.decode(data) : undefined;
 }
 
+/**
+ * DataModelSchema, Report/Layout, Metadata e Settings dentro de um .pbit são
+ * texto UTF-16LE sem BOM, não UTF-8 (docs/FORMAT-NOTES.md seção 6) — decodificar
+ * com o decoder padrão produz um byte 0x00 intercalado em cada caractere ASCII
+ * e quebra o JSON.parse.
+ */
+const utf16leDecoder = new TextDecoder("utf-16le");
+
+export function readUtf16LEText(entries: Record<string, Uint8Array>, path: string): string | undefined {
+  const data = entries[path];
+  return data ? utf16leDecoder.decode(data) : undefined;
+}
+
 export function hasDirectMsappShape(entries: Record<string, Uint8Array>): boolean {
   return (
     Object.keys(entries).some((path) => /^Src\/.*\.pa\.yaml$/i.test(path)) ||

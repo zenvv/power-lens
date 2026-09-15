@@ -482,3 +482,86 @@ Registrando aqui para a fase de implementação do IR (Prompt 3), sem escrever c
   `.msapp` real de tamanho não-trivial.
 - Normalizar separador de path (`\` vs `/`) ao procurar entradas dentro de qualquer zip
   (`.msapp`, solution, export avulso) — o CMPA precisou disso, não é hipotético.
+
+---
+
+## 6. `.pbit` — achados do início da Fase 3 (arquivo real inspecionado)
+
+> A seção 4, pergunta 15 dizia que não havia nenhum fato disponível sobre Power BI. O
+> usuário forneceu um `.pbit` real (`reference/pbi-file-example.pbit`, gitignored) que foi
+> inspecionado diretamente (unzip + decode manual) antes de escrever qualquer código.
+> Complementado com a documentação oficial de TMSL/TOM da Microsoft para os campos que o
+> arquivo de exemplo não exercitava (relacionamentos sem cardinalidade/cross-filter
+> explícitos). Convenção: **[FATO]** = visto no arquivo real. **[DOC]** = confirmado na
+> documentação oficial da Microsoft, não neste arquivo. **[LACUNA]** = ainda não verificado.
+
+**[FATO]** Um `.pbit` é um zip comum (assinatura `PK`), sem wrapper externo (diferente do
+`.msapp` via Studio). Entradas de topo observadas: `Connections`, `DataModelSchema`,
+`DiagramLayout`, `Metadata`, `Report/Layout`, `SecurityBindings`, `Settings`, `Version`,
+`[Content_Types].xml`.
+
+**[FATO]** `DataModelSchema` e `Report/Layout` (e também `Metadata`/`Settings`) **não são
+UTF-8** — são texto **UTF-16LE sem BOM**. `Connections` e `Version` são UTF-8/ASCII normais
+(`Version` é só o texto `"1.28"`). Decodificar com `new TextDecoder("utf-16le")` funciona
+tanto em Node quanto no browser (testado nos dois antes de escrever o parser) — não precisa
+de nenhuma lib extra. Ignorar esse detalhe faz `JSON.parse` falhar silenciosamente ou
+produzir lixo (cada char ASCII vira 2 bytes, um deles `0x00`).
+
+**[FATO]** `DataModelSchema` é TMSL (`{ name, compatibilityLevel, model: {...} }`), onde
+`name` é um GUID interno (não um nome amigável — o parser usa o nome do arquivo pra
+`DataModel.name` e o GUID pra `DataModel.id`). `model.tables[]` tem `name`, `lineageTag`,
+`columns[]`, `partitions[]`, `annotations[]`, e opcionalmente `measures[]` e `isHidden`.
+
+**[FATO]** Colunas normais não têm campo `type`; colunas calculadas têm `type: "calculated"`
+mais um campo `expression`. `isCalculated` no IR = `column.type === "calculated"`.
+
+**[FATO — importante, pegou o parser de surpresa]** O campo `expression` (em `measures[]`,
+em colunas calculadas, e em `partitions[].source.expression` para partições M) é **ora uma
+string única, ora um array de strings, uma por linha** — o serializador do Power BI Desktop
+escolhe o formato conforme o número de linhas da fórmula (confirmado: `"YEAR([Date])"` veio
+como string simples; um DAX de 6 linhas e um M de 30+ linhas vieram como array). Todo lugar
+que lê `expression` precisa tratar os dois casos e juntar o array com `"\n"`.
+
+**[FATO]** Medidas (`measures[]`) ficam dentro de cada tabela (`model.tables[].measures`),
+não em uma lista separada no nível do modelo — bate com a spec seção 5 (`Measure.table`).
+
+**[FATO]** O Power BI Desktop cria automaticamente tabelas de data ocultas
+(`LocalDateTable_<guid>`, `DateTableTemplate_<guid>`) e os relacionamentos correspondentes
+quando "Auto date/time" está ligado, uma por coluna de data/hora usada em um visual. Elas
+aparecem no TMSL como tabelas normais com `isHidden: true` — o parser não as filtra (o IR
+reflete o modelo real; esconder isso seria decisão de renderer/health-check, não de parser).
+No arquivo de exemplo, 6 das 10 tabelas eram desse tipo.
+
+**[FATO]** Nenhum relacionamento do arquivo de exemplo tinha `fromCardinality`,
+`toCardinality`, `crossFilteringBehavior` ou `isActive` explícitos — todos eram
+relacionamentos automáticos de data (`joinOnDateBehavior: "datePartOnly"` apenas). Os
+defaults abaixo vêm da documentação oficial, não deste arquivo:
+
+**[DOC]** `fromCardinality`/`toCardinality` — enum `"none" | "one" | "many"`. Quando
+omitidos, o padrão observado na prática (e usado pelo parser) é `from: "many"`, `to: "one"`
+— bate com os 6 relacionamentos do arquivo de exemplo, que são todos muitos-para-um em
+direção à tabela de data. `crossFilteringBehavior` — enum `"oneDirection" | "bothDirections"
+| "automatic"`, default `"automatic"` quando omitido (mapeado para `"single"` no IR — é o
+comportamento mais comum na prática; `"automatic"` deixa o engine decidir, então essa
+tradução é uma aproximação, registrada como tal no parser). `isActive` — default `true`
+quando omitido. Fonte:
+https://learn.microsoft.com/analysis-services/tmsl/relationships-object-tmsl
+
+**[LACUNA]** Nenhum relacionamento `manyToMany`, `oneToOne` explícito ou com
+`crossFilteringBehavior`/`isActive` setados manualmente foi visto em um arquivo real — só
+testado com fixture sintética. Revisitar se um `.pbit` real com esses casos aparecer.
+
+**[LACUNA]** `.pbip` não foi tocado nesta fase — é uma pasta de projeto (`.Report/` +
+`.SemanticModel/` como pastas irmãs do `.pbip`), não um único zip, então precisa de uma
+estratégia de upload diferente na UI (múltiplos arquivos/pasta) antes de fazer sentido
+escrever o parser. Fica para um incremento futuro.
+
+**[LACUNA]** `Report/Layout` (também UTF-16LE) tem `sections[]` com `visualContainers[]` —
+dá pra ver que é a fonte do futuro `Report`/`Visual` do IR, mas não foi mapeado agora
+(escopo desta fase é só `DataModel`). `Metadata`, `Settings`, `DiagramLayout`,
+`SecurityBindings` não foram investigados a fundo — não pareceram necessários pro `DataModel`.
+
+**[LACUNA]** `.pbix` não foi verificado — a spec (seção 6) já assume que `Report/Layout` e
+`DataMashup` são legíveis nele e que o `DataModel` é inacessível (Xpress9). Nada neste
+arquivo `.pbit` confirma ou contradiz isso; seguirá como suposição até um `.pbix` real
+aparecer.

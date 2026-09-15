@@ -1,0 +1,81 @@
+{
+  "name": "11111111-2222-3333-4444-555555555555",
+  "compatibilityLevel": 1567,
+  "model": {
+    "culture": "pt-BR",
+    "tables": [
+      {
+        "name": "Customers",
+        "columns": [
+          { "name": "CustomerId", "dataType": "int64" },
+          { "name": "Name", "dataType": "string" }
+        ],
+        "partitions": [
+          {
+            "name": "Customers",
+            "source": {
+              "type": "m",
+              "expression": [
+                "let",
+                "    Source = Sql.Database(\"server\", \"db\")",
+                "in",
+                "    Source"
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "name": "Sales",
+        "columns": [
+          { "name": "CustomerId", "dataType": "int64" },
+          { "name": "Amount", "dataType": "double" },
+          {
+            "name": "AmountRounded",
+            "dataType": "int64",
+            "type": "calculated",
+            "expression": "ROUND([Amount], 0)"
+          }
+        ],
+        "measures": [
+          {
+            "name": "Total Amount",
+            "formatString": "0.00",
+            "expression": ["", "SUM(", "    Sales[Amount]", ")"]
+          }
+        ],
+        "partitions": [
+          {
+            "name": "Sales",
+            "source": { "type": "m", "expression": "let\n    Source = Sql.Database(\"server\", \"db\")\nin\n    Source" }
+          }
+        ]
+      },
+      {
+        "name": "LocalDateTable_hidden",
+        "isHidden": true,
+        "columns": [{ "name": "Date", "dataType": "dateTime" }]
+      }
+    ],
+    "relationships": [
+      {
+        "name": "rel-default",
+        "fromTable": "Sales",
+        "fromColumn": "CustomerId",
+        "toTable": "Customers",
+        "toColumn": "CustomerId"
+      },
+      {
+        "name": "rel-one-to-many-both-inactive",
+        "fromTable": "Customers",
+        "fromColumn": "CustomerId",
+        "toTable": "Sales",
+        "toColumn": "CustomerId",
+        "fromCardinality": "one",
+        "toCardinality": "many",
+        "crossFilteringBehavior": "bothDirections",
+        "isActive": false
+      }
+    ]
+  }
+}

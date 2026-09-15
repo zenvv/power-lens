@@ -63,14 +63,41 @@ describe("analyzeFile", () => {
   });
 
   it("flags a detected-but-unimplemented format instead of throwing", async () => {
-    // A zip with no recognizable internal signature falls back to the file
-    // extension (detectFormat's PL203 path) rather than to "undefined".
-    const zipBytes = zipSync({ "readme.txt": new TextEncoder().encode("hello") });
-    const file = new File([zipBytes], "report.pbit", { type: "application/octet-stream" });
+    // A zip containing "DataModel" (not "DataModelSchema") is detected as
+    // .pbix (detect.ts), which has no parser yet — unlike .pbit, whose
+    // DataModelSchema is readable (parsePbit).
+    const zipBytes = zipSync({ DataModel: new TextEncoder().encode("(binário Xpress9, fora de alcance)") });
+    const file = new File([zipBytes], "report.pbix", { type: "application/octet-stream" });
     const result = await analyzeFile(file);
     expect(result.status).toBe("parsed");
     if (result.status !== "parsed") return;
-    expect(result.document.source.detectedFormat).toBe("pbit");
+    expect(result.document.source.detectedFormat).toBe("pbix");
     expect(result.document.diagnostics.some((d) => d.code === "PL210")).toBe(true);
+  });
+
+  it("detects and parses a .pbit's DataModelSchema end to end", async () => {
+    const schemaText = readFileSync(
+      resolve(__dirname, "../../../fixtures/synthetic/pbit-minimal/DataModelSchema.json"),
+      "utf-8",
+    );
+    const utf16le = new Uint8Array(schemaText.length * 2);
+    for (let i = 0; i < schemaText.length; i++) {
+      const code = schemaText.charCodeAt(i);
+      utf16le[i * 2] = code & 0xff;
+      utf16le[i * 2 + 1] = (code >> 8) & 0xff;
+    }
+    const zipBytes = zipSync({ DataModelSchema: utf16le });
+    const file = new File([zipBytes], "Sample.pbit", { type: "application/octet-stream" });
+
+    const result = await analyzeFile(file);
+
+    expect(result.status).toBe("parsed");
+    if (result.status !== "parsed") return;
+    expect(result.document.source.detectedFormat).toBe("pbit");
+    const model = result.document.artifacts.find((a) => a.kind === "dataModel");
+    expect(model?.kind).toBe("dataModel");
+    if (model?.kind === "dataModel") {
+      expect(model.tables.map((t) => t.name)).toContain("Sales");
+    }
   });
 });

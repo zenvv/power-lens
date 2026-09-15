@@ -3,6 +3,7 @@ import {
   detectFormat,
   parseFlow,
   parseMsapp,
+  parsePbit,
   parseSolution,
   type Diagnostic,
   type PowerLensDocument,
@@ -42,6 +43,12 @@ export async function analyzeFile(file: File): Promise<AnalysisResult> {
 
   if (detection.format === "flow") {
     const document = parseFlow(bytes, source);
+    document.diagnostics = [...detection.diagnostics, ...document.diagnostics];
+    return { status: "parsed", document };
+  }
+
+  if (detection.format === "pbit") {
+    const document = parsePbit(bytes, source);
     document.diagnostics = [...detection.diagnostics, ...document.diagnostics];
     return { status: "parsed", document };
   }
