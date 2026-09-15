@@ -11,6 +11,7 @@
  * sorteio de conceito.
  */
 import { useCallback, useState } from "react";
+import { AnimatePresence } from "motion/react";
 import Navbar from "./components/nav/Navbar.js";
 import { Sidebar, type SectionId } from "./components/nav/Sidebar.js";
 import { HomeSection } from "./components/HomeSection.js";
@@ -19,6 +20,16 @@ import { ConfirmDialog } from "./components/ConfirmDialog.js";
 import { analyzeFile } from "./lib/analyze.js";
 import type { AppState } from "./lib/app-state.js";
 
+/** Piso artificial pro estado de loading — parsing real costuma terminar em
+ * poucos ms, mas um flash instantâneo lê como "não fez nada". Decisão de
+ * design otimista (ver docs/changelog), não uma tentativa de esconder que é
+ * rápido: as etapas mostradas continuam sendo as reais do pipeline. */
+const MIN_LOADING_MS = 1000;
+
+function wait(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 export function App() {
   const [state, setState] = useState<AppState>({ status: "idle" });
   const [activeSection, setActiveSection] = useState<SectionId>("home");
@@ -26,9 +37,16 @@ export function App() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const onFile = useCallback((file: File) => {
-    setState({ status: "loading", fileName: file.name });
-    analyzeFile(file)
-      .then((result) => {
+    setState({ status: "loading", fileName: file.name, stage: "Detectando formato do arquivo" });
+    const startedAt = performance.now();
+
+    analyzeFile(file, {
+      onStage: (stage) => setState((s) => (s.status === "loading" ? { ...s, stage } : s)),
+    })
+      .then(async (result) => {
+        const elapsed = performance.now() - startedAt;
+        if (elapsed < MIN_LOADING_MS) await wait(MIN_LOADING_MS - elapsed);
+
         if (result.status === "unrecognized") {
           setState({ status: "unrecognized", fileName: result.fileName, diagnostics: result.diagnostics });
           setActiveSection("home");
@@ -63,24 +81,33 @@ export function App() {
   }, [state.status]);
 
   const document = state.status === "parsed" ? state.result.document : null;
+  /** A tela de upload (idle) é o único momento sem navegação lateral — assim
+   * que algo começa a acontecer (loading, erro, documento) a navegação passa
+   * a fazer sentido e desliza pra dentro. */
+  const showSidebar = state.status !== "idle";
 
   return (
     <main className="flex h-screen flex-col bg-background text-foreground">
       <Navbar
         document={document}
+        showSidebarToggle={showSidebar}
         onOpenDiagnostics={() => setActiveSection("diagnostics")}
         onToggleSidebar={() => setSidebarOpen((v) => !v)}
       />
 
       <div className="flex min-h-0 flex-1">
-        <Sidebar
-          document={document}
-          activeSection={activeSection}
-          onSectionChange={setActiveSection}
-          onRequestImport={onRequestImport}
-          mobileOpen={sidebarOpen}
-          onMobileClose={() => setSidebarOpen(false)}
-        />
+        <AnimatePresence>
+          {showSidebar && (
+            <Sidebar
+              document={document}
+              activeSection={activeSection}
+              onSectionChange={setActiveSection}
+              onRequestImport={onRequestImport}
+              mobileOpen={sidebarOpen}
+              onMobileClose={() => setSidebarOpen(false)}
+            />
+          )}
+        </AnimatePresence>
 
         <div className="min-w-0 flex-1 overflow-y-auto">
           <div className="mx-auto flex w-full max-w-[1600px] flex-1 flex-col px-6 py-6">

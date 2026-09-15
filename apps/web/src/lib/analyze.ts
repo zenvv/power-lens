@@ -14,6 +14,19 @@ export type AnalysisResult =
   | { status: "unrecognized"; fileName: string; diagnostics: Diagnostic[] }
   | { status: "parsed"; document: PowerLensDocument };
 
+const FORMAT_LABEL: Record<string, string> = {
+  msapp: "app canvas (.msapp)",
+  solution: "solution (.zip)",
+  flow: "definição de flow",
+  pbit: ".pbit/.pbip",
+};
+
+type AnalyzeOptions = {
+  /** Rótulo da etapa real do pipeline em andamento — usado pela UI de
+   * loading pra mostrar o que está acontecendo, não um progresso fabricado. */
+  onStage?: (label: string) => void;
+};
+
 /**
  * Bridges a dropped File to the core pipeline (detect -> parser -> health
  * check). This is the only place in apps/web allowed to touch file
@@ -22,7 +35,9 @@ export type AnalysisResult =
  * they see the final, fully-assembled document regardless of which parser
  * produced it (spec seção 7: as regras são funções puras sobre o IR).
  */
-export async function analyzeFile(file: File): Promise<AnalysisResult> {
+export async function analyzeFile(file: File, options: AnalyzeOptions = {}): Promise<AnalysisResult> {
+  const { onStage } = options;
+  onStage?.("Detectando formato do arquivo");
   const buffer = await file.arrayBuffer();
   const bytes = new Uint8Array(buffer);
 
@@ -31,6 +46,7 @@ export async function analyzeFile(file: File): Promise<AnalysisResult> {
     return { status: "unrecognized", fileName: file.name, diagnostics: detection.diagnostics };
   }
 
+  onStage?.(`Lendo estrutura do ${FORMAT_LABEL[detection.format] ?? detection.format}`);
   const source = { fileName: file.name, fileSize: file.size };
 
   let document: PowerLensDocument;
@@ -58,6 +74,7 @@ export async function analyzeFile(file: File): Promise<AnalysisResult> {
       ];
   }
 
+  onStage?.("Verificando integridade");
   document.diagnostics = [...detection.diagnostics, ...document.diagnostics, ...runHealthChecks(document)];
   return { status: "parsed", document };
 }

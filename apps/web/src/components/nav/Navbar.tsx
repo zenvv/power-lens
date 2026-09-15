@@ -7,6 +7,9 @@ import { FormatIcon } from "./FormatIcon";
 
 type NavbarProps = {
   document?: PowerLensDocument | null;
+  /** A navegação lateral não existe ainda na tela de upload — sem ela, o
+   * botão de hambúrguer (só visível em mobile) não teria o que abrir. */
+  showSidebarToggle: boolean;
   onOpenDiagnostics: () => void;
   onToggleSidebar: () => void;
 };
@@ -14,18 +17,20 @@ type NavbarProps = {
 /** Barra superior fixa do app. Só identidade e status aqui — a ação de
  * trocar de arquivo mora na navegação lateral (item "Importar arquivo",
  * com confirmação), pra não duplicar o mesmo comando em dois lugares. */
-function Navbar({ document, onOpenDiagnostics, onToggleSidebar }: NavbarProps) {
+function Navbar({ document, showSidebarToggle, onOpenDiagnostics, onToggleSidebar }: NavbarProps) {
   return (
     <div className="flex h-12 w-full shrink-0 items-center gap-3 border-b bg-background px-4">
-      <Button
-        variant="ghost"
-        size="icon"
-        className="md:hidden"
-        aria-label="Abrir navegação"
-        onClick={onToggleSidebar}
-      >
-        <Menu />
-      </Button>
+      {showSidebarToggle && (
+        <Button
+          variant="ghost"
+          size="icon"
+          className="md:hidden"
+          aria-label="Abrir navegação"
+          onClick={onToggleSidebar}
+        >
+          <Menu />
+        </Button>
+      )}
 
       <div className="flex shrink-0 items-center gap-2">
         <SearchSparkleColor className="size-5" />

@@ -1,5 +1,6 @@
 import { useCallback, useRef, useState } from "react";
-import { UploadCloud } from "lucide-react";
+import { FileText } from "lucide-react";
+import { motion } from "motion/react";
 import { cn } from "@/lib/utils";
 
 type DropzoneProps = {
@@ -7,6 +8,10 @@ type DropzoneProps = {
   disabled?: boolean;
 };
 
+/** Alvo central de import — sem borda de nenhum tipo (o convite é o próprio
+ * ícone + texto flutuando no meio do OrbitField, não uma caixa). O feedback
+ * de "solte aqui" é um halo suave que aparece atrás do ícone, não uma borda
+ * mudando de cor. */
 export function Dropzone({ onFile, disabled }: DropzoneProps) {
   const [isDragging, setIsDragging] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -48,10 +53,10 @@ export function Dropzone({ onFile, disabled }: DropzoneProps) {
       role="button"
       tabIndex={0}
       aria-disabled={disabled}
+      aria-label="Solte um arquivo ou clique para escolher"
       className={cn(
-        "flex w-[min(480px,90vw)] flex-col items-center gap-3 rounded-xl border-2 border-dashed px-8 py-12 text-center transition-colors",
-        isDragging ? "border-primary bg-primary/5" : "border-border",
-        disabled ? "cursor-wait opacity-60" : "cursor-pointer hover:border-primary/60",
+        "relative z-10 flex flex-col items-center gap-3 rounded-2xl px-8 py-6 text-center outline-none",
+        disabled ? "cursor-wait" : "cursor-pointer",
       )}
     >
       <input
@@ -62,11 +67,28 @@ export function Dropzone({ onFile, disabled }: DropzoneProps) {
         className="hidden"
         disabled={disabled}
       />
-      <UploadCloud className="size-8 text-muted-foreground" />
-      <p className="text-sm text-muted-foreground">
+
+      <div className="relative flex size-16 items-center justify-center">
+        <motion.div
+          className="absolute inset-0 rounded-full bg-primary/25 blur-md"
+          animate={
+            isDragging
+              ? { scale: 1.35, opacity: 0.7 }
+              : { scale: [1, 1.16, 1], opacity: [0.28, 0, 0.28] }
+          }
+          transition={
+            isDragging
+              ? { duration: 0.2 }
+              : { duration: 2.8, repeat: Infinity, ease: "easeInOut" }
+          }
+        />
+        <FileText className="relative size-8 text-foreground/70" strokeWidth={1.5} />
+      </div>
+
+      <p className="max-w-56 text-sm text-muted-foreground">
         {disabled
-          ? "Analisando..."
-          : "Solte um arquivo .msapp, solution .zip, .pbit ou .pbip aqui, ou clique para escolher"}
+          ? "Recebendo o arquivo..."
+          : "Solte um .msapp, solution .zip, .pbit ou .pbip aqui, ou clique para escolher"}
       </p>
     </div>
   );
