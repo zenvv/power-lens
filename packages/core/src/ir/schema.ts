@@ -121,6 +121,15 @@ export type Component = z.infer<typeof ComponentSchema>;
 export const DataSourceSchema = z.object({
   name: z.string(),
   type: z.string(),
+  /**
+   * Slug do conector (ex.: "sharepointonline", "sql") extraído do `ApiId`
+   * bruto (`/providers/microsoft.powerapps/apis/shared_sql`) — `type` sozinho
+   * não distingue o conector real, só a categoria genérica
+   * ("ConnectedDataSourceInfo" pra praticamente toda conexão real). Adicionado
+   * pra dar à futura regra PL009 (conector premium) um dado que o IR não
+   * tinha. Ausente quando o `.msapp` não trouxer `ApiId`.
+   */
+  connectorId: z.string().optional(),
 });
 export type DataSource = z.infer<typeof DataSourceSchema>;
 

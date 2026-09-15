@@ -5,6 +5,17 @@ import { readText } from "../zip.js";
 const DATA_SOURCES_PATH = "References/DataSources.json";
 
 /**
+ * `ApiId` bruto é algo como "/providers/microsoft.powerapps/apis/shared_sql"
+ * (docs/FORMAT-NOTES.md seção 1.6) — extrai só o slug do conector
+ * ("sql"), sem o prefixo "shared_" nem o resto do path.
+ */
+function extractConnectorId(apiId: string | undefined): string | undefined {
+  if (!apiId) return undefined;
+  const match = /\/apis\/(?:shared_)?([^/]+)$/i.exec(apiId);
+  return match?.[1]?.toLowerCase();
+}
+
+/**
  * References/DataSources.json is a flat list mixing real connected data
  * sources with Cloud Flow references ("ServiceInfo") and design-time sample
  * data ("StaticDataSourceInfo") — docs/FORMAT-NOTES.md section 1.6. Only
@@ -36,7 +47,8 @@ export function parseDataSources(entries: Record<string, Uint8Array>, diagnostic
     if (!entry.Name || entry.Type === "ServiceInfo" || entry.Type === "StaticDataSourceInfo") {
       continue;
     }
-    result.push({ name: entry.Name, type: entry.Type ?? "Unknown" });
+    const connectorId = extractConnectorId(entry.ApiId);
+    result.push({ name: entry.Name, type: entry.Type ?? "Unknown", ...(connectorId ? { connectorId } : {}) });
   }
   return result;
 }

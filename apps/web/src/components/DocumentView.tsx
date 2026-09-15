@@ -1,24 +1,17 @@
 import { useMemo } from "react";
-import { buildContextPack, renderMarkdown, type Diagnostic, type PowerLensDocument } from "@power-lens/core";
-import { Badge } from "@/components/ui/badge";
+import { buildContextPack, renderMarkdown, type PowerLensDocument } from "@power-lens/core";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Separator } from "@/components/ui/separator";
 import { downloadBytes } from "@/lib/download";
 import { FlowDagView } from "@/components/flow/FlowDagView";
 import { MerView } from "@/components/mer/MerView";
 import { MeasuresPanel } from "@/components/mer/MeasuresPanel";
+import { DiagnosticsPanel } from "@/components/DiagnosticsPanel";
 
 type DocumentViewProps = {
   document: PowerLensDocument;
   onReset: () => void;
-};
-
-const SEVERITY_VARIANT: Record<Diagnostic["severity"], "destructive" | "secondary" | "outline"> = {
-  error: "destructive",
-  warning: "secondary",
-  info: "outline",
 };
 
 export function DocumentView({ document, onReset }: DocumentViewProps) {
@@ -100,29 +93,7 @@ export function DocumentView({ document, onReset }: DocumentViewProps) {
         </Card>
       ))}
 
-      {document.diagnostics.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Diagnósticos</CardTitle>
-            <CardDescription>Problemas estruturais encontrados durante a análise.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <ul className="flex flex-col gap-3">
-              {document.diagnostics.map((diagnostic, index) => (
-                <li key={`${diagnostic.code}-${index}`}>
-                  <div className="flex items-center gap-2">
-                    <Badge variant={SEVERITY_VARIANT[diagnostic.severity]}>{diagnostic.severity}</Badge>
-                    <span className="font-mono text-xs text-muted-foreground">{diagnostic.code}</span>
-                  </div>
-                  <p className="mt-1 text-sm">{diagnostic.message}</p>
-                  {diagnostic.path && <p className="mt-0.5 text-xs text-muted-foreground">{diagnostic.path}</p>}
-                  {index < document.diagnostics.length - 1 && <Separator className="mt-3" />}
-                </li>
-              ))}
-            </ul>
-          </CardContent>
-        </Card>
-      )}
+      <DiagnosticsPanel diagnostics={document.diagnostics} />
 
       <Card>
         <CardHeader>

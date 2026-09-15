@@ -174,7 +174,9 @@ describe("parseMsapp — data sources", () => {
     const app = doc.artifacts.find((a) => a.kind === "canvasApp");
     if (app?.kind !== "canvasApp") throw new Error("expected canvasApp artifact");
 
-    expect(app.dataSources).toEqual([{ name: "Pedidos", type: "ConnectedDataSourceInfo" }]);
+    expect(app.dataSources).toEqual([
+      { name: "Pedidos", type: "ConnectedDataSourceInfo", connectorId: "sharepointonline" },
+    ]);
   });
 });
 
