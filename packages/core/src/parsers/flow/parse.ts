@@ -84,6 +84,7 @@ export function parseFlow(bytes: Uint8Array, source: FlowSource): PowerLensDocum
         ...(extractConnectorName(firstTrigger[1].inputs)
           ? { connectorName: extractConnectorName(firstTrigger[1].inputs) }
           : {}),
+        ...(firstTrigger[1].inputs !== undefined ? { inputs: firstTrigger[1].inputs } : {}),
       }
     : { id: "(sem gatilho)", name: "(sem gatilho)", type: "Unknown", runAfter: [] };
 

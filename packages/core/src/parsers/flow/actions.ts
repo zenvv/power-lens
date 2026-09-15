@@ -40,6 +40,7 @@ function buildNode(id: string, action: RawAction, parentId: string | undefined, 
     ...(branch ? { branch } : {}),
     ...(connectorName ? { connectorName } : {}),
     ...(action.description ? { summary: action.description } : {}),
+    ...(action.inputs !== undefined ? { inputs: action.inputs } : {}),
   };
 }
 

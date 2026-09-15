@@ -22,6 +22,16 @@ describe("parseFlow — trigger", () => {
     expect(flow.trigger.type).toBe("OpenApiConnection");
     expect(flow.trigger.connectorName).toBe("sharepointonline");
   });
+
+  it("keeps the trigger's raw inputs for the DAG inspector", () => {
+    const doc = parseFixture();
+    const flow = doc.artifacts.find((a) => a.kind === "cloudFlow");
+    if (flow?.kind !== "cloudFlow") throw new Error("expected cloudFlow artifact");
+
+    expect(flow.trigger.inputs).toMatchObject({
+      parameters: { dataset: "https://contoso.sharepoint.com/sites/Corp/compras", table: "Ordens de Compra" },
+    });
+  });
 });
 
 describe("parseFlow — actions", () => {
@@ -76,6 +86,18 @@ describe("parseFlow — actions", () => {
 
     const finalStep = flow.actions.find((a) => a.id === "Final_step");
     expect(finalStep?.summary).toBe("Atualiza o status final do item na lista");
+  });
+
+  it("keeps an action's raw inputs, object or bare expression string alike", () => {
+    const doc = parseFixture();
+    const flow = doc.artifacts.find((a) => a.kind === "cloudFlow");
+    if (flow?.kind !== "cloudFlow") throw new Error("expected cloudFlow artifact");
+
+    const terminate = flow.actions.find((a) => a.id === "Terminate");
+    expect(terminate?.inputs).toEqual({ runStatus: "Cancelled" });
+
+    const compose = flow.actions.find((a) => a.id === "Compose");
+    expect(compose?.inputs).toBe("@triggerBody()");
   });
 });
 

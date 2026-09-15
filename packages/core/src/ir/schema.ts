@@ -183,6 +183,15 @@ export const FlowNodeSchema = z.object({
   runAfter: z.array(RunAfterSchema),
   summary: z.string().optional(),
   /**
+   * Raw `inputs` from the action/trigger's Workflow Definition Language
+   * entry, kept as-is (object, string, whatever the definition has) so the
+   * DAG viewer's inspector sidebar can show what a step receives. There is
+   * no equivalent `outputs` here on purpose: a static definition.json never
+   * carries output samples, only a run's history would (spec seção 3,
+   * "degradação honesta" — the sidebar says so instead of showing nothing).
+   */
+  inputs: z.unknown().optional(),
+  /**
    * Added while implementing the Fase 2 flow parser — not in the original
    * spec draft. `parentId` alone can't distinguish which side of a branch a
    * nested action belongs to (an If's true vs. false actions, or which
