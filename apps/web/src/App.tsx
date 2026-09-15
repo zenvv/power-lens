@@ -53,7 +53,7 @@ export function App() {
         onReset={onReset}
       />
 
-      <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col px-6 py-10">
+      <div className="mx-auto flex w-full max-w-[1800px] flex-1 flex-col px-6 py-8 sm:px-8">
         {(state.status === "idle" || state.status === "loading") && (
           <div className="flex flex-1 flex-col items-center justify-center">
             <Dropzone onFile={onFile} disabled={state.status === "loading"} />
