@@ -159,7 +159,7 @@ export function DocumentView({ document }: DocumentViewProps) {
   };
 
   return (
-    <Tabs value={activeSection} onValueChange={setActiveSection} className="flex-1 items-start gap-6">
+    <div className="flex flex-1 items-start gap-6">
       <nav className="flex w-64 shrink-0 flex-col gap-1">
         <SidebarLink
           active={activeSection === "summary"}
@@ -217,6 +217,7 @@ export function DocumentView({ document }: DocumentViewProps) {
       </nav>
 
       <div className="min-w-0 flex-1">
+      <Tabs value={activeSection} onValueChange={setActiveSection}>
         <TabsContent value="summary" className="flex flex-col gap-4">
           <Card>
             <CardHeader>
@@ -364,7 +365,8 @@ export function DocumentView({ document }: DocumentViewProps) {
             </CardContent>
           </Card>
         </TabsContent>
+      </Tabs>
       </div>
-    </Tabs>
+    </div>
   );
 }
