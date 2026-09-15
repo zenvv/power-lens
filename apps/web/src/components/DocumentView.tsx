@@ -7,6 +7,8 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { downloadBytes } from "@/lib/download";
 import { FlowDagView } from "@/components/flow/FlowDagView";
+import { MerView } from "@/components/mer/MerView";
+import { MeasuresPanel } from "@/components/mer/MeasuresPanel";
 
 type DocumentViewProps = {
   document: PowerLensDocument;
@@ -22,6 +24,7 @@ const SEVERITY_VARIANT: Record<Diagnostic["severity"], "destructive" | "secondar
 export function DocumentView({ document, onReset }: DocumentViewProps) {
   const markdown = useMemo(() => renderMarkdown(document), [document]);
   const flows = useMemo(() => document.artifacts.filter((a) => a.kind === "cloudFlow"), [document]);
+  const models = useMemo(() => document.artifacts.filter((a) => a.kind === "dataModel"), [document]);
 
   const onDownloadMarkdown = () => {
     downloadBytes(markdown, `${document.source.fileName}.summary.md`, "text/markdown");
@@ -72,6 +75,27 @@ export function DocumentView({ document, onReset }: DocumentViewProps) {
           </CardHeader>
           <CardContent>
             <FlowDagView flow={flow} />
+          </CardContent>
+        </Card>
+      ))}
+
+      {models.map((model) => (
+        <Card key={model.id}>
+          <CardHeader>
+            <CardTitle>Modelo de dados: {model.name}</CardTitle>
+            <CardDescription>
+              {model.tables.length} tabela(s) · {model.relationships.length} relacionamento(s) ·{" "}
+              {model.measures.length} medida(s) · role a roda pra dar zoom, clique no cabeçalho da tabela pra
+              recolher as colunas, arraste pra reorganizar (posição fica salva)
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="flex flex-col gap-4 lg:flex-row">
+            <div className="min-w-0 flex-1">
+              <MerView model={model} />
+            </div>
+            <div className="h-[70vh] w-full shrink-0 rounded-lg border lg:w-70">
+              <MeasuresPanel measures={model.measures} />
+            </div>
           </CardContent>
         </Card>
       ))}
