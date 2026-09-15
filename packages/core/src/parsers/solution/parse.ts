@@ -2,6 +2,7 @@ import { createEmptyDocument, type Diagnostic, type PowerLensDocument, type Solu
 import { parseFlow } from "../flow/index.js";
 import { parseMsapp } from "../msapp/index.js";
 import { readText, unzipNormalized } from "../zip.js";
+import { parseCustomizationsXml } from "./customizations-xml.js";
 import { parseSolutionXml } from "./solution-xml.js";
 
 export type SolutionSource = {
@@ -10,16 +11,17 @@ export type SolutionSource = {
 };
 
 /**
- * Parses a Dataverse solution .zip. The internal structure is unverified
- * against a real file (docs/FORMAT-NOTES.md section 2) — this extracts what
- * it can confidently recognize (solution.xml metadata, embedded
- * CanvasApps/*.msapp reused via the msapp parser, Workflows/*.json reused
- * via the flow parser) and leaves customizations.xml tables as an honest
- * "not parsed in this phase yet" diagnostic (Dataverse tables are Fase 3).
- * Whether Workflows/*.json actually shares definition.json's shape is
- * itself unverified (docs/FORMAT-NOTES.md section 2) — the flow parser
- * degrades to a diagnostic per file if it doesn't. Never throws — every
- * failure degrades to a Diagnostic on the returned document.
+ * Parses a Dataverse solution .zip. `solution.xml`'s own shape is still
+ * unverified against a real file (docs/FORMAT-NOTES.md section 2), but
+ * `customizations.xml` (Dataverse tables) is now parsed against the
+ * official CustomizationsSolution.xsd schema (FORMAT-NOTES.md seção 2.1) —
+ * verified against Microsoft's published schema, not yet against a real
+ * exported solution. Also reuses the msapp parser for embedded
+ * CanvasApps/*.msapp and the flow parser for Workflows/*.json. Whether
+ * Workflows/*.json actually shares definition.json's shape is itself
+ * unverified — the flow parser degrades to a diagnostic per file if it
+ * doesn't. Never throws — every failure degrades to a Diagnostic on the
+ * returned document.
  */
 export function parseSolution(bytes: Uint8Array, source: SolutionSource): PowerLensDocument {
   const document = createEmptyDocument({ ...source, detectedFormat: "solution" });
@@ -91,15 +93,22 @@ export function parseSolution(bytes: Uint8Array, source: SolutionSource): PowerL
     }
   }
 
-  if (entries["customizations.xml"] !== undefined) {
-    diagnostics.push({
-      code: "PL306",
-      severity: "info",
-      message: "customizations.xml encontrado, mas tabelas Dataverse ainda não são parseadas nesta fase.",
-    });
+  const customizationsXmlText = readText(entries, "customizations.xml");
+  let dataModel: ReturnType<typeof parseCustomizationsXml> | undefined;
+  if (customizationsXmlText !== undefined) {
+    dataModel = parseCustomizationsXml(customizationsXmlText, solutionMeta?.id ?? "dataverse-tables", diagnostics);
+    if (dataModel) {
+      document.artifacts.push(dataModel);
+    } else {
+      diagnostics.push({
+        code: "PL306",
+        severity: "info",
+        message: "customizations.xml encontrado, mas nenhuma tabela Dataverse foi reconhecida nele.",
+      });
+    }
   }
 
-  if (msappPaths.length === 0 && workflowPaths.length === 0 && !solutionMeta) {
+  if (msappPaths.length === 0 && workflowPaths.length === 0 && !solutionMeta && !dataModel) {
     diagnostics.push({
       code: "PL307",
       severity: "warning",

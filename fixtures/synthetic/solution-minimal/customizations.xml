@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ImportExportXml>
+  <Entities>
+    <Entity Name="new_pedido">
+      <Name OriginalName="new_pedido">new_pedido</Name>
+      <EntityInfo>
+        <entity Name="new_pedido">
+          <attributes>
+            <attribute PhysicalName="new_pedidoid">
+              <Type>uniqueidentifier</Type>
+              <Name>new_pedidoid</Name>
+              <LogicalName>new_pedidoid</LogicalName>
+            </attribute>
+            <attribute PhysicalName="new_titulo">
+              <Type>nvarchar</Type>
+              <Name>new_titulo</Name>
+              <LogicalName>new_titulo</LogicalName>
+              <RequiredLevel>none</RequiredLevel>
+              <MaxLength>100</MaxLength>
+            </attribute>
+            <attribute PhysicalName="new_fornecedorid">
+              <Type>lookup</Type>
+              <Name>new_fornecedorid</Name>
+              <LogicalName>new_fornecedorid</LogicalName>
+            </attribute>
+            <attribute PhysicalName="new_valortotalcalculado">
+              <Type>decimal</Type>
+              <Name>new_valortotalcalculado</Name>
+              <LogicalName>new_valortotalcalculado</LogicalName>
+              <CalculationOf>new_valorunitario</CalculationOf>
+              <FormulaDefinitionFileName>new_valortotalcalculado.FormulaDefinition.xml</FormulaDefinitionFileName>
+            </attribute>
+          </attributes>
+        </entity>
+      </EntityInfo>
+    </Entity>
+    <Entity Name="new_fornecedor">
+      <Name OriginalName="new_fornecedor">new_fornecedor</Name>
+      <EntityInfo>
+        <entity Name="new_fornecedor">
+          <attributes>
+            <attribute PhysicalName="new_fornecedorid">
+              <Type>uniqueidentifier</Type>
+              <Name>new_fornecedorid</Name>
+              <LogicalName>new_fornecedorid</LogicalName>
+            </attribute>
+            <attribute PhysicalName="new_nome">
+              <Type>nvarchar</Type>
+              <Name>new_nome</Name>
+              <LogicalName>new_nome</LogicalName>
+              <MaxLength>200</MaxLength>
+            </attribute>
+          </attributes>
+        </entity>
+      </EntityInfo>
+    </Entity>
+    <Entity Name="new_categoria">
+      <Name OriginalName="new_categoria">new_categoria</Name>
+      <EntityInfo>
+        <entity Name="new_categoria">
+          <attributes>
+            <attribute PhysicalName="new_categoriaid">
+              <Type>uniqueidentifier</Type>
+              <Name>new_categoriaid</Name>
+              <LogicalName>new_categoriaid</LogicalName>
+            </attribute>
+          </attributes>
+        </entity>
+      </EntityInfo>
+    </Entity>
+  </Entities>
+  <EntityRelationships>
+    <EntityRelationship Name="new_pedido_new_fornecedor">
+      <EntityRelationshipType>OneToMany</EntityRelationshipType>
+      <ReferencingEntityName>new_pedido</ReferencingEntityName>
+      <ReferencedEntityName>new_fornecedor</ReferencedEntityName>
+      <ReferencingAttributeName>new_fornecedorid</ReferencingAttributeName>
+      <CascadeDelete>NoCascade</CascadeDelete>
+    </EntityRelationship>
+    <EntityRelationship Name="new_pedido_new_categoria">
+      <EntityRelationshipType>ManyToMany</EntityRelationshipType>
+      <FirstEntityName>new_pedido</FirstEntityName>
+      <SecondEntityName>new_categoria</SecondEntityName>
+      <IntersectEntityName>new_pedido_new_categoria</IntersectEntityName>
+    </EntityRelationship>
+  </EntityRelationships>
+</ImportExportXml>

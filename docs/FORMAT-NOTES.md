@@ -311,6 +311,73 @@ casos de borda desse formato.** Isso precisa vir de um arquivo real (ver seção
 
 ---
 
+## 2.1 `customizations.xml` — schema oficial verificado (ainda sem arquivo real)
+
+> Diferente do resto desta seção 2, o *schema* de `customizations.xml` abaixo não é
+> suposição: é lido direto do `CustomizationsSolution.xsd` oficial, baixado de
+> `https://download.microsoft.com/download/B/9/7/B97655A4-4E46-4E51-BA0A-C669106D563F/Schemas.zip`
+> (link linkado pela própria doc da Microsoft, "Customization solutions file schema").
+> Convenção: **[XSD]** = confirmado lendo o arquivo `.xsd` diretamente. **[LACUNA]** = o
+> XSD descreve o que é *válido*, não necessariamente o que uma exportação real do Studio
+> de fato produz — ainda não validado contra uma solution real.
+
+**[XSD]** Estrutura relevante pra tabelas (`ImportExportXml`):
+
+```
+ImportExportXml
+├─ Entities
+│  └─ Entity[]                        (atributo Name = nome lógico, ex. "new_pedido")
+│     └─ EntityInfo
+│        └─ entity
+│           └─ attributes
+│              └─ attribute[]         (atributo PhysicalName = nome da coluna, required)
+│                 ├─ Type              (enum CrmDataType — ver lista abaixo)
+│                 ├─ LogicalName
+│                 ├─ CalculationOf     (presente = coluna calculada)
+│                 └─ FormulaDefinitionFileName  (idem — a fórmula em si fica num
+│                                                 arquivo separado, não aparece aqui)
+└─ EntityRelationships
+   └─ EntityRelationship[]            (atributo Name)
+      ├─ EntityRelationshipType       ("OneToMany" | "ManyToMany" — só esses dois; não
+      │                                existe "ManyToOne" no schema, 1:N é sempre descrito
+      │                                do lado "um")
+      ├─ ReferencingEntityName / ReferencedEntityName / ReferencingAttributeName  (OneToMany)
+      └─ FirstEntityName / SecondEntityName / IntersectEntityName                (ManyToMany)
+```
+
+**[XSD]** `CrmDataType` (enum completo de `Type`): `virtual`, `primarykey`,
+`uniqueidentifier`, `char`, `nchar`, `varchar`, `nvarchar`, `ntext`, `text`, `numeric`,
+`int`, `smallint`, `tinyint`, `bigint`, `binary`, `varbinary`, `image`, `float`, `decimal`,
+`real`, `money`, `smallmoney`, `bit`, `timezone`, `datetime`, `smalldatetime`, `timestamp`,
+`lookup`, `picklist`, `multiselectpicklist`, `partylist`, `customer`, `owner`, `state`,
+`status`, `sql_variant`, `phoneticguide`, `HierarchyId`, `managedproperty`.
+
+**[LACUNA]** O XSD não documenta o *significado* do campo `SourceType` (inteiro opaco,
+provavelmente 0=simples/1=calculada/2=rollup por analogia com a Web API, mas isso é
+suposição) — o parser (`parsers/solution/customizations-xml.ts`) evita decodificar esse
+número e usa a presença de `CalculationOf`/`FormulaDefinitionFileName` como sinal de coluna
+calculada, que é direto e sem ambiguidade.
+
+**[LACUNA]** A chave primária da entidade referenciada num relacionamento não aparece nos
+campos do próprio `EntityRelationship` — o parser assume a convenção fixa da plataforma
+`<nome lógico>id` (ex. `new_pedidoid` pra entidade `new_pedido`), que é uma regra
+documentada do Dataverse, não uma suposição sobre este arquivo.
+
+**[LACUNA]** Nada neste schema tem equivalente ao `crossFilteringBehavior` do TMSL
+(Dataverse não tem esse conceito) — o parser sempre usa `"single"` só porque o tipo do IR
+exige um valor, sem sinal real por trás. Mesma coisa pra `isActive`, sempre `true`.
+
+**[LACUNA]** O `EntityInfo > entity` tem muitos outros campos (`IsAuditEnabled`,
+`OwnershipTypeMask`, ícones, formulários, views...) que o parser ignora de propósito —
+fora do escopo de "tabelas e relacionamentos" que o `DataModel` do IR representa.
+
+**[LACUNA] mais importante**: continua sem validação contra uma solution exportada de
+verdade. O XSD garante que o parser aceita XML *válido*, não que bate com o que o Studio
+realmente escreve num export real (nomes de elemento opcionais que o Studio sempre inclui
+vs. os que geralmente omite, ordem, etc.).
+
+---
+
 ## 3. Casos de borda e armadilhas reveladas pelo código do CMPA
 
 Todos **[FATO]**, com onde foram encontrados:
