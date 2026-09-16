@@ -13,6 +13,7 @@ import { pl011UnhandledCriticalAction } from "./pl011-unhandled-critical-action.
 import { pl012NestedForeach } from "./pl012-nested-foreach.js";
 import { pl013UnusedModelEntity } from "./pl013-unused-model-entity.js";
 import { pl014RiskyRelationshipShape } from "./pl014-risky-relationship-shape.js";
+import { pl015LowContrast } from "./pl015-low-contrast.js";
 
 /**
  * Opções numéricas de uma regra (hoje só limiares — PL005/PL006). Uma regra
@@ -77,6 +78,7 @@ export const RULE_REGISTRY: readonly RuleDescriptor[] = [
   { code: "PL012", label: "Foreach aninhado", run: pl012NestedForeach },
   { code: "PL013", label: "Tabela/coluna do modelo nunca referenciada", run: pl013UnusedModelEntity },
   { code: "PL014", label: "Relacionamento com forma arriscada", run: pl014RiskyRelationshipShape },
+  { code: "PL015", label: "Contraste texto/fundo abaixo do recomendado", run: pl015LowContrast },
 ];
 
 /** Mantido pra compatibilidade com quem só quer a lista de funções, sem
@@ -111,4 +113,5 @@ export {
   pl012NestedForeach,
   pl013UnusedModelEntity,
   pl014RiskyRelationshipShape,
+  pl015LowContrast,
 };
