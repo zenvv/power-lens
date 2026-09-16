@@ -196,9 +196,8 @@ export const en = {
       emptyObject: "Empty object.",
     },
     branch: {
-      ifTrue: "If yes",
-      ifFalse: "If no",
       defaultCase: "Default case",
+      empty: "Empty",
     },
   },
   wireframe: {

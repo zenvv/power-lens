@@ -2,7 +2,7 @@ import { memo, type CSSProperties } from "react";
 import { Handle, Position, type NodeProps } from "@xyflow/react";
 import { ChevronDown, ChevronRight, Plug } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { GROUP_HEADER_HEIGHT } from "@/lib/flow-layout";
+import { GROUP_DETAIL_HEIGHT, GROUP_HEADER_HEIGHT } from "@/lib/flow-layout";
 import type { FlowRfActionNodeData, FlowRfNodeData } from "@/lib/flow-layout";
 import { CONNECTOR_ICONS } from "@/lib/connector-icons";
 import {
@@ -96,12 +96,13 @@ function FlowNodeComponent({ id, data }: FlowNodeProps) {
         isGroup
           ? "border-border/70 bg-muted/20 h-full"
           : "border-border bg-card p-2 h-full justify-center cursor-pointer hover:border-muted-foreground/50",
-        // Cor de início/fim só no bloco específico da action, nunca no
-        // contêiner de um grupo (If/Foreach/Scope/Switch) — senão o mesmo
-        // "fim de ramo" pinta tanto a ação final de um branch quanto a
-        // caixa inteira que a envolve, virando ruído visual redundante.
-        !isGroup && isTrigger && "border-emerald-500/70 bg-emerald-500/5",
-        !isGroup && isEnd && "border-rose-500/70 bg-rose-500/5",
+        // Início/fim não usam mais cor — misturava com a cor de categoria da
+        // action e, num grupo, com o "fim de ramo" de um filho interno. Em
+        // vez disso a forma muda: gatilho fica de canto reto (like um
+        // ponto de partida "quadrado"), fim vira uma cápsula arredondada.
+        // Só no bloco da action específica, nunca no contêiner de um grupo.
+        !isGroup && isTrigger && "rounded-none",
+        !isGroup && isEnd && "rounded-full",
         isSelected && "border-primary ring-1 ring-primary",
       )}
     >
@@ -117,32 +118,42 @@ function FlowNodeComponent({ id, data }: FlowNodeProps) {
       />
 
       {isGroup ? (
-        <button
-          type="button"
-          onClick={() => onToggle?.(id)}
-          title={detail}
-          className="nopan flex items-center gap-1.5 rounded-t-lg px-2 text-xs font-medium text-muted-foreground hover:text-foreground"
-          style={{ height: GROUP_HEADER_HEIGHT }}
-        >
-          {collapsed ? (
-            <ChevronRight className="size-3.5 shrink-0" />
-          ) : (
-            <ChevronDown className="size-3.5 shrink-0" />
-          )}
-          <NodeIcon
-            connectorName={flowNode.connectorName}
-            type={flowNode.type}
-            className="size-3.5 shrink-0"
-          />
-          <span className="shrink-0">{flowNode.name}</span>
-          {detail ? (
-            <span className="min-w-0 flex-1 truncate opacity-70">· {detail}</span>
-          ) : (
-            <span className="shrink-0 text-[10px] opacity-70">({flowNode.type})</span>
-          )}
-          {collapsed && (
-            <span className="shrink-0 text-[10px] opacity-70">
-              {t.flow.hiddenActionsSuffix({ count: childCount })}
+        <button type="button" onClick={() => onToggle?.(id)} className="nopan flex w-full flex-col text-left">
+          <span
+            className="flex items-center gap-1.5 rounded-t-lg px-2 text-xs font-medium text-muted-foreground hover:text-foreground"
+            style={{ height: GROUP_HEADER_HEIGHT }}
+          >
+            {collapsed ? (
+              <ChevronRight className="size-3.5 shrink-0" />
+            ) : (
+              <ChevronDown className="size-3.5 shrink-0" />
+            )}
+            <NodeIcon
+              connectorName={flowNode.connectorName}
+              type={flowNode.type}
+              className="size-3.5 shrink-0"
+            />
+            <span className="shrink-0">{flowNode.name}</span>
+            {!detail && <span className="shrink-0 text-[10px] opacity-70">({flowNode.type})</span>}
+            {collapsed && (
+              <span className="shrink-0 text-[10px] opacity-70">
+                {t.flow.hiddenActionsSuffix({ count: childCount })}
+              </span>
+            )}
+          </span>
+          {/* Bloco da condição (If) / coleção iterada (Foreach), embaixo do
+           * cabeçalho em vez de ao lado — pedido do usuário, pra não
+           * espremer o nome do grupo numa linha só com um texto que pode
+           * ser longo. `line-clamp-2` respeita a altura reservada em
+           * flow-layout.ts (GROUP_DETAIL_HEIGHT); title cobre o que
+           * estourar as 2 linhas. */}
+          {detail && (
+            <span
+              title={detail}
+              className="line-clamp-2 overflow-hidden px-2 pb-1.5 text-left font-mono text-[10px] leading-tight text-muted-foreground/80"
+              style={{ maxHeight: GROUP_DETAIL_HEIGHT }}
+            >
+              {detail}
             </span>
           )}
         </button>

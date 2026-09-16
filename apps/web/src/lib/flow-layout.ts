@@ -7,30 +7,66 @@ const elk = new ELK();
 export const NODE_WIDTH = 220;
 export const NODE_HEIGHT = 60;
 export const GROUP_HEADER_HEIGHT = 40;
+/** Altura reservada pro bloco de texto da condição/coleção (If/Foreach),
+ * abaixo do cabeçalho — não do lado dele, pra caber sem espremer o nome do
+ * grupo. `line-clamp-2` no componente garante que o texto nunca estoure
+ * essa altura (2 linhas de ~11px + padding). */
+export const GROUP_DETAIL_HEIGHT = 36;
 export const BRANCH_HEADER_HEIGHT = 26;
+/** Largura mínima de um grupo (If/Foreach/Scope/Switch) — maior que a de uma
+ * action folha (`NODE_WIDTH`) pra sobrar espaço horizontal pro bloco de
+ * condição/coleção quebrar em poucas linhas em vez de uma coluna estreita. */
+const GROUP_MIN_WIDTH = 360;
 
 /** Sentido do DAG: "DOWN" (padrão, cima pra baixo) ou "RIGHT" (esquerda pra
  * direita) — passado direto pro `elk.direction` do ELK, que já suporta os
  * dois nativamente. */
 export type FlowDirection = "DOWN" | "RIGHT";
 
-function groupLayoutOptions(direction: FlowDirection) {
+/** `extraTopPadding` reserva espaço extra no topo pro bloco de
+ * condição/coleção de um If/Foreach (`GROUP_DETAIL_HEIGHT`) — 0 pra
+ * qualquer outro tipo de grupo, que só tem o cabeçalho normal. */
+function groupLayoutOptions(direction: FlowDirection, extraTopPadding = 0) {
   return {
     "elk.algorithm": "layered",
     "elk.direction": direction,
     "elk.spacing.nodeNode": "28",
     "elk.layered.spacing.nodeNodeBetweenLayers": "40",
-    // O cabeçalho do grupo (chevron + nome) sempre fica na faixa de cima da
-    // caixa, independente do sentido do fluxo dos filhos — por isso o
-    // padding-top reservado pro header não muda com a direção.
-    "elk.padding": `[top=${GROUP_HEADER_HEIGHT + 16},left=16,bottom=16,right=16]`,
+    // O cabeçalho do grupo (chevron + nome + eventual bloco de condição)
+    // sempre fica na faixa de cima da caixa, independente do sentido do
+    // fluxo dos filhos — por isso o padding-top reservado não muda com a
+    // direção.
+    "elk.padding": `[top=${GROUP_HEADER_HEIGHT + extraTopPadding + 16},left=16,bottom=16,right=16]`,
+    "elk.nodeSize.constraints": "MINIMUM_SIZE",
+    "elk.nodeSize.minimum": `(${GROUP_MIN_WIDTH}, 0)`,
+  } as const;
+}
+
+/** Igual a `groupLayoutOptions`, mas pro nó que envolve os branch containers
+ * de um If/Switch (`buildBranchingElkNode`). Os branch containers nunca têm
+ * aresta entre si (um `true` não roda depois de um `false`), então sem essa
+ * opção o ELK os trata como "componentes desconectados" e os empilha
+ * verticalmente com seu empacotador simples, ignorando `elk.direction`
+ * completamente. Desligando `separateConnectedComponents`, eles voltam a
+ * entrar no algoritmo "layered" normal — como não há aresta entre eles,
+ * caem na mesma camada, e nós de uma mesma camada se arranjam
+ * perpendicular ao sentido do layout (por isso aqui é só `direction`, sem
+ * inverter: layout "DOWN" bota a mesma camada lado a lado horizontalmente,
+ * que é o que queremos pros dois ramos). */
+function branchesWrapperLayoutOptions(direction: FlowDirection, extraTopPadding = 0) {
+  return {
+    ...groupLayoutOptions(direction, extraTopPadding),
+    "elk.separateConnectedComponents": "false",
+    "elk.spacing.componentComponent": "28",
   } as const;
 }
 
 /** Igual a `groupLayoutOptions`, mas com um topo mais baixo — o rótulo de um
- * branch ("Se sim"/"Se não"/nome do case) é só um label, sem chevron nem
- * ícone, então não precisa da mesma altura reservada de um cabeçalho de
- * grupo colapsável. */
+ * branch (nome do case, ou "true"/"false" cru) é só um label, sem chevron
+ * nem ícone, então não precisa da mesma altura reservada de um cabeçalho de
+ * grupo colapsável. Tem largura/altura mínima própria pra que um branch
+ * vazio ainda apareça como uma caixa do tamanho de uma action, não uma
+ * lasca sem conteúdo. */
 function branchLayoutOptions(direction: FlowDirection) {
   return {
     "elk.algorithm": "layered",
@@ -38,6 +74,8 @@ function branchLayoutOptions(direction: FlowDirection) {
     "elk.spacing.nodeNode": "28",
     "elk.layered.spacing.nodeNodeBetweenLayers": "40",
     "elk.padding": `[top=${BRANCH_HEADER_HEIGHT + 12},left=12,bottom=12,right=12]`,
+    "elk.nodeSize.constraints": "MINIMUM_SIZE",
+    "elk.nodeSize.minimum": `(${NODE_WIDTH}, ${NODE_HEIGHT + BRANCH_HEADER_HEIGHT + 24})`,
   } as const;
 }
 
@@ -62,13 +100,25 @@ export type FlowRfBranchNodeData = {
   kind: "branch";
   ownerType: string;
   branch: string;
+  /** Ramo declarado (true/false de um If, sempre mostrados os dois) mas sem
+   * nenhuma action dentro na definição — o componente desenha um placeholder
+   * pontilhado em vez de uma caixa vazia sem explicação. */
+  isEmpty: boolean;
   direction: FlowDirection;
 };
 
 export type FlowRfNodeData = FlowRfActionNodeData | FlowRfBranchNodeData;
 
 type PlainEdge = { id: string; source: string; target: string; statuses: string[] };
-type BranchContainerInfo = { ownerType: string; branch: string };
+type BranchContainerInfo = { ownerType: string; branch: string; isEmpty: boolean };
+
+/** Só If/Foreach ganham o bloco de texto extra no cabeçalho do grupo — os
+ * outros tipos (Scope/Switch) não têm um `condition`/`iterateOver` no IR. */
+function hasGroupDetail(flowNode: FlowNode): boolean {
+  return Boolean(
+    (flowNode.type === "If" && flowNode.condition) || (flowNode.type === "Foreach" && flowNode.iterateOver),
+  );
+}
 
 /** Tipos de action cujos filhos se separam em ramos visuais distintos —
  * If (`branch`: "true"/"false") e Switch (`branch`: nome do case ou
@@ -80,20 +130,21 @@ function branchContainerId(ownerId: string, branch: string): string {
   return `${ownerId}::branch::${branch}`;
 }
 
-/** Ordem de exibição dos ramos: If sempre true antes de false (mesmo que só
- * um dos dois exista); Switch mantém a ordem de aparição dos cases, com
- * "default" sempre por último. Só aparece um contêiner de ramo pros branches
- * que de fato têm ações — se um If não tem `else`, não existe um branch
- * "false" vazio fabricado (degradação honesta: nada de mostrar uma caixa
- * pra um ramo que a definição não tem). */
-function orderBranches(children: readonly FlowNode[]): string[] {
+/** Ordem de exibição dos ramos. Um If sempre mostra os dois lados, "true"
+ * antes de "false", mesmo que um deles não tenha nenhuma action na
+ * definição (o branch container correspondente entra vazio — ver
+ * `FlowRfBranchNodeData.isEmpty` — em vez de sumir, já que um If sempre tem
+ * conceitualmente dois lados). Switch mantém a ordem de aparição dos cases,
+ * com "default" sempre por último — aí sim só aparece um contêiner pros
+ * cases que de fato têm ações, porque não há como saber os nomes dos cases
+ * vazios (`flattenActions` não os flatten, então não sobra rastro deles no
+ * IR pra fabricar uma caixa "vazia" com o nome certo). */
+function orderBranches(ownerType: string, children: readonly FlowNode[]): string[] {
+  if (ownerType === "If") return ["true", "false"];
+
   const seen: string[] = [];
   for (const child of children) {
     if (child.branch && !seen.includes(child.branch)) seen.push(child.branch);
-  }
-  if (seen.includes("true") || seen.includes("false")) {
-    const rest = seen.filter((b) => b !== "true" && b !== "false");
-    return [...(seen.includes("true") ? ["true"] : []), ...(seen.includes("false") ? ["false"] : []), ...rest];
   }
   if (seen.includes("default")) {
     return [...seen.filter((b) => b !== "default"), "default"];
@@ -120,13 +171,7 @@ function buildBranchingElkNode(
   direction: FlowDirection,
   branchContainers: Map<string, BranchContainerInfo>,
 ): ElkNode {
-  // Os ramos ficam lado a lado (perpendicular ao sentido geral do fluxo) —
-  // se o fluxo desce, os ramos ficam em colunas; se o fluxo vai pra
-  // direita, os ramos ficam em linhas. Dentro de cada ramo, as ações
-  // continuam seguindo o sentido geral, como o resto do diagrama.
-  const branchesDirection: FlowDirection = direction === "DOWN" ? "RIGHT" : "DOWN";
-
-  const branchNodes: ElkNode[] = orderBranches(children).map((branch) => {
+  const branchNodes: ElkNode[] = orderBranches(flowNode.type, children).map((branch) => {
     const branchChildren = children.filter((c) => c.branch === branch);
     const localEdges: ElkExtendedEdge[] = [];
     for (const child of branchChildren) {
@@ -140,7 +185,7 @@ function buildBranchingElkNode(
     }
 
     const id = branchContainerId(flowNode.id, branch);
-    branchContainers.set(id, { ownerType: flowNode.type, branch });
+    branchContainers.set(id, { ownerType: flowNode.type, branch, isEmpty: branchChildren.length === 0 });
 
     return {
       id,
@@ -154,7 +199,7 @@ function buildBranchingElkNode(
 
   return {
     id: flowNode.id,
-    layoutOptions: groupLayoutOptions(branchesDirection),
+    layoutOptions: branchesWrapperLayoutOptions(direction, hasGroupDetail(flowNode) ? GROUP_DETAIL_HEIGHT : 0),
     children: branchNodes,
     edges: [],
   };
@@ -193,7 +238,7 @@ function buildElkNode(
 
   return {
     id: flowNode.id,
-    layoutOptions: groupLayoutOptions(direction),
+    layoutOptions: groupLayoutOptions(direction, hasGroupDetail(flowNode) ? GROUP_DETAIL_HEIGHT : 0),
     children: children.map((child) => buildElkNode(child, byParent, collapsed, edgesOut, direction, branchContainers)),
     edges: localEdges,
   };
@@ -222,7 +267,13 @@ function collectRfNodes(
         draggable: false,
         selectable: false,
         style: { width: child.width, height: child.height },
-        data: { kind: "branch", ownerType: branchInfo.ownerType, branch: branchInfo.branch, direction },
+        data: {
+          kind: "branch",
+          ownerType: branchInfo.ownerType,
+          branch: branchInfo.branch,
+          isEmpty: branchInfo.isEmpty,
+          direction,
+        },
       });
 
       if (child.children) {

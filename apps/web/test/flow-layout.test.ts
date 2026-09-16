@@ -48,6 +48,39 @@ describe("layoutFlow", () => {
     expect(terminate?.parentId).toBe(falseBranch?.id);
   });
 
+  it("always renders both sides of an If, marking the side without an else as empty", async () => {
+    const raw = {
+      triggers: { Manual: { type: "Request" } },
+      actions: {
+        Only_true_side: {
+          type: "If",
+          expression: { equals: ["@variables('x')", 1] },
+          actions: {
+            Send_an_email: { type: "OpenApiConnection", runAfter: {} },
+          },
+          runAfter: {},
+        },
+      },
+    };
+    const bytes = new TextEncoder().encode(JSON.stringify(raw));
+    const doc = parseFlow(bytes, { fileName: "flow.json", fileSize: bytes.byteLength });
+    const flow = doc.artifacts.find((a) => a.kind === "cloudFlow");
+    if (flow?.kind !== "cloudFlow") throw new Error("expected cloudFlow artifact");
+
+    const { nodes } = await layoutFlow(flow, new Set());
+
+    const trueBranch = nodes.find(
+      (n) => n.type === "flowBranch" && n.parentId === "Only_true_side" && n.data.kind === "branch" && n.data.branch === "true",
+    );
+    const falseBranch = nodes.find(
+      (n) => n.type === "flowBranch" && n.parentId === "Only_true_side" && n.data.kind === "branch" && n.data.branch === "false",
+    );
+    expect(trueBranch).toBeDefined();
+    expect(falseBranch).toBeDefined();
+    if (trueBranch?.data.kind === "branch") expect(trueBranch.data.isEmpty).toBe(false);
+    if (falseBranch?.data.kind === "branch") expect(falseBranch.data.isEmpty).toBe(true);
+  });
+
   it("collapsing a group removes its children from the node list", async () => {
     const flow = loadFlow();
     const expanded = await layoutFlow(flow, new Set());

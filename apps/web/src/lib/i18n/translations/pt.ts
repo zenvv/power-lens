@@ -192,9 +192,8 @@ export const pt = {
       emptyObject: "Objeto vazio.",
     },
     branch: {
-      ifTrue: "Se sim",
-      ifFalse: "Se não",
       defaultCase: "Caso padrão",
+      empty: "Vazio",
     },
   },
   wireframe: {

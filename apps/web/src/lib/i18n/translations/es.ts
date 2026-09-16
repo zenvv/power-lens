@@ -192,9 +192,8 @@ export const es = {
       emptyObject: "Objeto vacío.",
     },
     branch: {
-      ifTrue: "Si es verdadero",
-      ifFalse: "Si es falso",
       defaultCase: "Caso predeterminado",
+      empty: "Vacío",
     },
   },
   wireframe: {
