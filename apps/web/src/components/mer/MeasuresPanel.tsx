@@ -1,6 +1,7 @@
 import type { Measure } from "@power-lens/core";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { useI18n } from "@/lib/i18n/context";
 
 type MeasuresPanelProps = {
   measures: Measure[];
@@ -9,8 +10,9 @@ type MeasuresPanelProps = {
 /** Painel lateral de medidas (spec seção 7) — separado do diagrama porque uma
  * medida não pertence a um nó, mas a uma tabela dentro dele. */
 export function MeasuresPanel({ measures }: MeasuresPanelProps) {
+  const { t } = useI18n();
   if (measures.length === 0) {
-    return <p className="p-3 text-sm text-muted-foreground">Nenhuma medida neste modelo.</p>;
+    return <p className="p-3 text-sm text-muted-foreground">{t.mer.noMeasures}</p>;
   }
 
   return (

@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { useI18n } from "@/lib/i18n/context";
 
 type FlowNodeInputsTreeProps = {
   data: unknown;
@@ -11,8 +12,10 @@ type FlowNodeInputsTreeProps = {
  * texto não editável.
  */
 export function FlowNodeInputsTree({ data }: FlowNodeInputsTreeProps) {
+  const { t } = useI18n();
+
   if (data === null || typeof data !== "object") {
-    return <Field label="Inputs" value={String(data)} />;
+    return <Field label={t.flow.inspector.inputs} value={String(data)} />;
   }
 
   const entries = Array.isArray(data)
@@ -20,7 +23,7 @@ export function FlowNodeInputsTree({ data }: FlowNodeInputsTreeProps) {
     : Object.entries(data as Record<string, unknown>);
 
   if (entries.length === 0) {
-    return <p className="text-muted-foreground">Objeto vazio.</p>;
+    return <p className="text-muted-foreground">{t.flow.inputsTree.emptyObject}</p>;
   }
 
   return <div className="flex flex-col gap-3">{entries.map(([key, value]) => renderNode(value, key, key))}</div>;

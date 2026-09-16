@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { resolveScreenLayout, DEFAULT_CANVAS_WIDTH, DEFAULT_CANVAS_HEIGHT, type CanvasApp } from "@power-lens/core";
 import { CanvasTreeView } from "./CanvasTreeView";
 import { ControlBox } from "./ControlBox";
+import { useI18n } from "@/lib/i18n/context";
 
 type WireframeViewProps = {
   app: CanvasApp;
@@ -12,6 +13,7 @@ type WireframeViewProps = {
  * na UI, é um blueprint aproximado, não uma simulação fiel do app rodando.
  */
 export function WireframeView({ app }: WireframeViewProps) {
+  const { t } = useI18n();
   const sortedScreens = useMemo(() => [...app.screens].sort((a, b) => a.order - b.order), [app.screens]);
   const [selectedName, setSelectedName] = useState<string | undefined>(sortedScreens[0]?.name);
   const [selectedControlName, setSelectedControlName] = useState<string>();
@@ -31,7 +33,7 @@ export function WireframeView({ app }: WireframeViewProps) {
   }, [selectedControlName, selectedScreen?.name]);
 
   if (!selectedScreen || !resolved) {
-    return <p className="text-sm text-muted-foreground">Nenhuma tela pra mostrar.</p>;
+    return <p className="text-sm text-muted-foreground">{t.wireframe.noScreens}</p>;
   }
 
   return (

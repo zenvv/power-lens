@@ -16,6 +16,7 @@ import { ArrowDown, ArrowRight } from "lucide-react";
 import type { CloudFlow, FlowNode as FlowNodeIR } from "@power-lens/core";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { useI18n } from "@/lib/i18n/context";
 import {
   layoutFlow,
   type FlowDirection,
@@ -32,6 +33,7 @@ type FlowDagViewProps = {
 };
 
 export function FlowDagView({ flow }: FlowDagViewProps) {
+  const { t } = useI18n();
   const { resolvedTheme } = useTheme();
   const [collapsed, setCollapsed] = useState<ReadonlySet<string>>(
     () => new Set(),
@@ -147,8 +149,8 @@ export function FlowDagView({ flow }: FlowDagViewProps) {
           <Button
             variant="ghost"
             size="icon-sm"
-            aria-label="De cima pra baixo"
-            title="De cima pra baixo"
+            aria-label={t.flow.directionTopToBottom}
+            title={t.flow.directionTopToBottom}
             onClick={() => setDirection("DOWN")}
             className={cn(direction === "DOWN" && "bg-muted text-foreground")}
           >
@@ -157,8 +159,8 @@ export function FlowDagView({ flow }: FlowDagViewProps) {
           <Button
             variant="ghost"
             size="icon-sm"
-            aria-label="Da esquerda pra direita"
-            title="Da esquerda pra direita"
+            aria-label={t.flow.directionLeftToRight}
+            title={t.flow.directionLeftToRight}
             onClick={() => setDirection("RIGHT")}
             className={cn(direction === "RIGHT" && "bg-muted text-foreground")}
           >

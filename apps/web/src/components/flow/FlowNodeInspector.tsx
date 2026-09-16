@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CONNECTOR_ICONS } from "@/lib/connector-icons";
+import { useI18n } from "@/lib/i18n/context";
 import { FlowNodeInputsTree } from "./FlowNodeInputsTree";
 
 type FlowNodeInspectorProps = {
@@ -23,6 +24,7 @@ export function FlowNodeInspector({
   flowNode,
   onClose,
 }: FlowNodeInspectorProps) {
+  const { t } = useI18n();
   const iconSrc = flowNode.connectorName
     ? CONNECTOR_ICONS[flowNode.connectorName]
     : undefined;
@@ -47,7 +49,7 @@ export function FlowNodeInspector({
           variant="ghost"
           size="icon-sm"
           onClick={onClose}
-          aria-label="Fechar"
+          aria-label={t.flow.inspector.close}
         >
           <X />
         </Button>
@@ -58,7 +60,7 @@ export function FlowNodeInspector({
           {flowNode.summary && (
             <section>
               <h4 className="mb-1 font-medium text-muted-foreground">
-                Descrição
+                {t.flow.inspector.description}
               </h4>
               <p>{flowNode.summary}</p>
             </section>
@@ -67,7 +69,7 @@ export function FlowNodeInspector({
           {flowNode.connectorName && (
             <section>
               <h4 className="mb-1 font-medium text-muted-foreground">
-                Conector
+                {t.flow.inspector.connector}
               </h4>
               <p>{flowNode.connectorName}</p>
             </section>
@@ -76,7 +78,7 @@ export function FlowNodeInspector({
           {flowNode.runAfter.length > 0 && (
             <section>
               <h4 className="mb-1 font-medium text-muted-foreground">
-                Executa depois de
+                {t.flow.inspector.runsAfter}
               </h4>
               <ul className="flex flex-col gap-0.5">
                 {flowNode.runAfter.map((r) => (
@@ -92,12 +94,12 @@ export function FlowNodeInspector({
           )}
 
           <section>
-            <h4 className="mb-1 font-medium text-muted-foreground">Inputs</h4>
+            <h4 className="mb-1 font-medium text-muted-foreground">{t.flow.inspector.inputs}</h4>
             {flowNode.inputs !== undefined ? (
               <Tabs defaultValue="parsed">
                 <TabsList>
-                  <TabsTrigger value="parsed">Leitura</TabsTrigger>
-                  <TabsTrigger value="raw">Raw</TabsTrigger>
+                  <TabsTrigger value="parsed">{t.flow.inspector.read}</TabsTrigger>
+                  <TabsTrigger value="raw">{t.flow.inspector.raw}</TabsTrigger>
                 </TabsList>
                 <TabsContent value="parsed" className="pt-2">
                   {typeof flowNode.inputs === "string" ? (
@@ -118,7 +120,7 @@ export function FlowNodeInspector({
               </Tabs>
             ) : (
               <p className="text-muted-foreground">
-                Este passo não declara inputs na definição.
+                {t.flow.inspector.noInputs}
               </p>
             )}
           </section>

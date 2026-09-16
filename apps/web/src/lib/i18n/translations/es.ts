@@ -167,6 +167,39 @@ export const es = {
       networkError: "No se pudo contactar al proveedor. Verifique su conexión y que la clave de API sea correcta.",
     },
   },
+  flow: {
+    directionTopToBottom: "De arriba hacia abajo",
+    directionLeftToRight: "De izquierda a derecha",
+    hiddenActionsSuffix: (p: { count: number }) => `(${p.count} acción(es) oculta(s))`,
+    inspector: {
+      close: "Cerrar",
+      description: "Descripción",
+      connector: "Conector",
+      runsAfter: "Se ejecuta después de",
+      inputs: "Inputs",
+      read: "Lectura",
+      raw: "Raw",
+      noInputs: "Este paso no declara inputs en la definición.",
+    },
+    inputsTree: {
+      emptyObject: "Objeto vacío.",
+    },
+    branch: {
+      ifTrue: "Si es verdadero",
+      ifFalse: "Si es falso",
+      defaultCase: "Caso predeterminado",
+    },
+  },
+  wireframe: {
+    treeTitle: "Pantallas",
+    noScreens: "No hay pantallas para mostrar.",
+    dynamicSuffix: " — posición/tamaño no resuelto, fórmula dinámica",
+    dynamicLabel: "(dinámico)",
+  },
+  mer: {
+    noMeasures: "No hay medidas en este modelo.",
+    columnsAbbrev: "col.",
+  },
   analyze: {
     formatLabel: {
       msapp: "app canvas (.msapp)",

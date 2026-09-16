@@ -10,6 +10,7 @@ import {
   FLOW_ACTION_TYPE_ICONS,
 } from "@/lib/flow-action-icons";
 import { FLOW_ACTION_TYPE_COLORS } from "@/lib/flow-action-colors";
+import { useI18n } from "@/lib/i18n/context";
 
 /** Ícone de um bloco: o ícone oficial do conector quando ele está no mapa
  * conhecido (CONNECTOR_ICONS), um ícone genérico por tipo de action quando
@@ -70,6 +71,7 @@ function groupDetail(flowNode: FlowRfActionNodeData["flowNode"]): string | undef
 }
 
 function FlowNodeComponent({ id, data }: FlowNodeProps) {
+  const { t } = useI18n();
   if (data.kind !== "action") return null;
 
   const {
@@ -140,7 +142,7 @@ function FlowNodeComponent({ id, data }: FlowNodeProps) {
           )}
           {collapsed && (
             <span className="shrink-0 text-[10px] opacity-70">
-              ({childCount} ação(ões) ocultas)
+              {t.flow.hiddenActionsSuffix({ count: childCount })}
             </span>
           )}
         </button>

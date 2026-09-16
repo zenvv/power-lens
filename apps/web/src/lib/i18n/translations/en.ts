@@ -171,6 +171,39 @@ export const en = {
       networkError: "Couldn't reach the provider. Check your connection and whether the API key is correct.",
     },
   },
+  flow: {
+    directionTopToBottom: "Top to bottom",
+    directionLeftToRight: "Left to right",
+    hiddenActionsSuffix: (p: { count: number }) => `(${p.count} hidden action(s))`,
+    inspector: {
+      close: "Close",
+      description: "Description",
+      connector: "Connector",
+      runsAfter: "Runs after",
+      inputs: "Inputs",
+      read: "Read",
+      raw: "Raw",
+      noInputs: "This step doesn't declare inputs in the definition.",
+    },
+    inputsTree: {
+      emptyObject: "Empty object.",
+    },
+    branch: {
+      ifTrue: "If yes",
+      ifFalse: "If no",
+      defaultCase: "Default case",
+    },
+  },
+  wireframe: {
+    treeTitle: "Screens",
+    noScreens: "No screens to show.",
+    dynamicSuffix: " — position/size not resolved, dynamic formula",
+    dynamicLabel: "(dynamic)",
+  },
+  mer: {
+    noMeasures: "No measures in this model.",
+    columnsAbbrev: "col.",
+  },
   analyze: {
     formatLabel: {
       msapp: "canvas app (.msapp)",

@@ -167,6 +167,39 @@ export const pt = {
       networkError: "Não foi possível contatar o provedor. Verifique sua conexão e se a chave de API está correta.",
     },
   },
+  flow: {
+    directionTopToBottom: "De cima pra baixo",
+    directionLeftToRight: "Da esquerda pra direita",
+    hiddenActionsSuffix: (p: { count: number }) => `(${p.count} ação(ões) ocultas)`,
+    inspector: {
+      close: "Fechar",
+      description: "Descrição",
+      connector: "Conector",
+      runsAfter: "Executa depois de",
+      inputs: "Inputs",
+      read: "Leitura",
+      raw: "Raw",
+      noInputs: "Este passo não declara inputs na definição.",
+    },
+    inputsTree: {
+      emptyObject: "Objeto vazio.",
+    },
+    branch: {
+      ifTrue: "Se sim",
+      ifFalse: "Se não",
+      defaultCase: "Caso padrão",
+    },
+  },
+  wireframe: {
+    treeTitle: "Telas",
+    noScreens: "Nenhuma tela pra mostrar.",
+    dynamicSuffix: " — posição/tamanho não resolvido, fórmula dinâmica",
+    dynamicLabel: "(dinâmico)",
+  },
+  mer: {
+    noMeasures: "Nenhuma medida neste modelo.",
+    columnsAbbrev: "col.",
+  },
   analyze: {
     formatLabel: {
       msapp: "app canvas (.msapp)",

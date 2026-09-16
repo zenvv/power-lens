@@ -1,6 +1,7 @@
 import type { CSSProperties } from "react";
 import type { ResolvedControl } from "@power-lens/core";
 import { cn } from "@/lib/utils";
+import { useI18n } from "@/lib/i18n/context";
 import {
   autoLayoutStyle,
   DYNAMIC_CASCADE_STEP,
@@ -33,6 +34,7 @@ type ControlBoxProps = {
  * `(0,0)` e empilhar controles exatamente um em cima do outro.
  */
 export function ControlBox({ control, parentIsAutoLayout, siblingIndex = 0, selectedControlName }: ControlBoxProps) {
+  const { t } = useI18n();
   if (control.visible.status === "resolved" && !control.visible.value) return null;
 
   const positioned = hasDeclaredPosition(control);
@@ -74,7 +76,7 @@ export function ControlBox({ control, parentIsAutoLayout, siblingIndex = 0, sele
   return (
     <div
       data-control-name={control.name}
-      title={`${control.name} (${control.type})${isDynamic ? " — posição/tamanho não resolvido, fórmula dinâmica" : ""}`}
+      title={`${control.name} (${control.type})${isDynamic ? t.wireframe.dynamicSuffix : ""}`}
       style={{
         ...(positioned ? { left: x, top: y } : {}),
         width,
@@ -99,7 +101,7 @@ export function ControlBox({ control, parentIsAutoLayout, siblingIndex = 0, sele
         </p>
       )}
       {control.text.status === "dynamic" && (
-        <p className="truncate px-1.5 py-1 text-xs text-muted-foreground italic">(dinâmico)</p>
+        <p className="truncate px-1.5 py-1 text-xs text-muted-foreground italic">{t.wireframe.dynamicLabel}</p>
       )}
 
       <div style={childStyle}>

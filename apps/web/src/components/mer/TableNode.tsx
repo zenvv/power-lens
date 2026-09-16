@@ -3,6 +3,7 @@ import { Handle, Position, type NodeProps } from "@xyflow/react";
 import { ChevronDown, ChevronRight, EyeOff, Sigma } from "lucide-react";
 import { HANDLE_SLOT_COUNT, TABLE_HEADER_HEIGHT } from "@/lib/mer-layout";
 import type { MerRfNodeData } from "@/lib/mer-layout";
+import { useI18n } from "@/lib/i18n/context";
 
 export type MerRfNodeDataWithToggle = MerRfNodeData & { onToggle?: (tableName: string) => void };
 
@@ -16,6 +17,7 @@ const HANDLE_SLOT_OFFSETS = Array.from(
 );
 
 function TableNodeComponent({ id, data }: TableNodeProps) {
+  const { t } = useI18n();
   const { table, expanded, onToggle } = data;
 
   return (
@@ -51,7 +53,7 @@ function TableNodeComponent({ id, data }: TableNodeProps) {
         <span className="truncate">{table.name}</span>
         {table.isHidden && <EyeOff className="size-3 shrink-0 text-muted-foreground" />}
         <span className="ml-auto shrink-0 text-[10px] font-normal text-muted-foreground">
-          {table.columns.length} col.
+          {table.columns.length} {t.mer.columnsAbbrev}
         </span>
       </button>
 

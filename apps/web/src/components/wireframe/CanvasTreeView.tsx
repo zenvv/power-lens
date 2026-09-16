@@ -2,6 +2,7 @@ import { useState } from "react";
 import type { Control, Screen } from "@power-lens/core";
 import { ChevronDown, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useI18n } from "@/lib/i18n/context";
 
 type CanvasTreeViewProps = {
   screens: readonly Screen[];
@@ -26,9 +27,10 @@ export function CanvasTreeView({
   selectedControlName,
   onSelectControl,
 }: CanvasTreeViewProps) {
+  const { t } = useI18n();
   return (
     <div className="flex w-56 shrink-0 flex-col gap-0.5 overflow-auto rounded-lg border bg-muted/10 p-2 text-sm">
-      <p className="px-1 pb-1 text-[11px] font-medium tracking-wide text-muted-foreground uppercase">Screens</p>
+      <p className="px-1 pb-1 text-[11px] font-medium tracking-wide text-muted-foreground uppercase">{t.wireframe.treeTitle}</p>
       {screens.map((screen) => (
         <ScreenNode
           key={screen.name}

@@ -2,18 +2,17 @@ import { memo } from "react";
 import type { NodeProps } from "@xyflow/react";
 import { BRANCH_HEADER_HEIGHT } from "@/lib/flow-layout";
 import type { FlowRfNodeData } from "@/lib/flow-layout";
+import { useI18n } from "@/lib/i18n/context";
 
 /** Rótulo de um ramo de If/Switch — "Se sim"/"Se não" pro true/false de um
  * If (como o Power Automate chama as duas colunas), o nome do case pra um
- * Switch, "Caso padrão" pro `default`. Sem tradução via i18n: o resto da UI
- * do viewer (apps/web) também é só PT-BR, hardcoded — só o texto de
- * diagnóstico do parser (packages/core) passa por i18n. */
-function branchLabel(ownerType: string, branch: string): string {
+ * Switch, "Caso padrão" pro `default`. */
+function branchLabel(ownerType: string, branch: string, t: ReturnType<typeof useI18n>["t"]): string {
   if (ownerType === "If") {
-    if (branch === "true") return "Se sim";
-    if (branch === "false") return "Se não";
+    if (branch === "true") return t.flow.branch.ifTrue;
+    if (branch === "false") return t.flow.branch.ifFalse;
   }
-  if (branch === "default") return "Caso padrão";
+  if (branch === "default") return t.flow.branch.defaultCase;
   return branch;
 }
 
@@ -27,6 +26,7 @@ type FlowBranchNodeProps = NodeProps & { data: FlowRfNodeData };
  * cor (início/fim, categoria da action) — o contêiner de ramo é neutro.
  */
 function FlowBranchNodeComponent({ data }: FlowBranchNodeProps) {
+  const { t } = useI18n();
   if (data.kind !== "branch") return null;
 
   return (
@@ -35,7 +35,7 @@ function FlowBranchNodeComponent({ data }: FlowBranchNodeProps) {
         className="flex shrink-0 items-center px-2 text-[11px] font-medium text-muted-foreground"
         style={{ height: BRANCH_HEADER_HEIGHT }}
       >
-        <span className="truncate">{branchLabel(data.ownerType, data.branch)}</span>
+        <span className="truncate">{branchLabel(data.ownerType, data.branch, t)}</span>
       </div>
     </div>
   );
