@@ -140,7 +140,7 @@ export function FlowDagView({ flow }: FlowDagViewProps) {
         <Background />
         <Controls showInteractive={false} />
         <Panel
-          position="top-right"
+          position="top-left"
           className="flex gap-0.5 rounded-md border bg-card p-0.5 shadow-sm"
         >
           <Button

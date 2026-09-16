@@ -19,45 +19,72 @@ type FlowNodeInspectorProps = {
  * um artefato lido pela ferramenta) — degradação honesta em vez de mostrar
  * um "Outputs" vazio como se faltasse extrair algo.
  */
-export function FlowNodeInspector({ flowNode, onClose }: FlowNodeInspectorProps) {
-  const iconSrc = flowNode.connectorName ? CONNECTOR_ICONS[flowNode.connectorName] : undefined;
+export function FlowNodeInspector({
+  flowNode,
+  onClose,
+}: FlowNodeInspectorProps) {
+  const iconSrc = flowNode.connectorName
+    ? CONNECTOR_ICONS[flowNode.connectorName]
+    : undefined;
 
   return (
-    <div className="absolute top-0 right-0 flex h-full w-80 flex-col border-l bg-card shadow-lg">
+    <div className="absolute top-0 right-0 flex h-full w-80 animate-in flex-col border-l bg-card shadow-lg slide-in-from-right-4 duration-200">
       <div className="flex items-center gap-2 border-b px-3 py-2">
-        {iconSrc && <img src={iconSrc} alt={flowNode.connectorName} className="size-5 shrink-0 rounded-[3px]" />}
+        {iconSrc && (
+          <img
+            src={iconSrc}
+            alt={flowNode.connectorName}
+            className="size-5 shrink-0 rounded-[3px]"
+          />
+        )}
         <div className="min-w-0 flex-1">
           <p className="truncate text-sm font-medium">{flowNode.name}</p>
-          <p className="truncate text-xs text-muted-foreground">{flowNode.type}</p>
+          <p className="truncate text-xs text-muted-foreground">
+            {flowNode.type}
+          </p>
         </div>
-        <Button variant="ghost" size="icon-sm" onClick={onClose} aria-label="Fechar">
+        <Button
+          variant="ghost"
+          size="icon-sm"
+          onClick={onClose}
+          aria-label="Fechar"
+        >
           <X />
         </Button>
       </div>
 
-      <ScrollArea className="flex-1">
+      <ScrollArea className="min-h-0 flex-1">
         <div className="flex flex-col gap-4 p-3 text-xs">
           {flowNode.summary && (
             <section>
-              <h4 className="mb-1 font-medium text-muted-foreground">Descrição</h4>
+              <h4 className="mb-1 font-medium text-muted-foreground">
+                Descrição
+              </h4>
               <p>{flowNode.summary}</p>
             </section>
           )}
 
           {flowNode.connectorName && (
             <section>
-              <h4 className="mb-1 font-medium text-muted-foreground">Conector</h4>
+              <h4 className="mb-1 font-medium text-muted-foreground">
+                Conector
+              </h4>
               <p>{flowNode.connectorName}</p>
             </section>
           )}
 
           {flowNode.runAfter.length > 0 && (
             <section>
-              <h4 className="mb-1 font-medium text-muted-foreground">Executa depois de</h4>
+              <h4 className="mb-1 font-medium text-muted-foreground">
+                Executa depois de
+              </h4>
               <ul className="flex flex-col gap-0.5">
                 {flowNode.runAfter.map((r) => (
                   <li key={r.id}>
-                    {r.id} <span className="text-muted-foreground">({r.statuses.join(", ")})</span>
+                    {r.id}{" "}
+                    <span className="text-muted-foreground">
+                      ({r.statuses.join(", ")})
+                    </span>
                   </li>
                 ))}
               </ul>
@@ -83,12 +110,16 @@ export function FlowNodeInspector({ flowNode, onClose }: FlowNodeInspectorProps)
                 </TabsContent>
                 <TabsContent value="raw" className="pt-2">
                   <pre className="rounded-md bg-muted p-2 break-all whitespace-pre-wrap">
-                    {typeof flowNode.inputs === "string" ? flowNode.inputs : JSON.stringify(flowNode.inputs, null, 2)}
+                    {typeof flowNode.inputs === "string"
+                      ? flowNode.inputs
+                      : JSON.stringify(flowNode.inputs, null, 2)}
                   </pre>
                 </TabsContent>
               </Tabs>
             ) : (
-              <p className="text-muted-foreground">Este passo não declara inputs na definição.</p>
+              <p className="text-muted-foreground">
+                Este passo não declara inputs na definição.
+              </p>
             )}
           </section>
         </div>
