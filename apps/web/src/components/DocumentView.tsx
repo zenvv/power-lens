@@ -9,6 +9,7 @@ import { MeasuresPanel } from "@/components/mer/MeasuresPanel";
 import { LineagePanel } from "@/components/mer/LineagePanel";
 import { DiagnosticsPanel } from "@/components/DiagnosticsPanel";
 import { CanvasAppView } from "@/components/canvas/CanvasAppView";
+import { DependencyGraphView } from "@/components/graph/DependencyGraphView";
 import { AiExplanationCard } from "@/components/ai/AiExplanationCard";
 import { ArtifactTabs } from "@/components/document/ArtifactTabs";
 import { MarkdownDocView } from "@/components/document/MarkdownDocView";
@@ -165,6 +166,16 @@ export function DocumentView({
               />
             )}
           </ArtifactTabs>
+        </TabsContent>
+      )}
+
+      {document.dependencies.length > 0 && (
+        <TabsContent value="dependencies" className="flex flex-col gap-4 p-6">
+          <SectionHeader
+            title={t.dependencies.title}
+            description={t.dependencies.description({ count: document.dependencies.length })}
+          />
+          <DependencyGraphView document={document} />
         </TabsContent>
       )}
 

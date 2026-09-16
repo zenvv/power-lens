@@ -12,6 +12,7 @@ export const en = {
     flows: "Flows",
     models: "Data models",
     apps: "Apps",
+    dependencies: "Dependencies",
     diagnostics: "Diagnostics",
     docs: "Documentation",
     ai: "AI explanation",
@@ -275,6 +276,23 @@ export const en = {
     kindMeasure: "measure",
     kindColumn: "column",
     unused: "Not used in any visual of this report.",
+  },
+  dependencies: {
+    title: "Dependencies",
+    description: (p: { count: number }) => `${p.count} dependency link(s) found between artifacts in this solution.`,
+    heuristic: "heuristic",
+    artifactKindLabel: {
+      canvasApp: "app",
+      cloudFlow: "flow",
+      dataModel: "data model",
+      report: "report",
+      solutionMeta: "solution",
+    },
+    toKindLabel: {
+      table: "table",
+      connection: "connection",
+      flow: "flow",
+    },
   },
   analyze: {
     formatLabel: {

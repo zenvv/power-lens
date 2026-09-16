@@ -11,6 +11,7 @@ import {
   LayoutDashboard,
   Monitor,
   Moon,
+  Share2,
   SlidersHorizontal,
   Sparkles,
   Sun,
@@ -42,6 +43,7 @@ export type SectionId =
   | "flows"
   | "models"
   | "apps"
+  | "dependencies"
   | "diagnostics"
   | "docs"
   | "ai";
@@ -305,6 +307,15 @@ export function Sidebar({
                 icon={AppWindow}
                 label={t.nav.apps}
                 count={canvasApps.length}
+              />
+            )}
+            {document.dependencies.length > 0 && (
+              <NavItem
+                active={activeSection === "dependencies"}
+                onClick={() => go("dependencies")}
+                icon={Share2}
+                label={t.nav.dependencies}
+                count={document.dependencies.length}
               />
             )}
             {document.diagnostics.length > 0 && (

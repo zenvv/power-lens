@@ -8,6 +8,7 @@ export const pt = {
     flows: "Fluxos",
     models: "Modelos de dados",
     apps: "Apps",
+    dependencies: "Dependências",
     diagnostics: "Diagnósticos",
     docs: "Documentação",
     ai: "Explicação por IA",
@@ -271,6 +272,23 @@ export const pt = {
     kindMeasure: "medida",
     kindColumn: "coluna",
     unused: "Não aparece em nenhum visual deste relatório.",
+  },
+  dependencies: {
+    title: "Dependências",
+    description: (p: { count: number }) => `${p.count} vínculo(s) de dependência encontrado(s) entre artefatos desta solution.`,
+    heuristic: "heurística",
+    artifactKindLabel: {
+      canvasApp: "app",
+      cloudFlow: "fluxo",
+      dataModel: "modelo de dados",
+      report: "relatório",
+      solutionMeta: "solution",
+    },
+    toKindLabel: {
+      table: "tabela",
+      connection: "conexão",
+      flow: "fluxo",
+    },
   },
   analyze: {
     formatLabel: {
