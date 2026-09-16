@@ -31,3 +31,13 @@ export {
 export { buildSearchIndex, searchIndex, type SearchEntry, type SearchEntryKind } from "./search/index.js";
 export { buildLineageIndex, type LineageEntry, type LineageVisualRef } from "./analysis/index.js";
 export { summarizeTrigger, type TriggerSummary, type TriggerCategory } from "./analysis/index.js";
+export {
+  buildScreenNavigationGraph,
+  buildControlReferenceGraph,
+  buildComponentInventory,
+  APP_START_NODE,
+  type ScreenNavigationGraph,
+  type ScreenNavEdge,
+  type ControlReferenceEdge,
+  type ComponentUsage,
+} from "./analysis/index.js";
