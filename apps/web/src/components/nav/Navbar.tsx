@@ -4,7 +4,6 @@ import { Download, FileText, Menu, Sparkles, TriangleAlert, UploadCloud } from "
 import { Button } from "../ui/button";
 import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupText } from "../ui/input-group";
 import { useI18n } from "@/lib/i18n/context";
-import { ThemeToggle } from "./ThemeToggle";
 import { FormatIcon } from "./FormatIcon";
 
 type NavbarProps = {
@@ -105,7 +104,6 @@ function Navbar({
             </Button>
           </>
         )}
-        <ThemeToggle />
       </div>
     </div>
   );

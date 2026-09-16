@@ -56,8 +56,15 @@ export const en = {
   confirmDialog: {
     cancel: "Cancel",
   },
-  themeToggle: {
-    toggleLabel: "Toggle light/dark theme",
+  sidebarFooter: {
+    resetData: "Reset data",
+    language: "Language",
+    languageNames: { en: "English", pt: "Portuguese", es: "Spanish" },
+    theme: "Theme",
+    themeLight: "Light",
+    themeDark: "Dark",
+    themeSystem: "System",
+    githubLink: "Power Lens on GitHub",
   },
   app: {
     unexpectedError: (p: { error: string }) => `Unexpected error while analyzing the file: ${p.error}`,

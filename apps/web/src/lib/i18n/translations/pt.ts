@@ -52,8 +52,15 @@ export const pt = {
   confirmDialog: {
     cancel: "Cancelar",
   },
-  themeToggle: {
-    toggleLabel: "Alternar tema claro/escuro",
+  sidebarFooter: {
+    resetData: "Resetar dados",
+    language: "Idioma",
+    languageNames: { en: "Inglês", pt: "Português", es: "Espanhol" },
+    theme: "Tema",
+    themeLight: "Claro",
+    themeDark: "Escuro",
+    themeSystem: "Sistema",
+    githubLink: "Power Lens no GitHub",
   },
   app: {
     unexpectedError: (p: { error: string }) => `Erro inesperado ao analisar o arquivo: ${p.error}`,
