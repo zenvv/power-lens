@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/select";
 import { PROVIDERS, type AiProvider } from "@/lib/ai/providers";
 import { clearAiSettings, loadAiSettings, saveAiSettings, type AiSettings } from "@/lib/ai/settings-storage";
+import { useI18n } from "@/lib/i18n/context";
 
 type AiSettingsDialogProps = {
   onSettingsChange: (settings: AiSettings | undefined) => void;
@@ -33,6 +34,7 @@ type AiSettingsDialogProps = {
  * client-side only do projeto (ver `lib/ai/providers.ts`).
  */
 export function AiSettingsDialog({ onSettingsChange, trigger }: AiSettingsDialogProps) {
+  const { t } = useI18n();
   const [open, setOpen] = useState(false);
   const [provider, setProvider] = useState<AiProvider>("gemini");
   const [model, setModel] = useState(PROVIDERS.gemini.defaultModel);
@@ -83,31 +85,33 @@ export function AiSettingsDialog({ onSettingsChange, trigger }: AiSettingsDialog
       <DialogTrigger asChild>{trigger}</DialogTrigger>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Chave de API (BYOK)</DialogTitle>
+          <DialogTitle>{t.ai.settingsDialog.title}</DialogTitle>
           <DialogDescription>
-            Sua chave fica salva só no <strong>localStorage deste navegador</strong>. As chamadas vão{" "}
-            <strong>direto daqui pro provedor selecionado</strong> — nunca passam pelo Power Lens nem por nenhum
-            servidor nosso, porque o Power Lens não tem servidor.
+            {t.ai.settingsDialog.descriptionPart1}
+            <strong>{t.ai.settingsDialog.descriptionBold1}</strong>
+            {t.ai.settingsDialog.descriptionPart2}
+            <strong>{t.ai.settingsDialog.descriptionBold2}</strong>
+            {t.ai.settingsDialog.descriptionPart3}
           </DialogDescription>
         </DialogHeader>
 
         <div className="flex flex-col gap-3">
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="ai-provider">Provedor</Label>
+            <Label htmlFor="ai-provider">{t.ai.settingsDialog.providerLabel}</Label>
             <Select value={provider} onValueChange={onProviderChange}>
               <SelectTrigger id="ai-provider">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="gemini">{PROVIDERS.gemini.label}</SelectItem>
-                <SelectItem value="anthropic">{PROVIDERS.anthropic.label}</SelectItem>
+                <SelectItem value="gemini">{t.aiProviders.gemini.label}</SelectItem>
+                <SelectItem value="anthropic">{t.aiProviders.anthropic.label}</SelectItem>
                 <SelectItem value="openai" disabled>
-                  OpenAI — API não libera CORS pra chamada direta do browser
+                  {t.ai.settingsDialog.openaiDisabledLabel}
                 </SelectItem>
               </SelectContent>
             </Select>
             <p className="text-xs text-muted-foreground">
-              Pegue uma chave em{" "}
+              {t.ai.settingsDialog.getKeyAt}{" "}
               <a href={PROVIDERS[provider].apiKeyUrl} target="_blank" rel="noreferrer" className="underline">
                 {PROVIDERS[provider].apiKeyUrl}
               </a>
@@ -116,13 +120,13 @@ export function AiSettingsDialog({ onSettingsChange, trigger }: AiSettingsDialog
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="ai-model">Modelo</Label>
+            <Label htmlFor="ai-model">{t.ai.settingsDialog.modelLabel}</Label>
             <Input id="ai-model" value={model} onChange={(e) => setModel(e.target.value)} />
-            <p className="text-xs text-muted-foreground">{PROVIDERS[provider].modelHint}</p>
+            <p className="text-xs text-muted-foreground">{t.aiProviders[provider].modelHint}</p>
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="ai-key">Chave de API</Label>
+            <Label htmlFor="ai-key">{t.ai.settingsDialog.apiKeyLabel}</Label>
             <div className="flex gap-2">
               <Input
                 id="ai-key"
@@ -130,10 +134,10 @@ export function AiSettingsDialog({ onSettingsChange, trigger }: AiSettingsDialog
                 autoComplete="off"
                 value={apiKey}
                 onChange={(e) => setApiKey(e.target.value)}
-                placeholder="cole sua chave aqui"
+                placeholder={t.ai.settingsDialog.apiKeyPlaceholder}
               />
               <Button type="button" variant="outline" onClick={() => setShowKey((v) => !v)}>
-                {showKey ? "Ocultar" : "Mostrar"}
+                {showKey ? t.ai.settingsDialog.hide : t.ai.settingsDialog.show}
               </Button>
             </div>
           </div>
@@ -142,11 +146,11 @@ export function AiSettingsDialog({ onSettingsChange, trigger }: AiSettingsDialog
         <DialogFooter>
           {hadSavedKey && (
             <Button type="button" variant="outline" onClick={onRemove}>
-              Remover chave
+              {t.ai.settingsDialog.removeKey}
             </Button>
           )}
           <Button type="button" onClick={onSave} disabled={!apiKey.trim()}>
-            Salvar
+            {t.ai.settingsDialog.save}
           </Button>
         </DialogFooter>
       </DialogContent>

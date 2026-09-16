@@ -7,9 +7,10 @@ import { Spinner } from "@/components/ui/spinner";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { AiSettingsDialog } from "./AiSettingsDialog";
 import { MarkdownDocView } from "@/components/document/MarkdownDocView";
-import { callAiProvider, PROVIDERS } from "@/lib/ai/providers";
+import { callAiProvider } from "@/lib/ai/providers";
 import { loadAiSettings, maskApiKey, type AiSettings } from "@/lib/ai/settings-storage";
 import { downloadMarkdownAsPdf } from "@/lib/print-pdf";
+import { useI18n } from "@/lib/i18n/context";
 
 type AiExplanationCardProps = {
   document: PowerLensDocument;
@@ -37,13 +38,14 @@ export function AiExplanationCard({
   autoGenerateOnMount,
   onAutoGenerateConsumed,
 }: AiExplanationCardProps) {
+  const { t, locale } = useI18n();
   const [settings, setSettings] = useState<AiSettings | undefined>(() => loadAiSettings());
   const [state, setState] = useState<State>({ status: "idle" });
   const [pdfError, setPdfError] = useState<string | undefined>();
 
   const prompt = useMemo(
-    () => `${buildPromptMd(document)}\n\n---\n\n\`\`\`json\n${JSON.stringify(document, null, 2)}\n\`\`\`\n`,
-    [document],
+    () => `${buildPromptMd(document, locale)}\n\n---\n\n\`\`\`json\n${JSON.stringify(document, null, 2)}\n\`\`\`\n`,
+    [document, locale],
   );
 
   async function onGenerate() {
@@ -51,7 +53,7 @@ export function AiExplanationCard({
     setPdfError(undefined);
     setState({ status: "loading" });
     try {
-      const text = await callAiProvider(settings.provider, settings.apiKey, settings.model, prompt);
+      const text = await callAiProvider(settings.provider, settings.apiKey, settings.model, prompt, locale);
       setState({ status: "done", text });
     } catch (err) {
       setState({ status: "error", message: err instanceof Error ? err.message : String(err) });
@@ -76,12 +78,10 @@ export function AiExplanationCard({
     if (state.status !== "done") return;
     const opened = downloadMarkdownAsPdf(
       state.text,
-      `${document.source.fileName} — explicação por IA`,
+      t.ai.explanationCard.pdfDocTitle({ fileName: document.source.fileName }),
     );
     if (!opened) {
-      setPdfError(
-        "Não consegui abrir a janela de impressão — verifique se o navegador bloqueou um pop-up.",
-      );
+      setPdfError(t.ai.explanationCard.pdfErrorMessage);
     }
   };
 
@@ -90,12 +90,8 @@ export function AiExplanationCard({
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Explicação por IA</CardTitle>
-        <CardDescription>
-          Peça pra um LLM da sua escolha explicar este artefato em linguagem natural. A
-          chamada é direta do seu navegador pro provedor, com a sua própria chave — nada
-          passa pelo Power Lens.
-        </CardDescription>
+        <CardTitle>{t.ai.explanationCard.title}</CardTitle>
+        <CardDescription>{t.ai.explanationCard.description}</CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col gap-3">
         {settings ? (
@@ -103,30 +99,30 @@ export function AiExplanationCard({
             <div className="flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
               <KeyRound className="size-3.5 shrink-0" />
               <span className="font-medium text-foreground">
-                {PROVIDERS[settings.provider].label}
+                {t.aiProviders[settings.provider].label}
               </span>
               <span aria-hidden="true">·</span>
               <code className="rounded bg-background px-1 py-0.5 font-mono text-[0.7rem]">
                 {settings.model}
               </code>
               <span aria-hidden="true">·</span>
-              <span className="font-mono">chave {maskApiKey(settings.apiKey)}</span>
+              <span className="font-mono">{t.ai.explanationCard.keyLabel({ key: maskApiKey(settings.apiKey) })}</span>
             </div>
             <AiSettingsDialog
               onSettingsChange={setSettings}
               trigger={
                 <Button variant="ghost" size="sm" disabled={isBusy}>
-                  Trocar
+                  {t.ai.explanationCard.swap}
                 </Button>
               }
             />
           </div>
         ) : (
           <div className="flex flex-col items-start gap-2 rounded-md border border-dashed border-border px-3 py-3">
-            <p className="text-xs text-muted-foreground">Nenhuma chave de API configurada ainda.</p>
+            <p className="text-xs text-muted-foreground">{t.ai.explanationCard.noKeyConfigured}</p>
             <AiSettingsDialog
               onSettingsChange={setSettings}
-              trigger={<Button size="sm">Configurar chave de API</Button>}
+              trigger={<Button size="sm">{t.ai.explanationCard.configureKey}</Button>}
             />
           </div>
         )}
@@ -135,17 +131,17 @@ export function AiExplanationCard({
           <Button onClick={onGenerate} disabled={isBusy} className="self-start">
             {isBusy && <Spinner className="size-4" />}
             {isBusy
-              ? "Gerando explicação…"
+              ? t.ai.explanationCard.generating
               : state.status === "done" || state.status === "error"
-                ? "Gerar novamente"
-                : "Gerar explicação"}
+                ? t.ai.explanationCard.regenerate
+                : t.ai.explanationCard.generate}
           </Button>
         )}
 
         {state.status === "error" && (
           <Alert variant="destructive">
             <TriangleAlert />
-            <AlertTitle>Não deu pra gerar a explicação</AlertTitle>
+            <AlertTitle>{t.ai.explanationCard.errorTitle}</AlertTitle>
             <AlertDescription>{state.message}</AlertDescription>
           </Alert>
         )}
@@ -153,7 +149,7 @@ export function AiExplanationCard({
         {pdfError && (
           <Alert variant="destructive">
             <TriangleAlert />
-            <AlertTitle>Não deu pra abrir o PDF</AlertTitle>
+            <AlertTitle>{t.ai.explanationCard.pdfErrorTitle}</AlertTitle>
             <AlertDescription>{pdfError}</AlertDescription>
           </Alert>
         )}

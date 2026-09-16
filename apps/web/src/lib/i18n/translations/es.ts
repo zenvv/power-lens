@@ -115,6 +115,58 @@ export const es = {
     aiDescription: "Opcional: pídele a un LLM que explique este artefacto en lenguaje natural, con tu propia clave.",
     aiButton: "Generar explicación por IA",
   },
+  ai: {
+    settingsDialog: {
+      title: "Clave de API (BYOK)",
+      descriptionPart1: "Tu clave se guarda solo en el ",
+      descriptionBold1: "localStorage de este navegador",
+      descriptionPart2: ". Las llamadas van ",
+      descriptionBold2: "directo de aquí al proveedor seleccionado",
+      descriptionPart3:
+        " — nunca pasan por Power Lens ni por ningún servidor nuestro, porque Power Lens no tiene servidor.",
+      providerLabel: "Proveedor",
+      openaiDisabledLabel: "OpenAI — la API no habilita CORS para llamadas directas desde el navegador",
+      getKeyAt: "Consigue una clave en",
+      modelLabel: "Modelo",
+      apiKeyLabel: "Clave de API",
+      apiKeyPlaceholder: "pega tu clave aquí",
+      show: "Mostrar",
+      hide: "Ocultar",
+      removeKey: "Eliminar clave",
+      save: "Guardar",
+    },
+    explanationCard: {
+      title: "Explicación por IA",
+      description:
+        "Pídele a un LLM de tu elección que explique este artefacto en lenguaje natural. La llamada va directo desde tu navegador al proveedor, con tu propia clave — nada pasa por Power Lens.",
+      keyLabel: (p: { key: string }) => `clave ${p.key}`,
+      swap: "Cambiar",
+      noKeyConfigured: "Todavía no hay ninguna clave de API configurada.",
+      configureKey: "Configurar clave de API",
+      generating: "Generando explicación…",
+      regenerate: "Generar de nuevo",
+      generate: "Generar explicación",
+      errorTitle: "No se pudo generar la explicación",
+      pdfErrorTitle: "No se pudo abrir el PDF",
+      pdfErrorMessage: "No se pudo abrir la ventana de impresión — verifique si el navegador bloqueó una ventana emergente.",
+      pdfDocTitle: (p: { fileName: string }) => `${p.fileName} — explicación por IA`,
+    },
+  },
+  aiProviders: {
+    anthropic: { label: "Anthropic (Claude)", modelHint: "ID de un modelo disponible en tu cuenta de Anthropic." },
+    gemini: {
+      label: "Google Gemini",
+      modelHint: "ID de un modelo disponible en Google AI Studio (el nivel gratuito cubre flash).",
+    },
+    errors: {
+      anthropicUnexpectedStatus: (p: { status: number }) => `Anthropic respondió ${p.status}.`,
+      anthropicUnexpectedFormat: "La respuesta de Anthropic tiene un formato inesperado.",
+      geminiUnexpectedStatus: (p: { status: number }) => `Gemini respondió ${p.status}.`,
+      geminiUnexpectedFormat:
+        "La respuesta de Gemini tiene un formato inesperado (el mensaje puede haber sido bloqueado por un filtro de seguridad).",
+      networkError: "No se pudo contactar al proveedor. Verifique su conexión y que la clave de API sea correcta.",
+    },
+  },
   analyze: {
     formatLabel: {
       msapp: "app canvas (.msapp)",

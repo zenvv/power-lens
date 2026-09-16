@@ -115,6 +115,58 @@ export const pt = {
     aiDescription: "Opcional: peça pra um LLM explicar este artefato em linguagem natural, com a sua própria chave.",
     aiButton: "Gerar explicação por IA",
   },
+  ai: {
+    settingsDialog: {
+      title: "Chave de API (BYOK)",
+      descriptionPart1: "Sua chave fica salva só no ",
+      descriptionBold1: "localStorage deste navegador",
+      descriptionPart2: ". As chamadas vão ",
+      descriptionBold2: "direto daqui pro provedor selecionado",
+      descriptionPart3:
+        " — nunca passam pelo Power Lens nem por nenhum servidor nosso, porque o Power Lens não tem servidor.",
+      providerLabel: "Provedor",
+      openaiDisabledLabel: "OpenAI — API não libera CORS pra chamada direta do browser",
+      getKeyAt: "Pegue uma chave em",
+      modelLabel: "Modelo",
+      apiKeyLabel: "Chave de API",
+      apiKeyPlaceholder: "cole sua chave aqui",
+      show: "Mostrar",
+      hide: "Ocultar",
+      removeKey: "Remover chave",
+      save: "Salvar",
+    },
+    explanationCard: {
+      title: "Explicação por IA",
+      description:
+        "Peça pra um LLM da sua escolha explicar este artefato em linguagem natural. A chamada é direta do seu navegador pro provedor, com a sua própria chave — nada passa pelo Power Lens.",
+      keyLabel: (p: { key: string }) => `chave ${p.key}`,
+      swap: "Trocar",
+      noKeyConfigured: "Nenhuma chave de API configurada ainda.",
+      configureKey: "Configurar chave de API",
+      generating: "Gerando explicação…",
+      regenerate: "Gerar novamente",
+      generate: "Gerar explicação",
+      errorTitle: "Não deu pra gerar a explicação",
+      pdfErrorTitle: "Não deu pra abrir o PDF",
+      pdfErrorMessage: "Não consegui abrir a janela de impressão — verifique se o navegador bloqueou um pop-up.",
+      pdfDocTitle: (p: { fileName: string }) => `${p.fileName} — explicação por IA`,
+    },
+  },
+  aiProviders: {
+    anthropic: { label: "Anthropic (Claude)", modelHint: "ID de um modelo disponível na sua conta Anthropic." },
+    gemini: {
+      label: "Google Gemini",
+      modelHint: "ID de um modelo disponível no Google AI Studio (tier gratuito cobre o flash).",
+    },
+    errors: {
+      anthropicUnexpectedStatus: (p: { status: number }) => `A Anthropic respondeu ${p.status}.`,
+      anthropicUnexpectedFormat: "Resposta da Anthropic em um formato inesperado.",
+      geminiUnexpectedStatus: (p: { status: number }) => `O Gemini respondeu ${p.status}.`,
+      geminiUnexpectedFormat:
+        "Resposta do Gemini em um formato inesperado (a mensagem pode ter sido bloqueada por filtro de segurança).",
+      networkError: "Não foi possível contatar o provedor. Verifique sua conexão e se a chave de API está correta.",
+    },
+  },
   analyze: {
     formatLabel: {
       msapp: "app canvas (.msapp)",

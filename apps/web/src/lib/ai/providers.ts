@@ -1,3 +1,8 @@
+import { DEFAULT_LOCALE, type Locale } from "@power-lens/core";
+import { en } from "../i18n/translations/en";
+import { pt } from "../i18n/translations/pt";
+import { es } from "../i18n/translations/es";
+
 /**
  * Chamada direta do browser pro provedor de LLM (spec seção 9: BYOK) — sem
  * backend, sem proxy. A OpenAI fica de fora de propósito: a API dela
@@ -13,30 +18,34 @@
 export type AiProvider = "anthropic" | "gemini";
 
 export type ProviderInfo = {
-  label: string;
   defaultModel: string;
-  modelHint: string;
   apiKeyUrl: string;
 };
 
+/** `label`/`modelHint` (texto pra UI) vivem no dicionário de i18n
+ * (`t.aiProviders[provider]`), não aqui — este objeto só guarda dado técnico
+ * que não muda com o idioma. */
 export const PROVIDERS: Record<AiProvider, ProviderInfo> = {
   anthropic: {
-    label: "Anthropic (Claude)",
     defaultModel: "claude-sonnet-4-5",
-    modelHint: "ID de um modelo disponível na sua conta Anthropic.",
     apiKeyUrl: "https://console.anthropic.com/settings/keys",
   },
   gemini: {
-    label: "Google Gemini",
     defaultModel: "gemini-2.5-flash",
-    modelHint: "ID de um modelo disponível no Google AI Studio (tier gratuito cobre o flash).",
     apiKeyUrl: "https://aistudio.google.com/apikey",
   },
 };
 
+const PROVIDER_MESSAGES: Record<Locale, (typeof en)["aiProviders"]["errors"]> = {
+  en: en.aiProviders.errors,
+  pt: pt.aiProviders.errors,
+  es: es.aiProviders.errors,
+};
+
 export class AiRequestError extends Error {}
 
-async function callAnthropic(apiKey: string, model: string, prompt: string): Promise<string> {
+async function callAnthropic(apiKey: string, model: string, prompt: string, locale: Locale): Promise<string> {
+  const messages = PROVIDER_MESSAGES[locale];
   const response = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
     headers: {
@@ -54,17 +63,18 @@ async function callAnthropic(apiKey: string, model: string, prompt: string): Pro
 
   const data = await response.json().catch(() => undefined);
   if (!response.ok) {
-    throw new AiRequestError(data?.error?.message ?? `A Anthropic respondeu ${response.status}.`);
+    throw new AiRequestError(data?.error?.message ?? messages.anthropicUnexpectedStatus({ status: response.status }));
   }
 
   const text = data?.content?.find((block: { type?: string }) => block?.type === "text")?.text;
   if (typeof text !== "string") {
-    throw new AiRequestError("Resposta da Anthropic em um formato inesperado.");
+    throw new AiRequestError(messages.anthropicUnexpectedFormat);
   }
   return text;
 }
 
-async function callGemini(apiKey: string, model: string, prompt: string): Promise<string> {
+async function callGemini(apiKey: string, model: string, prompt: string, locale: Locale): Promise<string> {
+  const messages = PROVIDER_MESSAGES[locale];
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(apiKey)}`;
   const response = await fetch(url, {
     method: "POST",
@@ -74,12 +84,12 @@ async function callGemini(apiKey: string, model: string, prompt: string): Promis
 
   const data = await response.json().catch(() => undefined);
   if (!response.ok) {
-    throw new AiRequestError(data?.error?.message ?? `O Gemini respondeu ${response.status}.`);
+    throw new AiRequestError(data?.error?.message ?? messages.geminiUnexpectedStatus({ status: response.status }));
   }
 
   const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
   if (typeof text !== "string") {
-    throw new AiRequestError("Resposta do Gemini em um formato inesperado (a mensagem pode ter sido bloqueada por filtro de segurança).");
+    throw new AiRequestError(messages.geminiUnexpectedFormat);
   }
   return text;
 }
@@ -89,16 +99,17 @@ export async function callAiProvider(
   apiKey: string,
   model: string,
   prompt: string,
+  locale: Locale = DEFAULT_LOCALE,
 ): Promise<string> {
   try {
-    return provider === "anthropic" ? await callAnthropic(apiKey, model, prompt) : await callGemini(apiKey, model, prompt);
+    return provider === "anthropic"
+      ? await callAnthropic(apiKey, model, prompt, locale)
+      : await callGemini(apiKey, model, prompt, locale);
   } catch (err) {
     if (err instanceof AiRequestError) throw err;
     // fetch() rejeita com um TypeError genérico ("Failed to fetch") pra
     // qualquer falha de rede/CORS, sem detalhe nenhum — o browser não expõe
     // o motivo real por segurança.
-    throw new AiRequestError(
-      "Não foi possível contatar o provedor. Verifique sua conexão e se a chave de API está correta.",
-    );
+    throw new AiRequestError(PROVIDER_MESSAGES[locale].networkError);
   }
 }

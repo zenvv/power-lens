@@ -119,6 +119,58 @@ export const en = {
     aiDescription: "Optional: ask an LLM to explain this artifact in natural language, using your own key.",
     aiButton: "Generate AI explanation",
   },
+  ai: {
+    settingsDialog: {
+      title: "API Key (BYOK)",
+      descriptionPart1: "Your key is saved only in this browser's ",
+      descriptionBold1: "localStorage",
+      descriptionPart2: ". Requests go ",
+      descriptionBold2: "straight from here to the selected provider",
+      descriptionPart3:
+        " — they never pass through Power Lens or any server of ours, because Power Lens has no server.",
+      providerLabel: "Provider",
+      openaiDisabledLabel: "OpenAI — API doesn't allow CORS for direct browser calls",
+      getKeyAt: "Get a key at",
+      modelLabel: "Model",
+      apiKeyLabel: "API Key",
+      apiKeyPlaceholder: "paste your key here",
+      show: "Show",
+      hide: "Hide",
+      removeKey: "Remove key",
+      save: "Save",
+    },
+    explanationCard: {
+      title: "AI explanation",
+      description:
+        "Ask an LLM of your choice to explain this artifact in natural language. The call goes straight from your browser to the provider, using your own key — nothing goes through Power Lens.",
+      keyLabel: (p: { key: string }) => `key ${p.key}`,
+      swap: "Swap",
+      noKeyConfigured: "No API key configured yet.",
+      configureKey: "Configure API key",
+      generating: "Generating explanation…",
+      regenerate: "Generate again",
+      generate: "Generate explanation",
+      errorTitle: "Couldn't generate the explanation",
+      pdfErrorTitle: "Couldn't open the PDF",
+      pdfErrorMessage: "Couldn't open the print window — check whether your browser blocked a pop-up.",
+      pdfDocTitle: (p: { fileName: string }) => `${p.fileName} — AI explanation`,
+    },
+  },
+  aiProviders: {
+    anthropic: { label: "Anthropic (Claude)", modelHint: "ID of a model available in your Anthropic account." },
+    gemini: {
+      label: "Google Gemini",
+      modelHint: "ID of a model available in Google AI Studio (the free tier covers flash).",
+    },
+    errors: {
+      anthropicUnexpectedStatus: (p: { status: number }) => `Anthropic responded ${p.status}.`,
+      anthropicUnexpectedFormat: "Anthropic's response is in an unexpected format.",
+      geminiUnexpectedStatus: (p: { status: number }) => `Gemini responded ${p.status}.`,
+      geminiUnexpectedFormat:
+        "Gemini's response is in an unexpected format (the message may have been blocked by a safety filter).",
+      networkError: "Couldn't reach the provider. Check your connection and whether the API key is correct.",
+    },
+  },
   analyze: {
     formatLabel: {
       msapp: "canvas app (.msapp)",
