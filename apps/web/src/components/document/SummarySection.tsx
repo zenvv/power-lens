@@ -127,7 +127,9 @@ export function SummarySection({
             </span>
             <span className="inline-flex items-center gap-1.5">
               <CalendarClock className="size-3.5 shrink-0" />
-              {new Date(document.source.parsedAt).toLocaleString(t.summary.dateLocale)}
+              {new Date(document.source.parsedAt).toLocaleString(
+                t.summary.dateLocale,
+              )}
             </span>
             <span className="inline-flex items-center gap-1.5">
               <Tag className="size-3.5 shrink-0" />
@@ -137,7 +139,7 @@ export function SummarySection({
         }
       />
       <div className="flex items-start justify-start gap-4 flex-1 shrink-0 w-full mt-4">
-        <div className="flex flex-col gap-3 min-w-96">
+        <div className="flex flex-col gap-3 max-w-72 min-w-64 w-full">
           <motion.div className="h-full" {...cardEntrance(0)}>
             <StatTile
               icon={PuzzleCubePieceRegular}
@@ -182,17 +184,19 @@ export function SummarySection({
         <Separator orientation="vertical" className="h-full mx-4" />
         <div className="flex flex-col gap-4 flex-1 shrink-0">
           <motion.div {...cardEntrance(5)}>
-            <Card className="relative overflow-hidden bg-card/60 shadow-md backdrop-blur-xl dark:bg-card/40 p-0 hover:bg-card transition-all group">
-              <div className="relative flex items-center gap-0">
+            <Card className="relative overflow-hidden to-card/60 from-card/60 shadow-md backdrop-blur-xl dark:from-card/40 dark:to-card/40 p-0 bg-linear-to-tl hover:from-accent! hover:to-card transition-all duration-500 group">
+              <div className="relative flex items-center gap-0 lg:flex-row flex-col py-4">
                 <img
                   src={docHeartIllustration}
                   alt=""
-                  className="hidden size-28 shrink-0 object-contain ml-2 drop-shadow-lg sm:block p-2 saturate-0 group-hover:saturate-100 transition-all"
+                  className="hidden size-28 shrink-0 object-contain ml-2 drop-shadow-lg sm:block p-2 saturate-0 group-hover:saturate-100 transition-all scale-95 group-hover:scale-100"
                 />
                 <div className="min-w-0 flex-1">
                   <CardHeader className="gap-0.5">
                     <CardTitle>{t.summary.exportTitle}</CardTitle>
-                    <CardDescription>{t.summary.exportDescription}</CardDescription>
+                    <CardDescription>
+                      {t.summary.exportDescription}
+                    </CardDescription>
                   </CardHeader>
                   <CardContent className="mt-3 flex flex-wrap gap-2">
                     <Button size="lg" onClick={onDownloadMarkdown}>
@@ -219,12 +223,12 @@ export function SummarySection({
           </motion.div>
 
           <motion.div {...cardEntrance(6)}>
-            <Card className="relative overflow-hidden bg-card/60 shadow-md backdrop-blur-xl dark:bg-card/40 p-0 hover:bg-card transition-all group">
-              <div className="relative flex items-center gap-0">
+            <Card className="relative overflow-hidden to-card/60 from-card/60 shadow-md backdrop-blur-xl dark:from-card/40 dark:to-card/40 p-0 bg-linear-to-tl hover:from-accent! hover:to-card transition-all duration-500 group">
+              <div className="relative flex items-center gap-0 lg:flex-row flex-col py-4">
                 <img
                   src={aiIllustration}
                   alt=""
-                  className="hidden size-28 shrink-0 object-contain ml-4 drop-shadow-lg sm:block p-2 saturate-0 group-hover:saturate-100 transition-all"
+                  className="hidden size-28 shrink-0 object-contain ml-4 drop-shadow-lg sm:block p-2 saturate-0 group-hover:saturate-100 transition-all  scale-95 group-hover:scale-100"
                 />
                 <div className="min-w-0 flex-1">
                   <CardHeader className="gap-0.5">

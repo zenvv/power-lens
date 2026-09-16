@@ -28,7 +28,6 @@ export function WireframeView({ app, initialSelection }: WireframeViewProps) {
     if (!initialSelection) return;
     setSelectedName(initialSelection.screenName);
     setSelectedControlName(initialSelection.controlName);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialSelection]);
 
   const resolved = useMemo(() => (selectedScreen ? resolveScreenLayout(selectedScreen) : undefined), [selectedScreen]);

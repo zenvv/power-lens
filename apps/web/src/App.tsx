@@ -42,7 +42,6 @@ export function App() {
   const [state, setState] = useState<AppState>({ status: "idle" });
   const [activeSection, setActiveSection] = useState<SectionId>("home");
   const [confirmImportOpen, setConfirmImportOpen] = useState(false);
-  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [aiAutoGenerateArmed, setAiAutoGenerateArmed] = useState(false);
   const [ruleConfig, setRuleConfig] = useState<RuleConfigMap | undefined>(() => loadRuleConfig());
   const [searchOpen, setSearchOpen] = useState(false);
@@ -166,11 +165,13 @@ export function App() {
     const { file } = state;
     const requestId = ++latestRequestRef.current;
 
-    analyzeFile(file, { locale, ruleConfig }).then((result) => {
-      if (result.status === "parsed" && latestRequestRef.current === requestId) {
-        setState({ status: "parsed", result, file });
-      }
-    });
+    analyzeFile(file, { locale, ruleConfig })
+      .then((result) => {
+        if (result.status === "parsed" && latestRequestRef.current === requestId) {
+          setState({ status: "parsed", result, file });
+        }
+      })
+      .catch(() => {});
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [locale, ruleConfig]);
 
@@ -206,7 +207,6 @@ export function App() {
           document={document}
           showSidebarToggle={showSidebar}
           onOpenDiagnostics={() => setActiveSection("diagnostics")}
-          onToggleSidebar={() => setSidebarOpen((v) => !v)}
           onRequestImport={onRequestImport}
           onDownloadMarkdown={downloadMarkdown}
           onDownloadIr={downloadIr}
@@ -231,8 +231,6 @@ export function App() {
                 activeSection={activeSection}
                 onSectionChange={setActiveSection}
                 onRequestImport={onRequestImport}
-                mobileOpen={sidebarOpen}
-                onMobileClose={() => setSidebarOpen(false)}
                 onRuleConfigChange={onRuleConfigChange}
                 onCompareFile={onCompareFile}
               />

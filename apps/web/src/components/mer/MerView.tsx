@@ -39,11 +39,13 @@ export function MerView({ model }: MerViewProps) {
 
   useEffect(() => {
     let cancelled = false;
-    layoutModel(model, expanded).then((result) => {
-      if (cancelled) return;
-      setNodes(result.nodes);
-      setEdges(result.edges);
-    });
+    layoutModel(model, expanded)
+      .then((result) => {
+        if (cancelled) return;
+        setNodes(result.nodes);
+        setEdges(result.edges);
+      })
+      .catch(() => {});
     return () => {
       cancelled = true;
     };

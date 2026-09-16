@@ -53,7 +53,12 @@ function renderNode(value: unknown, label: string, keyPath: string): ReactNode {
     );
   }
 
-  return <Field key={keyPath} label={label} value={String(value)} />;
+  // null/undefined, arrays e objetos já retornaram acima — o que sobra de um
+  // JSON.parse só pode ser string/number/boolean (json.org: JSON não tem
+  // bigint, symbol ou function), mas o narrowing de `unknown` do TS não
+  // enxerga isso no ramo negativo dos `typeof` acima.
+  const primitive: string | number | boolean = value as string | number | boolean;
+  return <Field key={keyPath} label={label} value={String(primitive)} />;
 }
 
 function formatLabel(label: string): string {

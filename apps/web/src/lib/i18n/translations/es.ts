@@ -12,11 +12,9 @@ export const es = {
     diagnostics: "Diagnósticos",
     docs: "Documentación",
     ai: "Explicación por IA",
-    closeNav: "Cerrar navegación",
   },
   navbar: {
     notAffiliated: "Not afiliated with Microsoft",
-    openNav: "Abrir navegación",
     artifactsCount: (p: { count: number }) => `${p.count} artefacto(s)`,
     importFile: "Importar archivo",
     diagnosticsAria: (p: { count: number }) => `${p.count} diagnóstico(s)`,

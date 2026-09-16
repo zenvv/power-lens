@@ -49,7 +49,7 @@ export function parseFlow(bytes: Uint8Array, source: FlowSource, locale: Locale 
     return document;
   }
 
-  const definition = resolveDefinition(parsed as RawWorkflowDefinition & RawFlowPackage);
+  const definition = resolveDefinition(parsed);
   if (!definition) {
     diagnostics.push({
       code: "PL402",

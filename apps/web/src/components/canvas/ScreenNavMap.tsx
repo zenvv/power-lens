@@ -25,18 +25,20 @@ export function ScreenNavMap({ app }: ScreenNavMapProps) {
 
   useEffect(() => {
     let cancelled = false;
-    layoutScreenNavigation(app).then((result) => {
-      if (cancelled) return;
-      setNodes(result.nodes);
-      setEdges(result.edges);
-    });
+    layoutScreenNavigation(app)
+      .then((result) => {
+        if (cancelled) return;
+        setNodes(result.nodes);
+        setEdges(result.edges);
+      })
+      .catch(() => {});
     return () => {
       cancelled = true;
     };
   }, [app]);
 
   useEffect(() => {
-    rfInstanceRef.current?.fitView({ padding: 0.2 });
+    void rfInstanceRef.current?.fitView({ padding: 0.2 });
   }, [nodes]);
 
   return (

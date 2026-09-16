@@ -1,5 +1,4 @@
 import { useCallback, useRef, useState } from "react";
-import { FileText } from "lucide-react";
 import { motion } from "motion/react";
 import { cn } from "@/lib/utils";
 import { useI18n } from "@/lib/i18n/context";
@@ -9,10 +8,10 @@ type DropzoneProps = {
   disabled?: boolean;
 };
 
-/** Alvo central de import — sem borda de nenhum tipo (o convite é o próprio
- * ícone + texto flutuando no meio do OrbitField, não uma caixa). O feedback
- * de "solte aqui" é um halo suave que aparece atrás do ícone, não uma borda
- * mudando de cor. */
+/** Segmento B do `IntakeDiagram` — sem borda de nenhum tipo (o convite é o
+ * próprio ícone + texto flutuando no meio do diagrama, não uma caixa). O
+ * feedback de "solte aqui" é um halo suave atrás do ícone, e a própria
+ * ilustração satura de cinza pra cor ao passar o mouse ou soltar o arquivo. */
 export function Dropzone({ onFile, disabled }: DropzoneProps) {
   const { t } = useI18n();
   const [isDragging, setIsDragging] = useState(false);
@@ -57,10 +56,11 @@ export function Dropzone({ onFile, disabled }: DropzoneProps) {
       aria-disabled={disabled}
       aria-label={t.dropzone.ariaLabel}
       className={cn(
-        "relative z-10 flex flex-col items-center gap-2 rounded-2xl px-4 py-4 text-center outline-none sm:gap-3 sm:px-8 sm:py-6 group",
+        "relative z-10 flex flex-col items-center gap-2 rounded-2xl px-4 py-4 text-center outline-none sm:gap-3 sm:px-8 sm:py-6 group m-0! bg-radial from-transparent to-transparent hover:from-primary/3",
         disabled ? "cursor-wait" : "cursor-pointer",
       )}
     >
+      <div className="absolute size-full rounded-full bg-background blur-xl inset-0 -z-10"></div>
       <input
         ref={inputRef}
         type="file"
@@ -70,27 +70,28 @@ export function Dropzone({ onFile, disabled }: DropzoneProps) {
         disabled={disabled}
       />
 
-      <div className="relative flex size-12 items-center justify-center sm:size-16">
-        <motion.div
-          className="absolute inset-0 rounded-full bg-primary blur-md"
-          animate={
-            isDragging
-              ? { scale: 1.35, opacity: 0.7 }
-              : { scale: [1, 1.16, 1], opacity: [0.28, 0, 0.28] }
-          }
-          transition={
-            isDragging
-              ? { duration: 0.2 }
-              : { duration: 2.8, repeat: Infinity, ease: "easeInOut" }
-          }
-        />
-        <FileText
-          className="relative size-6 text-foreground/70 group-hover:text-sidebar-primary sm:size-8 transition-all"
-          strokeWidth={1.5}
+      <div className="relative flex p-2 items-center justify-center  border rounded-xl bg-linear-to-t from-muted to-muted/20 outline outline-border outline-offset-2 group-hover:p-3 group-hover:-outline-offset-4 transition-all group-hover:from-card group-hover:to-card">
+        {isDragging && (
+          <motion.div
+            className="absolute inset-0 rounded-full bg-primary/30 blur-md"
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 0.6, scale: 1.3 }}
+            transition={{ duration: 0.2 }}
+          />
+        )}
+
+        <img
+          src="/images/files.webp"
+          alt=""
+          className={cn(
+            "relative size-20  object-contain saturate-0 transition-all duration-200",
+            "group-hover:saturate-100 group-active:saturate-100 group-hover:scale-110",
+            isDragging && "saturate-100",
+          )}
         />
       </div>
 
-      <p className="max-w-28 text-xs text-muted-foreground sm:max-w-56 sm:text-sm">
+      <p className="max-w-28 text-xs text-muted-foreground sm:max-w-56 sm:text-sm group-hover:text-foreground transition-all">
         {disabled ? t.dropzone.receiving : t.dropzone.hint}
       </p>
     </div>

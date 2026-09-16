@@ -1,14 +1,6 @@
 import { useMemo, useState } from "react";
 import type { Diagnostic } from "@power-lens/core";
 import { Badge } from "@/components/ui/badge";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 import { useI18n } from "@/lib/i18n/context";
 import { SectionHeader } from "./document/SectionHeader";

@@ -14,7 +14,10 @@ export type RawTmslExpression = string | string[];
 export type RawColumn = {
   name?: string;
   dataType?: string;
-  type?: "calculated" | string;
+  // `string & {}` preserva o autocomplete de "calculated" no editor sem
+  // colapsar a union pra `string` puro (que é o que `"calculated" | string`
+  // faz de qualquer forma em tempo de tipo).
+  type?: "calculated" | (string & {});
   expression?: RawTmslExpression;
   isHidden?: boolean;
 };
@@ -48,9 +51,9 @@ export type RawRelationship = {
   fromColumn?: string;
   toTable?: string;
   toColumn?: string;
-  fromCardinality?: "none" | "one" | "many" | string;
-  toCardinality?: "none" | "one" | "many" | string;
-  crossFilteringBehavior?: "oneDirection" | "bothDirections" | "automatic" | string;
+  fromCardinality?: "none" | "one" | "many" | (string & {});
+  toCardinality?: "none" | "one" | "many" | (string & {});
+  crossFilteringBehavior?: "oneDirection" | "bothDirections" | "automatic" | (string & {});
   isActive?: boolean;
 };
 

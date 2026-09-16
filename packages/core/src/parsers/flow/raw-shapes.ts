@@ -30,7 +30,7 @@ export type RawActionInputs = {
 export type RawAction = {
   type?: string;
   description?: string;
-  inputs?: RawActionInputs | unknown;
+  inputs?: unknown;
   runAfter?: RawRunAfter;
   actions?: Record<string, RawAction>;
   else?: { actions?: Record<string, RawAction> };
@@ -56,7 +56,7 @@ export type RawAction = {
 
 export type RawTrigger = {
   type?: string;
-  inputs?: RawActionInputs | unknown;
+  inputs?: unknown;
   /**
    * [LACUNA] Presente num trigger `type: "Recurrence"`, segundo o schema
    * publicamente documentado do Workflow Definition Language — irmão de

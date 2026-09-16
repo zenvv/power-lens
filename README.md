@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="public/images/banner.png" alt="Power Lens" width="100%" />
+  <img src=".github/readme/banner.png" alt="Power Lens" width="100%" />
 </div>
 
 <div align="center">
@@ -80,25 +80,25 @@ conta de usuário ou telemetria.
 
 <table>
 <tr>
-<td width="50%"><img src="public/screenshots/home.png" alt="Tela inicial" /><br/><sub><b>Início</b> — arraste um arquivo, nada sai da sua máquina.</sub></td>
-<td width="50%"><img src="public/screenshots/summary.png" alt="Resumo do documento" /><br/><sub><b>Resumo</b> — contagem de artefatos, diagnósticos e exportação.</sub></td>
+<td width="50%"><img src=".github/readme/screenshots/home.png" alt="Tela inicial" /><br/><sub><b>Início</b> — arraste um arquivo, nada sai da sua máquina.</sub></td>
+<td width="50%"><img src=".github/readme/screenshots/summary.png" alt="Resumo do documento" /><br/><sub><b>Resumo</b> — contagem de artefatos, diagnósticos e exportação.</sub></td>
 </tr>
 <tr>
-<td width="50%"><img src="public/screenshots/app-wireframe.png" alt="Wireframe de Canvas App" /><br/><sub><b>App (Canvas)</b> — wireframe navegável por tela e controle.</sub></td>
-<td width="50%"><img src="public/screenshots/flow-diagram.png" alt="DAG de fluxo" /><br/><sub><b>Fluxo</b> — DAG com branches, loops e escopos.</sub></td>
+<td width="50%"><img src=".github/readme/screenshots/app-wireframe.png" alt="Wireframe de Canvas App" /><br/><sub><b>App (Canvas)</b> — wireframe navegável por tela e controle.</sub></td>
+<td width="50%"><img src=".github/readme/screenshots/flow-diagram.png" alt="DAG de fluxo" /><br/><sub><b>Fluxo</b> — DAG com branches, loops e escopos.</sub></td>
 </tr>
 <tr>
-<td width="50%"><img src="public/screenshots/data-model.png" alt="Modelo de dados do Power BI" /><br/><sub><b>Power BI</b> — MER com relacionamentos, medidas e lineage.</sub></td>
-<td width="50%"><img src="public/screenshots/dependency-graph.png" alt="Grafo de dependências" /><br/><sub><b>Relacionamentos</b> — grafo de dependências entre artefatos de uma solution.</sub></td>
+<td width="50%"><img src=".github/readme/screenshots/data-model.png" alt="Modelo de dados do Power BI" /><br/><sub><b>Power BI</b> — MER com relacionamentos, medidas e lineage.</sub></td>
+<td width="50%"><img src=".github/readme/screenshots/dependency-graph.png" alt="Grafo de dependências" /><br/><sub><b>Relacionamentos</b> — grafo de dependências entre artefatos de uma solution.</sub></td>
 </tr>
 <tr>
-<td width="50%"><img src="public/screenshots/diagnostics.png" alt="Painel de diagnósticos" /><br/><sub><b>Diagnósticos</b> — health checks com severidade, caminho e hint.</sub></td>
-<td width="50%"><img src="public/screenshots/documentation.png" alt="Documentação gerada" /><br/><sub><b>Documentação</b> — Markdown determinístico, sem IA.</sub></td>
+<td width="50%"><img src=".github/readme/screenshots/diagnostics.png" alt="Painel de diagnósticos" /><br/><sub><b>Diagnósticos</b> — health checks com severidade, caminho e hint.</sub></td>
+<td width="50%"><img src=".github/readme/screenshots/documentation.png" alt="Documentação gerada" /><br/><sub><b>Documentação</b> — Markdown determinístico, sem IA.</sub></td>
 </tr>
 </table>
 
 Mais telas (busca global, painel de lineage, mapa de navegação, estado da IA opcional) em
-[`public/screenshots/`](public/screenshots/).
+[`.github/readme/screenshots/`](.github/readme/screenshots/).
 
 > Todos os screenshots usam dados fictícios gerados só pra demonstração — nenhum artefato real.
 

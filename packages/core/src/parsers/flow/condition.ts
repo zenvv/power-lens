@@ -28,33 +28,40 @@ export function cleanExpressionString(expr: string): string {
   return expr.startsWith("@") ? expr.slice(1) : expr;
 }
 
+/** `Array.isArray` narrows to `any[]` nos tipos padrão do TS (não `unknown[]`)
+ * — esse wrapper existe só pra não vazar `any` toda vez que um `unknown`
+ * precisa ser checado como array aqui. */
+function isUnknownArray(value: unknown): value is unknown[] {
+  return Array.isArray(value);
+}
+
 function stringifyOperand(value: unknown): string {
   if (typeof value === "string") return cleanExpressionString(value);
   if (typeof value === "number" || typeof value === "boolean") return String(value);
   if (value === null) return "null";
-  if (Array.isArray(value)) return `[${value.map(stringifyOperand).join(", ")}]`;
+  if (isUnknownArray(value)) return `[${value.map(stringifyOperand).join(", ")}]`;
   if (value && typeof value === "object") return stringifyCondition(value);
   return JSON.stringify(value);
 }
 
 function formatOperator(operator: string, args: unknown): string {
   if (operator === "not") {
-    const inner = Array.isArray(args) ? args[0] : args;
+    const inner = isUnknownArray(args) ? args[0] : args;
     return `not (${stringifyCondition(inner)})`;
   }
 
-  if ((operator === "and" || operator === "or") && Array.isArray(args)) {
+  if ((operator === "and" || operator === "or") && isUnknownArray(args)) {
     if (args.length === 1) return stringifyCondition(args[0]);
     const joiner = operator === "and" ? " and " : " or ";
     return args.map((arg) => `(${stringifyCondition(arg)})`).join(joiner);
   }
 
   const symbol = COMPARISON_SYMBOLS[operator];
-  if (symbol && Array.isArray(args) && args.length === 2) {
+  if (symbol && isUnknownArray(args) && args.length === 2) {
     return `${stringifyOperand(args[0])} ${symbol} ${stringifyOperand(args[1])}`;
   }
 
-  const argList = Array.isArray(args) ? args.map(stringifyOperand).join(", ") : stringifyOperand(args);
+  const argList = isUnknownArray(args) ? args.map(stringifyOperand).join(", ") : stringifyOperand(args);
   return `${operator}(${argList})`;
 }
 

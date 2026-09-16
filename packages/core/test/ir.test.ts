@@ -101,7 +101,7 @@ describe("PowerLensDocument schema", () => {
 
   it("round-trips through JSON without losing validity or data", () => {
     const original = minimalValidDocument();
-    const roundTripped = JSON.parse(JSON.stringify(original));
+    const roundTripped: unknown = JSON.parse(JSON.stringify(original));
 
     const result = validateDocument(roundTripped);
     expect(result.ok).toBe(true);

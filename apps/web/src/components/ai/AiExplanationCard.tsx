@@ -65,10 +65,12 @@ export function AiExplanationCard({
   // `settings` carregado nesta montagem, dispara e "consome" o atalho pra
   // não regerar sozinho se o usuário sair e voltar pela sidebar depois.
   const onGenerateRef = useRef(onGenerate);
-  onGenerateRef.current = onGenerate;
+  useEffect(() => {
+    onGenerateRef.current = onGenerate;
+  });
   useEffect(() => {
     if (autoGenerateOnMount) {
-      if (settings) onGenerateRef.current();
+      if (settings) void onGenerateRef.current();
       onAutoGenerateConsumed?.();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -128,7 +130,7 @@ export function AiExplanationCard({
         )}
 
         {settings && (
-          <Button onClick={onGenerate} disabled={isBusy} className="self-start">
+          <Button onClick={() => void onGenerate()} disabled={isBusy} className="self-start">
             {isBusy && <Spinner className="size-4" />}
             {isBusy
               ? t.ai.explanationCard.generating

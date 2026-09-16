@@ -52,7 +52,7 @@ export function MarkdownDocView({
           <TabsTrigger value="raw">{t.markdownDoc.raw}</TabsTrigger>
         </TabsList>
         <div className="flex flex-wrap items-center gap-2">
-          <Button variant="outline" onClick={onCopy} className="min-w-21">
+          <Button variant="outline" onClick={() => void onCopy()} className="min-w-21">
             {copied ? <Check /> : <Copy />}
             {copied ? t.markdownDoc.copied : t.markdownDoc.copy}
           </Button>

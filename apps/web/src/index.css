@@ -50,71 +50,71 @@
 
 :root {
     --background: oklch(1 0 0);
-    --foreground: oklch(0.145 0.008 326);
+    --foreground: oklch(0.145 0 0);
     --card: oklch(1 0 0);
-    --card-foreground: oklch(0.145 0.008 326);
+    --card-foreground: oklch(0.145 0 0);
     --popover: oklch(1 0 0);
-    --popover-foreground: oklch(0.145 0.008 326);
-    --primary: oklch(0.457 0.24 277.023);
-    --primary-foreground: oklch(0.962 0.018 272.314);
+    --popover-foreground: oklch(0.145 0 0);
+    --primary: oklch(0.527 0.154 150.069);
+    --primary-foreground: oklch(0.982 0.018 155.826);
     --secondary: oklch(0.967 0.001 286.375);
     --secondary-foreground: oklch(0.21 0.006 285.885);
-    --muted: oklch(0.96 0.003 325.6);
-    --muted-foreground: oklch(0.542 0.034 322.5);
-    --accent: oklch(0.457 0.24 277.023);
-    --accent-foreground: oklch(0.962 0.018 272.314);
+    --muted: oklch(0.97 0 0);
+    --muted-foreground: oklch(0.556 0 0);
+    --accent: oklch(0.97 0 0);
+    --accent-foreground: oklch(0.205 0 0);
     --destructive: oklch(0.577 0.245 27.325);
-    --border: oklch(0.922 0.005 325.62);
-    --input: oklch(0.922 0.005 325.62);
-    --ring: oklch(0.711 0.019 323.02);
-    --chart-1: oklch(0.833 0.145 321.434);
-    --chart-2: oklch(0.667 0.295 322.15);
-    --chart-3: oklch(0.591 0.293 322.896);
-    --chart-4: oklch(0.518 0.253 323.949);
-    --chart-5: oklch(0.452 0.211 324.591);
-    --radius: 0.875rem;
+    --border: oklch(0.922 0 0);
+    --input: oklch(0.922 0 0);
+    --ring: oklch(0.708 0 0);
+    --chart-1: oklch(0.871 0.15 154.449);
+    --chart-2: oklch(0.723 0.219 149.579);
+    --chart-3: oklch(0.627 0.194 149.214);
+    --chart-4: oklch(0.527 0.154 150.069);
+    --chart-5: oklch(0.448 0.119 151.328);
+    --radius: 0.625rem;
     --sidebar: oklch(0.985 0 0);
-    --sidebar-foreground: oklch(0.145 0.008 326);
-    --sidebar-primary: oklch(0.511 0.262 276.966);
-    --sidebar-primary-foreground: oklch(0.962 0.018 272.314);
-    --sidebar-accent: oklch(0.96 0.003 325.6);
-    --sidebar-accent-foreground: oklch(0.212 0.019 322.12);
-    --sidebar-border: oklch(0.922 0.005 325.62);
-    --sidebar-ring: oklch(0.711 0.019 323.02);
+    --sidebar-foreground: oklch(0.145 0 0);
+    --sidebar-primary: oklch(0.627 0.194 149.214);
+    --sidebar-primary-foreground: oklch(0.982 0.018 155.826);
+    --sidebar-accent: oklch(0.97 0 0);
+    --sidebar-accent-foreground: oklch(0.205 0 0);
+    --sidebar-border: oklch(0.922 0 0);
+    --sidebar-ring: oklch(0.708 0 0);
 }
 
 .dark {
-    --background: oklch(0.145 0.008 326);
+    --background: oklch(0.145 0 0);
     --foreground: oklch(0.985 0 0);
-    --card: oklch(0.212 0.019 322.12);
+    --card: oklch(0.205 0 0);
     --card-foreground: oklch(0.985 0 0);
-    --popover: oklch(0.212 0.019 322.12);
+    --popover: oklch(0.205 0 0);
     --popover-foreground: oklch(0.985 0 0);
-    --primary: oklch(0.398 0.195 277.366);
-    --primary-foreground: oklch(0.962 0.018 272.314);
+    --primary: oklch(0.448 0.119 151.328);
+    --primary-foreground: oklch(0.982 0.018 155.826);
     --secondary: oklch(0.274 0.006 286.033);
     --secondary-foreground: oklch(0.985 0 0);
-    --muted: oklch(0.263 0.024 320.12);
-    --muted-foreground: oklch(0.711 0.019 323.02);
-    --accent: oklch(0.398 0.195 277.366);
-    --accent-foreground: oklch(0.962 0.018 272.314);
+    --muted: oklch(0.269 0 0);
+    --muted-foreground: oklch(0.708 0 0);
+    --accent: oklch(0.269 0 0);
+    --accent-foreground: oklch(0.985 0 0);
     --destructive: oklch(0.704 0.191 22.216);
     --border: oklch(1 0 0 / 10%);
     --input: oklch(1 0 0 / 15%);
-    --ring: oklch(0.542 0.034 322.5);
-    --chart-1: oklch(0.833 0.145 321.434);
-    --chart-2: oklch(0.667 0.295 322.15);
-    --chart-3: oklch(0.591 0.293 322.896);
-    --chart-4: oklch(0.518 0.253 323.949);
-    --chart-5: oklch(0.452 0.211 324.591);
-    --sidebar: oklch(0.212 0.019 322.12);
+    --ring: oklch(0.556 0 0);
+    --chart-1: oklch(0.871 0.15 154.449);
+    --chart-2: oklch(0.723 0.219 149.579);
+    --chart-3: oklch(0.627 0.194 149.214);
+    --chart-4: oklch(0.527 0.154 150.069);
+    --chart-5: oklch(0.448 0.119 151.328);
+    --sidebar: oklch(0.205 0 0);
     --sidebar-foreground: oklch(0.985 0 0);
-    --sidebar-primary: oklch(0.585 0.233 277.117);
-    --sidebar-primary-foreground: oklch(0.962 0.018 272.314);
-    --sidebar-accent: oklch(0.263 0.024 320.12);
+    --sidebar-primary: oklch(0.723 0.219 149.579);
+    --sidebar-primary-foreground: oklch(0.982 0.018 155.826);
+    --sidebar-accent: oklch(0.269 0 0);
     --sidebar-accent-foreground: oklch(0.985 0 0);
     --sidebar-border: oklch(1 0 0 / 10%);
-    --sidebar-ring: oklch(0.542 0.034 322.5);
+    --sidebar-ring: oklch(0.556 0 0);
 }
 
 @layer base {
@@ -127,4 +127,92 @@
   html {
     @apply font-sans;
     }
+}
+
+@layer components {
+  .markdown-body {
+    @apply leading-relaxed;
+  }
+  .markdown-body > :first-child {
+    @apply mt-0;
+  }
+  .markdown-body h1 {
+    @apply mt-0 mb-3 text-xl font-semibold tracking-tight;
+  }
+  .markdown-body h2 {
+    @apply mt-6 mb-2 border-b border-border pb-1 text-lg font-semibold tracking-tight;
+  }
+  .markdown-body h3 {
+    @apply mt-4 mb-2 text-base font-semibold;
+  }
+  .markdown-body h4 {
+    @apply mt-3 mb-1 text-sm font-semibold;
+  }
+  .markdown-body p {
+    @apply my-2;
+  }
+  .markdown-body ul {
+    @apply my-2 list-disc pl-5;
+  }
+  .markdown-body ol {
+    @apply my-2 list-decimal pl-5;
+  }
+  .markdown-body li {
+    @apply my-0.5;
+  }
+  .markdown-body li > p {
+    @apply my-0;
+  }
+  .markdown-body a {
+    @apply text-primary underline underline-offset-2;
+  }
+  .markdown-body strong {
+    @apply font-semibold text-foreground;
+  }
+  .markdown-body hr {
+    @apply my-4 border-border;
+  }
+  .markdown-body blockquote {
+    @apply my-2 border-l-2 border-border pl-3 text-muted-foreground;
+  }
+  .markdown-body code {
+    @apply rounded bg-muted px-1 py-0.5 font-mono text-[0.85em];
+  }
+  .markdown-body pre {
+    @apply my-2 overflow-x-auto rounded-lg bg-muted p-3;
+  }
+  .markdown-body pre code {
+    @apply bg-transparent p-0;
+  }
+  .markdown-body table {
+    @apply my-3 w-full border-collapse text-left text-sm;
+  }
+  .markdown-body th,
+  .markdown-body td {
+    @apply border border-border px-2 py-1;
+  }
+  .markdown-body th {
+    @apply bg-muted font-medium;
+  }
+}
+
+/* Fluxo sutil ("shimmer") nas linhas de conexão do diagrama de import
+   (`IntakeDiagram`) — sugere dado em movimento sem depender de JS por
+   frame. Fora de @layer de propósito: como são poucos seletores usados só
+   ali, não precisam entrar na cascata de utilities. */
+.power-lens-flow-line {
+  stroke-dasharray: 2.5 5;
+  animation: power-lens-flow 2.2s linear infinite;
+}
+
+@keyframes power-lens-flow {
+  to {
+    stroke-dashoffset: -30;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .power-lens-flow-line {
+    animation: none;
+  }
 }

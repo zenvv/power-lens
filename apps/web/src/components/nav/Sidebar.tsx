@@ -58,10 +58,6 @@ type SidebarProps = {
    * pra isso; o rodapé de configurações (ver changelog) vai reusar o mesmo
    * callback pro botão de resetar/limpar dados. */
   onRequestImport: () => void;
-  /** Controla o drawer em telas estreitas; em `md:` pra cima o rail fica
-   * sempre visível e essas props não têm efeito. */
-  mobileOpen: boolean;
-  onMobileClose: () => void;
   /** Repassa a config salva no `RuleConfigDialog` pro `App.tsx` re-rodar a
    * análise (Fase 8 do plano de novas features) — `undefined` quando o
    * usuário restaura pro padrão. */
@@ -261,8 +257,6 @@ export function Sidebar({
   activeSection,
   onSectionChange,
   onRequestImport,
-  mobileOpen,
-  onMobileClose,
   onRuleConfigChange,
   onCompareFile,
 }: SidebarProps) {
@@ -273,28 +267,16 @@ export function Sidebar({
 
   function go(section: SectionId) {
     onSectionChange(section);
-    onMobileClose();
   }
 
   return (
     <>
-      {mobileOpen && (
-        <button
-          type="button"
-          aria-label={t.nav.closeNav}
-          onClick={onMobileClose}
-          className="fixed inset-0 z-40 bg-black/40 md:hidden"
-        />
-      )}
       <motion.nav
         initial={{ opacity: 0, marginLeft: -28 }}
         animate={{ opacity: 1, marginLeft: 0 }}
         exit={{ opacity: 0, marginLeft: -16 }}
         transition={{ type: "spring", stiffness: 320, damping: 34 }}
-        className={cn(
-          "fixed top-12 bottom-0 left-0 z-50 flex w-64 -translate-x-full flex-col gap-0.5 overflow-y-auto bg-sidebar px-3 py-4 transition-transform duration-200 md:static md:top-auto md:bottom-auto md:z-auto md:w-60 md:shrink-0 md:translate-x-0",
-          mobileOpen && "translate-x-0",
-        )}
+        className="flex w-60 shrink-0 flex-col gap-0.5 overflow-y-auto bg-sidebar px-3 py-4"
       >
         {document && (
           <>

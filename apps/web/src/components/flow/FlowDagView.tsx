@@ -66,7 +66,9 @@ export function FlowDagView({ flow }: FlowDagViewProps) {
   // o wrapper do node com `pointer-events: none` — otimização dela pra nodes
   // totalmente estáticos). Um onClick dentro do FlowNode nunca chegaria a
   // disparar nesse caso; por isso a seleção vive aqui, não lá.
-  const onNodeClick = useCallback<NodeMouseHandler<Node<FlowRfNodeDataWithToggle>>>(
+  const onNodeClick = useCallback<
+    NodeMouseHandler<Node<FlowRfNodeDataWithToggle>>
+  >(
     (_event, node) => {
       if (node.data.kind !== "action" || node.data.isGroup) return;
       onSelect(node.id);
@@ -86,11 +88,13 @@ export function FlowDagView({ flow }: FlowDagViewProps) {
 
   useEffect(() => {
     let cancelled = false;
-    layoutFlow(flow, collapsed, direction).then((result) => {
-      if (cancelled) return;
-      setNodes(result.nodes);
-      setEdges(result.edges);
-    });
+    layoutFlow(flow, collapsed, direction)
+      .then((result) => {
+        if (cancelled) return;
+        setNodes(result.nodes);
+        setEdges(result.edges);
+      })
+      .catch(() => {});
     return () => {
       cancelled = true;
     };
@@ -100,7 +104,7 @@ export function FlowDagView({ flow }: FlowDagViewProps) {
   // trocar direção) — sem isso o novo formato do grafo pode ficar cortado
   // fora da viewport, já que `fitView` só roda sozinho na primeira carga.
   useEffect(() => {
-    rfInstanceRef.current?.fitView({ padding: 0.2 });
+    void rfInstanceRef.current?.fitView({ padding: 0.2 });
   }, [nodes]);
 
   const nodesWithToggle = useMemo<Node<FlowRfNodeDataWithToggle>[]>(
@@ -133,6 +137,7 @@ export function FlowDagView({ flow }: FlowDagViewProps) {
         fitViewOptions={{ padding: 0.2 }}
         proOptions={{ hideAttribution: true }}
         nodesConnectable={false}
+        connectionRadius={0}
         elementsSelectable={false}
         onNodeClick={onNodeClick}
         onPaneClick={() => setSelectedId(null)}

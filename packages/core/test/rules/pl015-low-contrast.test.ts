@@ -1,8 +1,9 @@
 import { describe, expect, it } from "vitest";
+import type { Expression } from "../../src/ir/index.js";
 import { pl015LowContrast } from "../../src/rules/pl015-low-contrast.js";
 import { canvasApp, control, emptyDocument, formula, literal } from "./helpers.js";
 
-function screenWithLabel(labelProperties: Record<string, ReturnType<typeof formula> | ReturnType<typeof literal>>) {
+function screenWithLabel(labelProperties: Record<string, Expression>) {
   return {
     name: "Screen1",
     order: 0,

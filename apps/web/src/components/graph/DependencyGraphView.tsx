@@ -33,28 +33,30 @@ export function DependencyGraphView({ document }: DependencyGraphViewProps) {
 
   useEffect(() => {
     let cancelled = false;
-    layoutDependencyGraph(document).then((result) => {
-      if (cancelled) return;
-      setNodes(result.nodes);
-      setEdges(
-        result.edges.map((edge) => {
-          const toKindLabel = t.dependencies.toKindLabel[edgeToKindLabel(edge.data?.toKind ?? "table")];
-          return {
-            ...edge,
-            label: edge.data?.confidence === "heuristic" ? `${toKindLabel} (${t.dependencies.heuristic})` : toKindLabel,
-            labelBgPadding: [4, 2] as [number, number],
-            labelStyle: { fontSize: 11 },
-          };
-        }),
-      );
-    });
+    layoutDependencyGraph(document)
+      .then((result) => {
+        if (cancelled) return;
+        setNodes(result.nodes);
+        setEdges(
+          result.edges.map((edge) => {
+            const toKindLabel = t.dependencies.toKindLabel[edgeToKindLabel(edge.data?.toKind ?? "table")];
+            return {
+              ...edge,
+              label: edge.data?.confidence === "heuristic" ? `${toKindLabel} (${t.dependencies.heuristic})` : toKindLabel,
+              labelBgPadding: [4, 2] as [number, number],
+              labelStyle: { fontSize: 11 },
+            };
+          }),
+        );
+      })
+      .catch(() => {});
     return () => {
       cancelled = true;
     };
   }, [document, t]);
 
   useEffect(() => {
-    rfInstanceRef.current?.fitView({ padding: 0.2 });
+    void rfInstanceRef.current?.fitView({ padding: 0.2 });
   }, [nodes]);
 
   return (

@@ -37,7 +37,7 @@ function NodeIcon({
         <img
           src={src}
           alt={connectorName}
-          className={cn("shrink-0 rounded-[3px]", className)}
+          className={cn("shrink-0 rounded-[99px]", className)}
         />
       );
     return <Plug className={cn("shrink-0 text-muted-foreground", className)} />;
@@ -64,7 +64,9 @@ type FlowNodeProps = NodeProps & { data: FlowRfNodeDataWithToggle };
  * sendo iterada, já que "o que esse bloco tá fazendo" era invisível sem
  * abrir o inspector. Só existe pra esses dois tipos (branch.ts/actions.ts
  * só preenchem `condition`/`iterateOver` pra eles). */
-function groupDetail(flowNode: FlowRfActionNodeData["flowNode"]): string | undefined {
+function groupDetail(
+  flowNode: FlowRfActionNodeData["flowNode"],
+): string | undefined {
   if (flowNode.type === "If") return flowNode.condition;
   if (flowNode.type === "Foreach") return flowNode.iterateOver;
   return undefined;
@@ -86,13 +88,15 @@ function FlowNodeComponent({ id, data }: FlowNodeProps) {
     isEnd,
   } = data;
   const isHorizontal = direction === "RIGHT";
-  const iconColor = !flowNode.connectorName ? FLOW_ACTION_TYPE_COLORS[flowNode.type] : undefined;
+  const iconColor = !flowNode.connectorName
+    ? FLOW_ACTION_TYPE_COLORS[flowNode.type]
+    : undefined;
   const detail = isGroup ? groupDetail(flowNode) : undefined;
 
   return (
     <div
       className={cn(
-        "nopan flex w-full flex-col rounded-lg border text-left",
+        "nopan flex shrink-0 flex-1 min-h-full w-full flex-col rounded-lg border text-left",
         isGroup
           ? "border-border/70 bg-muted/20 h-full"
           : "border-border bg-card p-2 h-full justify-center cursor-pointer hover:border-muted-foreground/50",
@@ -101,9 +105,9 @@ function FlowNodeComponent({ id, data }: FlowNodeProps) {
         // vez disso a forma muda: gatilho fica de canto reto (like um
         // ponto de partida "quadrado"), fim vira uma cápsula arredondada.
         // Só no bloco da action específica, nunca no contêiner de um grupo.
-        !isGroup && isTrigger && "rounded-none",
+        !isGroup && isTrigger && "rounded-sm border-foreground/70",
         !isGroup && isEnd && "rounded-full",
-        isSelected && "border-primary ring-1 ring-primary",
+        isSelected && "border-primary ring-3 ring-primary/20",
       )}
     >
       <Handle
@@ -118,7 +122,11 @@ function FlowNodeComponent({ id, data }: FlowNodeProps) {
       />
 
       {isGroup ? (
-        <button type="button" onClick={() => onToggle?.(id)} className="nopan flex w-full flex-col text-left">
+        <button
+          type="button"
+          onClick={() => onToggle?.(id)}
+          className="nopan flex w-full flex-col text-left"
+        >
           <span
             className="flex items-center gap-1.5 rounded-t-lg px-2 text-xs font-medium text-muted-foreground hover:text-foreground"
             style={{ height: GROUP_HEADER_HEIGHT }}
@@ -134,7 +142,11 @@ function FlowNodeComponent({ id, data }: FlowNodeProps) {
               className="size-3.5 shrink-0"
             />
             <span className="shrink-0">{flowNode.name}</span>
-            {!detail && <span className="shrink-0 text-[10px] opacity-70">({flowNode.type})</span>}
+            {!detail && (
+              <span className="shrink-0 text-[10px] opacity-70">
+                ({flowNode.type})
+              </span>
+            )}
             {collapsed && (
               <span className="shrink-0 text-[10px] opacity-70">
                 {t.flow.hiddenActionsSuffix({ count: childCount })}
@@ -150,7 +162,7 @@ function FlowNodeComponent({ id, data }: FlowNodeProps) {
           {detail && (
             <span
               title={detail}
-              className="line-clamp-2 overflow-hidden px-2 pb-1.5 text-left font-mono text-[10px] leading-tight text-muted-foreground/80"
+              className="line-clamp-2 rounded-sm overflow-hidden p-2 mx-2 text-left font-mono text-[10px] border flex items-start align-middle justify-start leading-none text-muted-foreground/80 bg-card/80"
               style={{ maxHeight: GROUP_DETAIL_HEIGHT }}
             >
               {detail}
@@ -159,11 +171,12 @@ function FlowNodeComponent({ id, data }: FlowNodeProps) {
         </button>
       ) : (
         <>
-          <span className="flex items-center gap-2 shrink-0 overflow-hidden">
+          <span className={cn("flex gap-1 items-center  overflow-hidden")}>
             <span
               className={cn(
-                "size-8 shrink-0 flex items-center justify-center border rounded-sm",
+                "size-8 shrink-0 flex items-center justify-center border",
                 iconColor ? "border-transparent" : "bg-muted",
+                isEnd ? "rounded-full" : "rounded-sm",
               )}
               style={iconColor ? { backgroundColor: iconColor } : undefined}
             >
@@ -174,12 +187,12 @@ function FlowNodeComponent({ id, data }: FlowNodeProps) {
                 style={iconColor ? { color: "white" } : undefined}
               />
             </span>
-            <div className="flex flex-col items-start gap-0.5">
-              <span className="truncate text-sm font-medium leading-none">
+            <div className="flex flex-col items-start gap-0.5 flex-1 shrink-0">
+              <span className="truncate w-full  text-sm font-medium leading-none">
                 {flowNode.name}
               </span>
               <div className="flex items-center gap-1.5 text-xs text-muted-foreground leading-none">
-                <span className="truncate">{flowNode.type}</span>
+                <span className="">{flowNode.type}</span>
                 {flowNode.branch && (
                   <span className="rounded-full border px-1.5 py-0 text-[10px]">
                     {flowNode.branch}

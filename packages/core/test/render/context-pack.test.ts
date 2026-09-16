@@ -33,7 +33,7 @@ describe("buildContextPack", () => {
     const irJson = entries["power-lens-pack/ir.json"];
     expect(irJson).toBeDefined();
 
-    const parsed = JSON.parse(new TextDecoder().decode(irJson));
+    const parsed: unknown = JSON.parse(new TextDecoder().decode(irJson));
     expect(parsed).toEqual(doc);
   });
 

@@ -1,21 +1,13 @@
 import type { PowerLensDocument } from "@power-lens/core";
-import { SearchSparkleColor } from "@fluentui/react-icons";
 import {
   Download,
   FileText,
-  Menu,
   Search,
   Sparkles,
   TriangleAlert,
   UploadCloud,
 } from "lucide-react";
 import { Button } from "../ui/button";
-import {
-  InputGroup,
-  InputGroupAddon,
-  InputGroupButton,
-  InputGroupText,
-} from "../ui/input-group";
 import { useI18n } from "@/lib/i18n/context";
 import { FormatIcon } from "./FormatIcon";
 import Logo from "./Logo";
@@ -27,7 +19,6 @@ type NavbarProps = {
    * botão de hambúrguer (só visível em mobile) não teria o que abrir. */
   showSidebarToggle: boolean;
   onOpenDiagnostics: () => void;
-  onToggleSidebar: () => void;
   onRequestImport: () => void;
   onDownloadMarkdown: () => void;
   onDownloadIr: () => void;
@@ -42,7 +33,6 @@ function Navbar({
   document,
   showSidebarToggle,
   onOpenDiagnostics,
-  onToggleSidebar,
   onRequestImport,
   onDownloadMarkdown,
   onDownloadIr,

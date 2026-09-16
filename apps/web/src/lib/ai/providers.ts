@@ -44,6 +44,19 @@ const PROVIDER_MESSAGES: Record<Locale, (typeof en)["aiProviders"]["errors"]> = 
 
 export class AiRequestError extends Error {}
 
+/** Shapes soltos das respostas de cada provedor — só o suficiente pra extrair
+ * o texto gerado ou a mensagem de erro sem propagar `any` (ambas as APIs
+ * devolvem JSON livre, nunca validado por schema aqui). */
+type AnthropicResponse = {
+  error?: { message?: string };
+  content?: { type?: string; text?: string }[];
+};
+
+type GeminiResponse = {
+  error?: { message?: string };
+  candidates?: { content?: { parts?: { text?: string }[] } }[];
+};
+
 async function callAnthropic(apiKey: string, model: string, prompt: string, locale: Locale): Promise<string> {
   const messages = PROVIDER_MESSAGES[locale];
   const response = await fetch("https://api.anthropic.com/v1/messages", {
@@ -61,12 +74,12 @@ async function callAnthropic(apiKey: string, model: string, prompt: string, loca
     }),
   });
 
-  const data = await response.json().catch(() => undefined);
+  const data = (await response.json().catch(() => undefined)) as AnthropicResponse | undefined;
   if (!response.ok) {
     throw new AiRequestError(data?.error?.message ?? messages.anthropicUnexpectedStatus({ status: response.status }));
   }
 
-  const text = data?.content?.find((block: { type?: string }) => block?.type === "text")?.text;
+  const text = data?.content?.find((block) => block.type === "text")?.text;
   if (typeof text !== "string") {
     throw new AiRequestError(messages.anthropicUnexpectedFormat);
   }
@@ -82,7 +95,7 @@ async function callGemini(apiKey: string, model: string, prompt: string, locale:
     body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] }),
   });
 
-  const data = await response.json().catch(() => undefined);
+  const data = (await response.json().catch(() => undefined)) as GeminiResponse | undefined;
   if (!response.ok) {
     throw new AiRequestError(data?.error?.message ?? messages.geminiUnexpectedStatus({ status: response.status }));
   }
