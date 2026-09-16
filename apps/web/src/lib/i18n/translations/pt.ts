@@ -205,6 +205,22 @@ export const pt = {
       defaultCase: "Caso padrão",
       empty: "Vazio",
     },
+    trigger: {
+      scheduled: "Roda numa agenda",
+      scheduledWithSchedule: (p: { interval: number; frequency: string }) =>
+        `Roda a cada ${p.interval} ${p.frequency}`,
+      manual: "Roda sob demanda — acionado diretamente, não por agenda nem evento externo",
+      event: (p: { connectorName: string }) => `Roda quando acontece um evento em ${p.connectorName}`,
+      eventGeneric: "Roda quando acontece um evento externo",
+      unknown: (p: { type: string }) => `Tipo de gatilho "${p.type}" — veja os inputs brutos pra mais detalhes`,
+      frequency: {
+        minute: "minuto(s)",
+        hour: "hora(s)",
+        day: "dia(s)",
+        week: "semana(s)",
+        month: "mês(es)",
+      },
+    },
   },
   wireframe: {
     treeTitle: "Telas",

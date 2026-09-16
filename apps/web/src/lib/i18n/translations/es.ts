@@ -205,6 +205,22 @@ export const es = {
       defaultCase: "Caso predeterminado",
       empty: "Vacío",
     },
+    trigger: {
+      scheduled: "Se ejecuta según un horario",
+      scheduledWithSchedule: (p: { interval: number; frequency: string }) =>
+        `Se ejecuta cada ${p.interval} ${p.frequency}`,
+      manual: "Se ejecuta bajo demanda — activado directamente, no por horario ni evento externo",
+      event: (p: { connectorName: string }) => `Se ejecuta cuando ocurre un evento en ${p.connectorName}`,
+      eventGeneric: "Se ejecuta cuando ocurre un evento externo",
+      unknown: (p: { type: string }) => `Tipo de disparador "${p.type}" — ver los inputs sin procesar para más detalles`,
+      frequency: {
+        minute: "minuto(s)",
+        hour: "hora(s)",
+        day: "día(s)",
+        week: "semana(s)",
+        month: "mes(es)",
+      },
+    },
   },
   wireframe: {
     treeTitle: "Pantallas",

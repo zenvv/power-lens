@@ -5,7 +5,7 @@ import { en } from "./translations/en";
 import { pt } from "./translations/pt";
 import { es } from "./translations/es";
 
-type Translations = typeof en;
+export type Translations = typeof en;
 
 const DICTIONARIES: Record<Locale, Translations> = { en, pt, es };
 

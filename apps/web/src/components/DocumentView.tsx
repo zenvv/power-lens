@@ -3,6 +3,7 @@ import type { PowerLensDocument } from "@power-lens/core";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { groupArtifactsByKind } from "@/lib/artifact-groups";
 import { FlowDagView } from "@/components/flow/FlowDagView";
+import { FlowTriggerSummary } from "@/components/flow/FlowTriggerSummary";
 import { MerView } from "@/components/mer/MerView";
 import { MeasuresPanel } from "@/components/mer/MeasuresPanel";
 import { DiagnosticsPanel } from "@/components/DiagnosticsPanel";
@@ -80,7 +81,12 @@ export function DocumentView({
               })
             }
           >
-            {(flow) => <FlowDagView flow={flow} />}
+            {(flow) => (
+              <div className="flex flex-col gap-3">
+                <FlowTriggerSummary trigger={flow.trigger} />
+                <FlowDagView flow={flow} />
+              </div>
+            )}
           </ArtifactTabs>
         </TabsContent>
       )}

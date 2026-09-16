@@ -209,6 +209,22 @@ export const en = {
       defaultCase: "Default case",
       empty: "Empty",
     },
+    trigger: {
+      scheduled: "Runs on a schedule",
+      scheduledWithSchedule: (p: { interval: number; frequency: string }) =>
+        `Runs every ${p.interval} ${p.frequency}`,
+      manual: "Runs on demand — triggered directly, not by a schedule or an external event",
+      event: (p: { connectorName: string }) => `Runs when an event happens in ${p.connectorName}`,
+      eventGeneric: "Runs when an external event happens",
+      unknown: (p: { type: string }) => `Trigger type "${p.type}" — see the raw inputs for details`,
+      frequency: {
+        minute: "minute(s)",
+        hour: "hour(s)",
+        day: "day(s)",
+        week: "week(s)",
+        month: "month(s)",
+      },
+    },
   },
   wireframe: {
     treeTitle: "Screens",
