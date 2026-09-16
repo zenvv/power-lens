@@ -63,6 +63,58 @@ export const es = {
     confirmImportDescGeneric: "Esto descarta el análisis actual y vuelve a la pantalla de importación.",
     confirmImportLabel: "Importar otro archivo",
   },
+  documentView: {
+    flowsTitle: "Flujos",
+    flowsDescription: (p: { count: number }) => `${p.count} flujo(s) encontrado(s) en este artefacto.`,
+    modelsTitle: "Modelos de datos",
+    modelsDescription: (p: { count: number }) => `${p.count} modelo(s) encontrado(s) en este artefacto.`,
+    appsTitle: "Apps",
+    appsDescription: (p: { count: number }) => `${p.count} canvas app(s) encontrada(s) en este artefacto.`,
+    flowItemDescription: (p: { triggerName: string; actionCount: number }) =>
+      `Disparador: ${p.triggerName} · ${p.actionCount} acción(es) · gira la rueda para hacer zoom, haz clic en los grupos para colapsar`,
+    modelItemDescription: (p: { tables: number; relationships: number; measures: number }) =>
+      `${p.tables} tabla(s) · ${p.relationships} relación(es) · ${p.measures} medida(s) · gira la rueda para hacer zoom, haz clic en el encabezado de la tabla para colapsar las columnas, arrastra para reorganizar (la posición se guarda)`,
+    appsItemDescription:
+      "Blueprint estático por pantalla — los valores literales/aritmética constante se resuelven, el resto se convierte en un placeholder punteado marcado como dinámico. No es una simulación fiel de la app en ejecución.",
+    docsTitle: "Documentación generada",
+    docsDescription: "Exportación Markdown determinística, sin IA.",
+  },
+  diagnosticsPanel: {
+    title: "Diagnósticos",
+    description: "Problemas estructurales y de health check encontrados durante el análisis.",
+    emptyFiltered: "Sin diagnósticos con la severidad seleccionada.",
+    severityLabel: { error: "error", warning: "aviso", info: "info" },
+  },
+  markdownDoc: {
+    read: "Lectura",
+    raw: "Raw",
+    copied: "Copiado",
+    copy: "Copiar",
+    downloadPdf: "Descargar PDF",
+    downloadMd: "Descargar .md",
+  },
+  summary: {
+    title: "Resumen",
+    parserPrefix: "parser",
+    dateLocale: "es-ES",
+    stats: {
+      artifacts: "artefacto(s)",
+      flows: "flujo(s)",
+      models: "modelo(s) de datos",
+      apps: "canvas app(s)",
+      diagnostics: "diagnóstico(s)",
+    },
+    diagnosticsDetail: (p: { errors: number; warnings: number; infos: number }) =>
+      `${p.errors} error(es), ${p.warnings} aviso(s), ${p.infos} info`,
+    exportTitle: "Exportar",
+    exportDescription: "Todo se genera en el navegador, nada sale de tu máquina.",
+    downloadDocButton: "Descargar documentación (.md)",
+    downloadIrButton: "Descargar IR (ir.json)",
+    downloadContextPackButton: "Descargar paquete de contexto (.zip)",
+    aiTitle: "Explicación por IA",
+    aiDescription: "Opcional: pídele a un LLM que explique este artefacto en lenguaje natural, con tu propia clave.",
+    aiButton: "Generar explicación por IA",
+  },
   analyze: {
     formatLabel: {
       msapp: "app canvas (.msapp)",

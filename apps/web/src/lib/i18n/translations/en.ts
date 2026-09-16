@@ -67,6 +67,58 @@ export const en = {
     confirmImportDescGeneric: "This discards the current analysis and returns to the import screen.",
     confirmImportLabel: "Import another file",
   },
+  documentView: {
+    flowsTitle: "Flows",
+    flowsDescription: (p: { count: number }) => `${p.count} flow(s) found in this artifact.`,
+    modelsTitle: "Data models",
+    modelsDescription: (p: { count: number }) => `${p.count} model(s) found in this artifact.`,
+    appsTitle: "Apps",
+    appsDescription: (p: { count: number }) => `${p.count} canvas app(s) found in this artifact.`,
+    flowItemDescription: (p: { triggerName: string; actionCount: number }) =>
+      `Trigger: ${p.triggerName} · ${p.actionCount} action(s) · scroll to zoom, click groups to collapse`,
+    modelItemDescription: (p: { tables: number; relationships: number; measures: number }) =>
+      `${p.tables} table(s) · ${p.relationships} relationship(s) · ${p.measures} measure(s) · scroll to zoom, click the table header to collapse columns, drag to rearrange (position is saved)`,
+    appsItemDescription:
+      "Static blueprint per screen — literal values/constant arithmetic are resolved, the rest becomes a dashed placeholder marked as dynamic. Not a faithful simulation of the running app.",
+    docsTitle: "Generated documentation",
+    docsDescription: "Deterministic Markdown export, no AI.",
+  },
+  diagnosticsPanel: {
+    title: "Diagnostics",
+    description: "Structural and health-check problems found during analysis.",
+    emptyFiltered: "No diagnostics with the selected severity.",
+    severityLabel: { error: "error", warning: "warning", info: "info" },
+  },
+  markdownDoc: {
+    read: "Read",
+    raw: "Raw",
+    copied: "Copied",
+    copy: "Copy",
+    downloadPdf: "Download PDF",
+    downloadMd: "Download .md",
+  },
+  summary: {
+    title: "Summary",
+    parserPrefix: "parser",
+    dateLocale: "en-US",
+    stats: {
+      artifacts: "artifact(s)",
+      flows: "flow(s)",
+      models: "data model(s)",
+      apps: "canvas app(s)",
+      diagnostics: "diagnostic(s)",
+    },
+    diagnosticsDetail: (p: { errors: number; warnings: number; infos: number }) =>
+      `${p.errors} error(s), ${p.warnings} warning(s), ${p.infos} info`,
+    exportTitle: "Export",
+    exportDescription: "Everything generated in the browser, nothing leaves your machine.",
+    downloadDocButton: "Download documentation (.md)",
+    downloadIrButton: "Download IR (ir.json)",
+    downloadContextPackButton: "Download context pack (.zip)",
+    aiTitle: "AI explanation",
+    aiDescription: "Optional: ask an LLM to explain this artifact in natural language, using your own key.",
+    aiButton: "Generate AI explanation",
+  },
   analyze: {
     formatLabel: {
       msapp: "canvas app (.msapp)",

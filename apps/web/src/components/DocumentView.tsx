@@ -12,6 +12,7 @@ import { ArtifactTabs } from "@/components/document/ArtifactTabs";
 import { MarkdownDocView } from "@/components/document/MarkdownDocView";
 import { SectionHeader } from "@/components/document/SectionHeader";
 import { SummarySection } from "@/components/document/SummarySection";
+import { useI18n } from "@/lib/i18n/context";
 import type { SectionId } from "@/components/nav/Sidebar";
 
 type DocumentViewProps = {
@@ -38,6 +39,7 @@ export function DocumentView({
   aiAutoGenerateArmed,
   onAiAutoGenerateConsumed,
 }: DocumentViewProps) {
+  const { t } = useI18n();
   const { flows, models, canvasApps } = useMemo(
     () => groupArtifactsByKind(document),
     [document],
@@ -50,7 +52,7 @@ export function DocumentView({
     >
       <TabsContent
         value="summary"
-        className="flex min-h-full w-full min-w-full flex-1 shrink-0 flex-col"
+        className="flex min-h-full w-full min-w-full flex-1 shrink-0 flex-col relative p-0! isolate overflow-hidden"
       >
         <SummarySection
           document={document}
@@ -64,19 +66,19 @@ export function DocumentView({
       </TabsContent>
 
       {flows.length > 0 && (
-        <TabsContent value="flows" className="flex flex-col gap-4">
+        <TabsContent value="flows" className="flex flex-col gap-4 p-6">
           <SectionHeader
-            title="Fluxos"
-            description={`${flows.length} fluxo(s) encontrado(s) neste artefato.`}
+            title={t.documentView.flowsTitle}
+            description={t.documentView.flowsDescription({ count: flows.length })}
           />
           <ArtifactTabs
             items={flows}
-            description={(flow) => (
-              <>
-                Gatilho: {flow.trigger.name} · {flow.actions.length} ação(ões) ·
-                role a roda pra dar zoom, clique nos grupos pra recolher
-              </>
-            )}
+            description={(flow) =>
+              t.documentView.flowItemDescription({
+                triggerName: flow.trigger.name,
+                actionCount: flow.actions.length,
+              })
+            }
           >
             {(flow) => <FlowDagView flow={flow} />}
           </ArtifactTabs>
@@ -84,22 +86,21 @@ export function DocumentView({
       )}
 
       {models.length > 0 && (
-        <TabsContent value="models" className="flex flex-col gap-4">
+        <TabsContent value="models" className="flex flex-col gap-4 p-6">
           <SectionHeader
-            title="Modelos de dados"
-            description={`${models.length} modelo(s) encontrado(s) neste artefato.`}
+            title={t.documentView.modelsTitle}
+            description={t.documentView.modelsDescription({ count: models.length })}
           />
           <ArtifactTabs
             items={models}
             contentClassName="flex flex-col gap-4 lg:flex-row"
-            description={(model) => (
-              <>
-                {model.tables.length} tabela(s) · {model.relationships.length}{" "}
-                relacionamento(s) · {model.measures.length} medida(s) · role a
-                roda pra dar zoom, clique no cabeçalho da tabela pra recolher as
-                colunas, arraste pra reorganizar (posição fica salva)
-              </>
-            )}
+            description={(model) =>
+              t.documentView.modelItemDescription({
+                tables: model.tables.length,
+                relationships: model.relationships.length,
+                measures: model.measures.length,
+              })
+            }
           >
             {(model) => (
               <>
@@ -116,20 +117,14 @@ export function DocumentView({
       )}
 
       {canvasApps.length > 0 && (
-        <TabsContent value="apps" className="flex flex-col gap-4">
+        <TabsContent value="apps" className="flex flex-col gap-4 p-6">
           <SectionHeader
-            title="Apps"
-            description={`${canvasApps.length} canvas app(s) encontrado(s) neste artefato.`}
+            title={t.documentView.appsTitle}
+            description={t.documentView.appsDescription({ count: canvasApps.length })}
           />
           <ArtifactTabs
             items={canvasApps}
-            description={() => (
-              <>
-                Blueprint estático por tela — valores literais/aritmética
-                constante são resolvidos, o resto vira placeholder tracejado
-                marcado como dinâmico. Não é uma simulação fiel do app rodando.
-              </>
-            )}
+            description={() => t.documentView.appsItemDescription}
           >
             {(app) => <WireframeView app={app} />}
           </ArtifactTabs>
@@ -137,18 +132,18 @@ export function DocumentView({
       )}
 
       {document.diagnostics.length > 0 && (
-        <TabsContent value="diagnostics">
+        <TabsContent value="diagnostics" className="p-6">
           <DiagnosticsPanel diagnostics={document.diagnostics} />
         </TabsContent>
       )}
 
       <TabsContent
         value="docs"
-        className="flex flex-col min-w-full w-full min-h-full flex-1 shrink-0 gap-4"
+        className="flex flex-col min-w-full w-full min-h-full flex-1 shrink-0 gap-4 p-6 pb-0 overflow-hidden"
       >
         <SectionHeader
-          title="Documentação gerada"
-          description="Exportação Markdown determinística, sem IA."
+          title={t.documentView.docsTitle}
+          description={t.documentView.docsDescription}
         />
         <MarkdownDocView
           markdown={markdown}
@@ -156,7 +151,7 @@ export function DocumentView({
         />
       </TabsContent>
 
-      <TabsContent value="ai">
+      <TabsContent value="ai" className="p-6">
         <AiExplanationCard
           document={document}
           autoGenerateOnMount={aiAutoGenerateArmed}
