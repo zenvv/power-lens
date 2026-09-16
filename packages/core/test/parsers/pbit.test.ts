@@ -6,6 +6,7 @@ import { validateDocument } from "../../src/ir/index.js";
 import { parsePbit } from "../../src/parsers/powerbi/index.js";
 
 const SCHEMA_PATH = resolve(__dirname, "../../../../fixtures/synthetic/pbit-minimal/DataModelSchema.json");
+const REPORT_LAYOUT_PATH = resolve(__dirname, "../../../../fixtures/synthetic/pbit-minimal/ReportLayout.json");
 
 /**
  * A real .pbit stores DataModelSchema as UTF-16LE without a BOM
@@ -23,9 +24,13 @@ function encodeUtf16LE(text: string): Uint8Array {
   return bytes;
 }
 
-function buildPbitZip(schemaText?: string) {
+function buildPbitZip(schemaText?: string, options?: { includeReportLayout?: boolean }) {
   const text = schemaText ?? readFileSync(SCHEMA_PATH, "utf-8");
-  return zipSync({ DataModelSchema: encodeUtf16LE(text) });
+  const files: Record<string, Uint8Array> = { DataModelSchema: encodeUtf16LE(text) };
+  if (options?.includeReportLayout) {
+    files["Report/Layout"] = encodeUtf16LE(readFileSync(REPORT_LAYOUT_PATH, "utf-8"));
+  }
+  return zipSync(files);
 }
 
 describe("parsePbit — tables e colunas", () => {
@@ -113,6 +118,56 @@ describe("parsePbit — relacionamentos", () => {
   });
 });
 
+describe("parsePbit — Report/Layout", () => {
+  it("does not produce a report artifact when Report/Layout is absent", () => {
+    const bytes = buildPbitZip();
+    const doc = parsePbit(bytes, { fileName: "Sample.pbit", fileSize: bytes.byteLength });
+
+    expect(doc.artifacts.some((a) => a.kind === "report")).toBe(false);
+  });
+
+  it("extracts pages ordered by ordinal, skipping group containers", () => {
+    const bytes = buildPbitZip(undefined, { includeReportLayout: true });
+    const doc = parsePbit(bytes, { fileName: "Sample.pbit", fileSize: bytes.byteLength });
+
+    const report = doc.artifacts.find((a) => a.kind === "report");
+    expect(report?.kind).toBe("report");
+    if (report?.kind !== "report") return;
+
+    expect(report.pages.map((p) => p.name)).toEqual(["Visão geral", "Detalhe"]);
+    expect(report.pages[0]?.visuals).toHaveLength(1);
+  });
+
+  it("extracts visual type, title and field names", () => {
+    const bytes = buildPbitZip(undefined, { includeReportLayout: true });
+    const doc = parsePbit(bytes, { fileName: "Sample.pbit", fileSize: bytes.byteLength });
+    const report = doc.artifacts.find((a) => a.kind === "report");
+    if (report?.kind !== "report") throw new Error("expected report");
+
+    const visual = report.pages[0]!.visuals[0]!;
+    expect(visual.type).toBe("columnChart");
+    expect(visual.title).toBe("Vendas por cliente");
+    expect(visual.fields).toEqual(["Sales.Amount", "Customers.Name"]);
+  });
+
+  it("extracts a visual with no title as undefined, not a placeholder string", () => {
+    const bytes = buildPbitZip(undefined, { includeReportLayout: true });
+    const doc = parsePbit(bytes, { fileName: "Sample.pbit", fileSize: bytes.byteLength });
+    const report = doc.artifacts.find((a) => a.kind === "report");
+    if (report?.kind !== "report") throw new Error("expected report");
+
+    const visual = report.pages[1]!.visuals[0]!;
+    expect(visual.type).toBe("card");
+    expect(visual.title).toBeUndefined();
+  });
+
+  it("produces a document that passes the IR schema with a report artifact present", () => {
+    const bytes = buildPbitZip(undefined, { includeReportLayout: true });
+    const doc = parsePbit(bytes, { fileName: "Sample.pbit", fileSize: bytes.byteLength });
+    expect(validateDocument(doc).ok).toBe(true);
+  });
+});
+
 describe("parsePbit — degradação honesta", () => {
   it("nunca lança em um byte stream que não é zip", () => {
     const doc = parsePbit(new TextEncoder().encode("not a zip"), { fileName: "broken.pbit", fileSize: 9 });
@@ -137,5 +192,17 @@ describe("parsePbit — degradação honesta", () => {
     const bytes = buildPbitZip();
     const doc = parsePbit(bytes, { fileName: "Sample.pbit", fileSize: bytes.byteLength });
     expect(validateDocument(doc).ok).toBe(true);
+  });
+
+  it("avisa mas mantém o DataModel quando Report/Layout não é um JSON válido", () => {
+    const bytes = zipSync({
+      DataModelSchema: encodeUtf16LE(readFileSync(SCHEMA_PATH, "utf-8")),
+      "Report/Layout": encodeUtf16LE("{ not json"),
+    });
+    const doc = parsePbit(bytes, { fileName: "Sample.pbit", fileSize: bytes.byteLength });
+
+    expect(doc.diagnostics.some((d) => d.code === "PL506")).toBe(true);
+    expect(doc.artifacts.some((a) => a.kind === "dataModel")).toBe(true);
+    expect(doc.artifacts.some((a) => a.kind === "report")).toBe(false);
   });
 });

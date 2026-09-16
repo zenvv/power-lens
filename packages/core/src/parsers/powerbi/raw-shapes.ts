@@ -64,3 +64,45 @@ export type RawDataModelSchema = {
   compatibilityLevel?: number;
   model?: RawModel;
 };
+
+/**
+ * Loose shapes for Report/Layout, verificado contra um `.pbit` real
+ * (`reference/pbi-file-example.pbit`, gitignored — docs/FORMAT-NOTES.md
+ * seção 6). Cada `visualContainers[].config` é uma STRING JSON (precisa de
+ * um segundo `JSON.parse`), não um objeto direto. Um visual de verdade tem
+ * `singleVisual`; um container de agrupamento (caixa decorativa sem dado)
+ * tem `singleVisualGroup` no lugar e é ignorado pelo parser — não é um
+ * "visual" no sentido de `Report.pages[].visuals[]` do IR.
+ */
+export type RawVisualQuerySelect = { Name?: string };
+
+export type RawVisualLiteralExpr = { Literal?: { Value?: string } };
+
+export type RawVisualObjectProperty = { properties?: { text?: { expr?: RawVisualLiteralExpr } } };
+
+export type RawSingleVisual = {
+  visualType?: string;
+  prototypeQuery?: { Select?: RawVisualQuerySelect[] };
+  objects?: { title?: RawVisualObjectProperty[] };
+};
+
+export type RawVisualContainerConfig = {
+  singleVisual?: RawSingleVisual;
+  singleVisualGroup?: { displayName?: string };
+};
+
+export type RawVisualContainer = {
+  /** JSON serializado — ver comentário do módulo. */
+  config?: string;
+};
+
+export type RawReportSection = {
+  name?: string;
+  displayName?: string;
+  ordinal?: number;
+  visualContainers?: RawVisualContainer[];
+};
+
+export type RawReportLayout = {
+  sections?: RawReportSection[];
+};

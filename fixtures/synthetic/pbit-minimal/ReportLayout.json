@@ -1,0 +1,29 @@
+{
+  "id": 1,
+  "reportId": 1,
+  "sections": [
+    {
+      "name": "sec1",
+      "displayName": "Visão geral",
+      "ordinal": 0,
+      "visualContainers": [
+        {
+          "config": "{\"name\":\"vc1\",\"singleVisual\":{\"visualType\":\"columnChart\",\"prototypeQuery\":{\"Select\":[{\"Name\":\"Sales.Amount\"},{\"Name\":\"Customers.Name\"}]},\"objects\":{\"title\":[{\"properties\":{\"text\":{\"expr\":{\"Literal\":{\"Value\":\"'Vendas por cliente'\"}}}}}]}}}"
+        },
+        {
+          "config": "{\"name\":\"vc2\",\"singleVisualGroup\":{\"displayName\":\"Grupo 1\",\"groupMode\":0}}"
+        }
+      ]
+    },
+    {
+      "name": "sec2",
+      "displayName": "Detalhe",
+      "ordinal": 1,
+      "visualContainers": [
+        {
+          "config": "{\"name\":\"vc3\",\"singleVisual\":{\"visualType\":\"card\",\"prototypeQuery\":{\"Select\":[{\"Name\":\"Total Amount\"}]}}}"
+        }
+      ]
+    }
+  ]
+}

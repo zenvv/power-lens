@@ -9,6 +9,7 @@ import {
   type Relationship,
 } from "../../ir/index.js";
 import { readUtf16LEText, unzipNormalized } from "../zip.js";
+import { parseReportLayout } from "./report.js";
 import type { RawColumn, RawDataModelSchema, RawMeasure, RawRelationship, RawTable, RawTmslExpression } from "./raw-shapes.js";
 
 export type PbitSource = {
@@ -92,9 +93,9 @@ function mapTable(raw: RawTable): ModelTable {
 
 /**
  * Parses a .pbit's DataModelSchema (TMSL) into a PowerLensDocument with a
- * DataModel artifact. Never throws — every failure degrades to a Diagnostic
- * (spec principle: "degradação honesta"). Report/Layout (visuals) is out of
- * scope here — docs/FORMAT-NOTES.md seção 6.
+ * DataModel artifact, plus Report/Layout (páginas/visuais) quando presente.
+ * Never throws — every failure degrades to a Diagnostic (spec principle:
+ * "degradação honesta").
  */
 export function parsePbit(bytes: Uint8Array, source: PbitSource): PowerLensDocument {
   const document = createEmptyDocument({ ...source, detectedFormat: "pbit" });
@@ -180,6 +181,13 @@ export function parsePbit(bytes: Uint8Array, source: PbitSource): PowerLensDocum
   };
 
   document.artifacts = [dataModel];
+
+  const reportLayoutText = readUtf16LEText(entries, "Report/Layout");
+  if (reportLayoutText !== undefined) {
+    const report = parseReportLayout(reportLayoutText, `${dataModel.id}-report`, diagnostics);
+    if (report) document.artifacts.push(report);
+  }
+
   document.diagnostics = diagnostics;
   return document;
 }
