@@ -1,5 +1,6 @@
 import { parse as parseYaml } from "yaml";
 import type { Component, Diagnostic, Expression, Screen } from "../../ir/index.js";
+import { DEFAULT_LOCALE, getMessages, type Locale } from "../../i18n/index.js";
 import { mapExpression, mapRoot } from "./controls.js";
 import type { RawAppFile, RawComponentFile, RawScreenFile } from "./raw-shapes.js";
 import { readText } from "../zip.js";
@@ -15,7 +16,9 @@ import { readText } from "../zip.js";
 export function parseSourceFiles(
   entries: Record<string, Uint8Array>,
   diagnostics: Diagnostic[],
+  locale: Locale = DEFAULT_LOCALE,
 ): { screens: Screen[]; components: Component[]; appOnStart?: Expression | undefined } {
+  const messages = getMessages(locale).parsers.msapp;
   const srcPaths = Object.keys(entries)
     .filter((path) => /^Src\/.*\.pa\.yaml$/i.test(path))
     .sort();
@@ -36,7 +39,7 @@ export function parseSourceFiles(
       diagnostics.push({
         code: "PL103",
         severity: "error",
-        message: `Falha ao interpretar YAML: ${String(err)}`,
+        message: messages.yamlParseError({ error: String(err) }),
         path,
       });
       continue;
@@ -61,7 +64,7 @@ export function parseSourceFiles(
         screens.push({
           name: screenName,
           order: screenOrder++,
-          root: mapRoot(screenName, "Screen", def ?? {}, diagnostics),
+          root: mapRoot(screenName, "Screen", def ?? {}, diagnostics, locale),
         });
       }
       continue;
@@ -71,7 +74,7 @@ export function parseSourceFiles(
       for (const [componentName, def] of Object.entries(record.ComponentDefinitions)) {
         components.push({
           name: componentName,
-          root: mapRoot(componentName, "Component", def ?? {}, diagnostics),
+          root: mapRoot(componentName, "Component", def ?? {}, diagnostics, locale),
         });
       }
       continue;
@@ -82,9 +85,8 @@ export function parseSourceFiles(
     diagnostics.push({
       code: "PL105",
       severity: "info",
-      message:
-        "A ordem das telas foi inferida pela ordem alfabética dos arquivos Src/*.pa.yaml, não por uma fonte autoritativa do Studio.",
-      hint: "Ver docs/FORMAT-NOTES.md — ordem real de telas é uma lacuna conhecida.",
+      message: messages.screenOrderInferred.message,
+      hint: messages.screenOrderInferred.hint,
     });
   }
 

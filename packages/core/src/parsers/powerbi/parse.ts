@@ -8,6 +8,7 @@ import {
   type PowerLensDocument,
   type Relationship,
 } from "../../ir/index.js";
+import { DEFAULT_LOCALE, getMessages, type Locale } from "../../i18n/index.js";
 import { readUtf16LEText, unzipNormalized } from "../zip.js";
 import { parseReportLayout } from "./report.js";
 import type { RawColumn, RawDataModelSchema, RawMeasure, RawRelationship, RawTable, RawTmslExpression } from "./raw-shapes.js";
@@ -29,7 +30,12 @@ function joinExpression(expression: RawTmslExpression | undefined): string | und
  * TMSL). "none" is not a real-world case we've observed; it falls back to
  * manyToOne with a diagnostic rather than producing an invalid IR value.
  */
-function mapCardinality(rel: RawRelationship, diagnostics: Diagnostic[], path: string): Relationship["cardinality"] {
+function mapCardinality(
+  rel: RawRelationship,
+  diagnostics: Diagnostic[],
+  path: string,
+  locale: Locale = DEFAULT_LOCALE,
+): Relationship["cardinality"] {
   const from = rel.fromCardinality ?? "many";
   const to = rel.toCardinality ?? "one";
 
@@ -37,7 +43,7 @@ function mapCardinality(rel: RawRelationship, diagnostics: Diagnostic[], path: s
     diagnostics.push({
       code: "PL504",
       severity: "info",
-      message: `Relacionamento com cardinalidade "${from}"/"${to}" fora do esperado ("one"/"many"); tratado como muitos-para-um.`,
+      message: getMessages(locale).parsers.powerbi.cardinalityUnexpected({ from, to }),
       path,
     });
     return "manyToOne";
@@ -59,10 +65,10 @@ function mapCrossFilter(rel: RawRelationship): Relationship["crossFilter"] {
   return rel.crossFilteringBehavior === "bothDirections" ? "both" : "single";
 }
 
-function mapColumn(raw: RawColumn): ModelColumn {
+function mapColumn(raw: RawColumn, noName: string): ModelColumn {
   const isCalculated = raw.type === "calculated";
   return {
-    name: raw.name ?? "(sem nome)",
+    name: raw.name ?? noName,
     dataType: raw.dataType ?? "unknown",
     isCalculated,
     ...(isCalculated && joinExpression(raw.expression) !== undefined
@@ -71,21 +77,21 @@ function mapColumn(raw: RawColumn): ModelColumn {
   };
 }
 
-function mapMeasure(raw: RawMeasure, tableName: string): Measure {
+function mapMeasure(raw: RawMeasure, tableName: string, noName: string): Measure {
   return {
-    name: raw.name ?? "(sem nome)",
+    name: raw.name ?? noName,
     table: tableName,
     expression: joinExpression(raw.expression) ?? "",
     ...(raw.formatString ? { formatString: raw.formatString } : {}),
   };
 }
 
-function mapTable(raw: RawTable): ModelTable {
-  const name = raw.name ?? "(sem nome)";
+function mapTable(raw: RawTable, noName: string): ModelTable {
+  const name = raw.name ?? noName;
   const sourceExpression = joinExpression(raw.partitions?.[0]?.source?.expression);
   return {
     name,
-    columns: (raw.columns ?? []).map(mapColumn),
+    columns: (raw.columns ?? []).map((column) => mapColumn(column, noName)),
     ...(sourceExpression !== undefined ? { sourceExpression } : {}),
     ...(raw.isHidden ? { isHidden: true } : {}),
   };
@@ -97,7 +103,8 @@ function mapTable(raw: RawTable): ModelTable {
  * Never throws — every failure degrades to a Diagnostic (spec principle:
  * "degradação honesta").
  */
-export function parsePbit(bytes: Uint8Array, source: PbitSource): PowerLensDocument {
+export function parsePbit(bytes: Uint8Array, source: PbitSource, locale: Locale = DEFAULT_LOCALE): PowerLensDocument {
+  const messages = getMessages(locale).parsers;
   const document = createEmptyDocument({ ...source, detectedFormat: "pbit" });
   const diagnostics: Diagnostic[] = [];
 
@@ -108,7 +115,7 @@ export function parsePbit(bytes: Uint8Array, source: PbitSource): PowerLensDocum
     diagnostics.push({
       code: "PL500",
       severity: "error",
-      message: `Não foi possível abrir o arquivo como zip: ${String(err)}`,
+      message: messages.powerbi.cantOpenZip({ error: String(err) }),
     });
     document.diagnostics = diagnostics;
     return document;
@@ -119,7 +126,7 @@ export function parsePbit(bytes: Uint8Array, source: PbitSource): PowerLensDocum
     diagnostics.push({
       code: "PL501",
       severity: "error",
-      message: 'Não encontrei "DataModelSchema" dentro do arquivo.',
+      message: messages.powerbi.dataModelSchemaNotFound,
     });
     document.diagnostics = diagnostics;
     return document;
@@ -132,7 +139,7 @@ export function parsePbit(bytes: Uint8Array, source: PbitSource): PowerLensDocum
     diagnostics.push({
       code: "PL502",
       severity: "error",
-      message: `"DataModelSchema" não é um JSON válido: ${String(err)}`,
+      message: messages.powerbi.dataModelSchemaInvalidJson({ error: String(err) }),
     });
     document.diagnostics = diagnostics;
     return document;
@@ -143,28 +150,28 @@ export function parsePbit(bytes: Uint8Array, source: PbitSource): PowerLensDocum
     diagnostics.push({
       code: "PL503",
       severity: "warning",
-      message: 'Não encontrei "model.tables" no DataModelSchema; modelo tratado como vazio.',
+      message: messages.powerbi.modelTablesNotFound,
     });
   }
 
-  const tables = (rawTables ?? []).map(mapTable);
+  const tables = (rawTables ?? []).map((table) => mapTable(table, messages.common.noName));
 
   const measures: Measure[] = [];
   for (const rawTable of rawTables ?? []) {
-    const tableName = rawTable.name ?? "(sem nome)";
+    const tableName = rawTable.name ?? messages.common.noName;
     for (const rawMeasure of rawTable.measures ?? []) {
-      measures.push(mapMeasure(rawMeasure, tableName));
+      measures.push(mapMeasure(rawMeasure, tableName, messages.common.noName));
     }
   }
 
   const relationships: Relationship[] = (schema.model?.relationships ?? []).map((rel) => {
-    const from = { table: rel.fromTable ?? "(desconhecida)", column: rel.fromColumn ?? "(desconhecida)" };
-    const to = { table: rel.toTable ?? "(desconhecida)", column: rel.toColumn ?? "(desconhecida)" };
+    const from = { table: rel.fromTable ?? messages.common.unknown, column: rel.fromColumn ?? messages.common.unknown };
+    const to = { table: rel.toTable ?? messages.common.unknown, column: rel.toColumn ?? messages.common.unknown };
     const path = `${from.table}.${from.column} -> ${to.table}.${to.column}`;
     return {
       from,
       to,
-      cardinality: mapCardinality(rel, diagnostics, path),
+      cardinality: mapCardinality(rel, diagnostics, path, locale),
       crossFilter: mapCrossFilter(rel),
       isActive: rel.isActive ?? true,
     };
@@ -184,7 +191,7 @@ export function parsePbit(bytes: Uint8Array, source: PbitSource): PowerLensDocum
 
   const reportLayoutText = readUtf16LEText(entries, "Report/Layout");
   if (reportLayoutText !== undefined) {
-    const report = parseReportLayout(reportLayoutText, `${dataModel.id}-report`, diagnostics);
+    const report = parseReportLayout(reportLayoutText, `${dataModel.id}-report`, diagnostics, locale);
     if (report) document.artifacts.push(report);
   }
 

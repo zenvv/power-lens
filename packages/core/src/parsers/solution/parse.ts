@@ -1,4 +1,5 @@
 import { createEmptyDocument, type Diagnostic, type PowerLensDocument, type SolutionMeta } from "../../ir/index.js";
+import { DEFAULT_LOCALE, getMessages, type Locale } from "../../i18n/index.js";
 import { parseFlow } from "../flow/index.js";
 import { parseMsapp } from "../msapp/index.js";
 import { readText, unzipNormalized } from "../zip.js";
@@ -24,7 +25,8 @@ export type SolutionSource = {
  * doesn't. Never throws — every failure degrades to a Diagnostic on the
  * returned document.
  */
-export function parseSolution(bytes: Uint8Array, source: SolutionSource): PowerLensDocument {
+export function parseSolution(bytes: Uint8Array, source: SolutionSource, locale: Locale = DEFAULT_LOCALE): PowerLensDocument {
+  const messages = getMessages(locale).parsers.solution;
   const document = createEmptyDocument({ ...source, detectedFormat: "solution" });
   const diagnostics: Diagnostic[] = [];
 
@@ -35,7 +37,7 @@ export function parseSolution(bytes: Uint8Array, source: SolutionSource): PowerL
     diagnostics.push({
       code: "PL300",
       severity: "error",
-      message: `Não foi possível abrir o arquivo como zip: ${String(err)}`,
+      message: messages.cantOpenZip({ error: String(err) }),
     });
     document.diagnostics = diagnostics;
     return document;
@@ -48,10 +50,10 @@ export function parseSolution(bytes: Uint8Array, source: SolutionSource): PowerL
     diagnostics.push({
       code: "PL304",
       severity: "warning",
-      message: "solution.xml não encontrado no zip; metadados da solution não estarão disponíveis.",
+      message: messages.solutionXmlNotFound,
     });
   } else {
-    const manifest = parseSolutionXml(solutionXmlText, diagnostics);
+    const manifest = parseSolutionXml(solutionXmlText, diagnostics, locale);
     if (manifest) {
       solutionMeta = {
         kind: "solutionMeta",
@@ -72,7 +74,7 @@ export function parseSolution(bytes: Uint8Array, source: SolutionSource): PowerL
     const innerBytes = entries[path];
     if (!innerBytes) continue;
 
-    const innerDocument = parseMsapp(innerBytes, { fileName: path, fileSize: innerBytes.byteLength });
+    const innerDocument = parseMsapp(innerBytes, { fileName: path, fileSize: innerBytes.byteLength }, locale);
     document.artifacts.push(...innerDocument.artifacts);
     for (const diagnostic of innerDocument.diagnostics) {
       diagnostics.push({ ...diagnostic, path: diagnostic.path ? `${path}!${diagnostic.path}` : path });
@@ -87,7 +89,7 @@ export function parseSolution(bytes: Uint8Array, source: SolutionSource): PowerL
     const workflowBytes = entries[path];
     if (!workflowBytes) continue;
 
-    const flowDocument = parseFlow(workflowBytes, { fileName: path, fileSize: workflowBytes.byteLength });
+    const flowDocument = parseFlow(workflowBytes, { fileName: path, fileSize: workflowBytes.byteLength }, locale);
     document.artifacts.push(...flowDocument.artifacts);
     for (const diagnostic of flowDocument.diagnostics) {
       diagnostics.push({ ...diagnostic, path: diagnostic.path ? `${path}!${diagnostic.path}` : path });
@@ -97,14 +99,14 @@ export function parseSolution(bytes: Uint8Array, source: SolutionSource): PowerL
   const customizationsXmlText = readText(entries, "customizations.xml");
   let dataModel: ReturnType<typeof parseCustomizationsXml> | undefined;
   if (customizationsXmlText !== undefined) {
-    dataModel = parseCustomizationsXml(customizationsXmlText, solutionMeta?.id ?? "dataverse-tables", diagnostics);
+    dataModel = parseCustomizationsXml(customizationsXmlText, solutionMeta?.id ?? "dataverse-tables", diagnostics, locale);
     if (dataModel) {
       document.artifacts.push(dataModel);
     } else {
       diagnostics.push({
         code: "PL306",
         severity: "info",
-        message: "customizations.xml encontrado, mas nenhuma tabela Dataverse foi reconhecida nele.",
+        message: messages.customizationsNoTables,
       });
     }
   }
@@ -113,11 +115,11 @@ export function parseSolution(bytes: Uint8Array, source: SolutionSource): PowerL
     diagnostics.push({
       code: "PL307",
       severity: "warning",
-      message: "Nenhum artefato reconhecido dentro da solution (nem CanvasApps/*.msapp, nem Workflows/*.json, nem solution.xml válido).",
+      message: messages.noArtifactsRecognized,
     });
   }
 
-  document.dependencies = linkDependencies(document, diagnostics);
+  document.dependencies = linkDependencies(document, diagnostics, locale);
   document.diagnostics = diagnostics;
   return document;
 }

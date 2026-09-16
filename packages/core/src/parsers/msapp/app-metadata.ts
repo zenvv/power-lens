@@ -1,4 +1,5 @@
 import type { Diagnostic } from "../../ir/index.js";
+import { DEFAULT_LOCALE, getMessages, type Locale } from "../../i18n/index.js";
 import type { RawPropertiesFile } from "./raw-shapes.js";
 import { readText } from "../zip.js";
 
@@ -8,13 +9,15 @@ export function parseAppMetadata(
   entries: Record<string, Uint8Array>,
   fallbackName: string,
   diagnostics: Diagnostic[],
+  locale: Locale = DEFAULT_LOCALE,
 ): { id: string; name: string } {
+  const messages = getMessages(locale).parsers.msapp;
   const text = readText(entries, PROPERTIES_PATH);
   if (text === undefined) {
     diagnostics.push({
       code: "PL106",
       severity: "warning",
-      message: `${PROPERTIES_PATH} não encontrado; usando o nome do arquivo como id/nome do app.`,
+      message: messages.propertiesNotFound({ path: PROPERTIES_PATH }),
       path: PROPERTIES_PATH,
     });
     return { id: fallbackName, name: fallbackName };
@@ -30,7 +33,7 @@ export function parseAppMetadata(
     diagnostics.push({
       code: "PL107",
       severity: "warning",
-      message: `${PROPERTIES_PATH} não é um JSON válido: ${String(err)}`,
+      message: messages.propertiesInvalidJson({ path: PROPERTIES_PATH, error: String(err) }),
       path: PROPERTIES_PATH,
     });
     return { id: fallbackName, name: fallbackName };

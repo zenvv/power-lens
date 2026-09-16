@@ -1,4 +1,5 @@
 import { createEmptyDocument, type CloudFlow, type Diagnostic, type FlowNode, type PowerLensDocument } from "../../ir/index.js";
+import { DEFAULT_LOCALE, getMessages, type Locale } from "../../i18n/index.js";
 import { buildConnectionRefs, extractConnectorName, flattenActions } from "./actions.js";
 import type { RawFlowPackage, RawWorkflowDefinition } from "./raw-shapes.js";
 
@@ -20,7 +21,8 @@ function resolveDefinition(parsed: RawWorkflowDefinition & RawFlowPackage): RawW
  * section 4) — degrades to a Diagnostic rather than throwing whenever the
  * shape doesn't hold.
  */
-export function parseFlow(bytes: Uint8Array, source: FlowSource): PowerLensDocument {
+export function parseFlow(bytes: Uint8Array, source: FlowSource, locale: Locale = DEFAULT_LOCALE): PowerLensDocument {
+  const messages = getMessages(locale).parsers.flow;
   const document = createEmptyDocument({ ...source, detectedFormat: "flow" });
   const diagnostics: Diagnostic[] = [];
 
@@ -31,7 +33,7 @@ export function parseFlow(bytes: Uint8Array, source: FlowSource): PowerLensDocum
     diagnostics.push({
       code: "PL400",
       severity: "error",
-      message: `Não foi possível interpretar o arquivo como JSON: ${String(err)}`,
+      message: messages.invalidJson({ error: String(err) }),
     });
     document.diagnostics = diagnostics;
     return document;
@@ -41,7 +43,7 @@ export function parseFlow(bytes: Uint8Array, source: FlowSource): PowerLensDocum
     diagnostics.push({
       code: "PL401",
       severity: "error",
-      message: "O JSON não representa um objeto no nível raiz.",
+      message: messages.notObjectAtRoot,
     });
     document.diagnostics = diagnostics;
     return document;
@@ -52,8 +54,8 @@ export function parseFlow(bytes: Uint8Array, source: FlowSource): PowerLensDocum
     diagnostics.push({
       code: "PL402",
       severity: "error",
-      message: 'Não encontrei "triggers"/"actions" no nível raiz nem em "properties.definition".',
-      hint: "Formato de definição de fluxo ainda não verificado contra um arquivo real — ver docs/FORMAT-NOTES.md seção 4.",
+      message: messages.definitionNotFound.message,
+      hint: messages.definitionNotFound.hint,
     });
     document.diagnostics = diagnostics;
     return document;
@@ -64,13 +66,13 @@ export function parseFlow(bytes: Uint8Array, source: FlowSource): PowerLensDocum
     diagnostics.push({
       code: "PL403",
       severity: "warning",
-      message: 'Nenhum gatilho encontrado em "triggers".',
+      message: messages.noTrigger,
     });
   } else if (triggerEntries.length > 1) {
     diagnostics.push({
       code: "PL404",
       severity: "warning",
-      message: `Encontrados ${triggerEntries.length} gatilhos; um fluxo normalmente tem exatamente um. Usando "${triggerEntries[0]![0]}".`,
+      message: messages.multipleTriggers({ count: triggerEntries.length, firstKey: triggerEntries[0]![0] }),
     });
   }
 
@@ -86,7 +88,7 @@ export function parseFlow(bytes: Uint8Array, source: FlowSource): PowerLensDocum
           : {}),
         ...(firstTrigger[1].inputs !== undefined ? { inputs: firstTrigger[1].inputs } : {}),
       }
-    : { id: "(sem gatilho)", name: "(sem gatilho)", type: "Unknown", runAfter: [] };
+    : { id: messages.noTriggerFallbackName, name: messages.noTriggerFallbackName, type: "Unknown", runAfter: [] };
 
   const actions = flattenActions(definition.actions);
   const connections = buildConnectionRefs(actions, trigger);

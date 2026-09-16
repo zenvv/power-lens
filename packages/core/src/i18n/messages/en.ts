@@ -109,4 +109,93 @@ export const en = {
       hint: "Only calculated when Fill/Color resolve to a fully opaque color (literal or constant RGBA) — large text has a lower threshold (3:1), not distinguished here.",
     },
   },
+  parsers: {
+    common: {
+      noName: "(no name)",
+      unknown: "(unknown)",
+      missing: "(missing)",
+    },
+    detect: {
+      pbipPointerOnly: {
+        message:
+          "The .pbip file is just a pointer; the actual project lives in sibling folders (Report/, SemanticModel/) that weren't included.",
+        hint: "Upload the whole project folder, not just the .pbip file.",
+      },
+      notZipOrFlow: "Unrecognized format: the file is neither a zip nor a flow definition JSON.",
+      zipCantOpen: (p: { error: string }) => `The file has a zip signature but couldn't be opened: ${p.error}`,
+      zipNoSignature:
+        "Unrecognized format: it's a zip, but without solution.xml, Src/*.pa.yaml, DataModelSchema, or DataModel.",
+      extensionFallback: (p: { ext: string }) =>
+        `Format assumed from the "${p.ext}" extension — the zip's internal structure didn't match any known signature.`,
+    },
+    msapp: {
+      cantOpenZip: (p: { error: string }) => `Couldn't open the file as a zip: ${p.error}`,
+      extractedFromPackage: (p: { path: string }) =>
+        `The file was a Power Apps Studio export package; the .msapp was automatically extracted from "${p.path}".`,
+      cantOpenExtracted: (p: { path: string; error: string }) =>
+        `Found "${p.path}" inside the package, but couldn't open it as .msapp: ${p.error}`,
+      multipleMsappFound: (p: { paths: string }) =>
+        `Multiple .msapp files found inside the package (${p.paths}); can't determine which one to analyze.`,
+      flowFolderFound: (p: { count: number }) =>
+        `The export package also contains Microsoft.Flow/ (${p.count} flow file(s)), not parsed in this phase yet.`,
+      childrenItemNotObject: "Children item isn't an object; skipped.",
+      childrenItemEmptyObject: "Children item is an empty object; skipped.",
+      dataSourcesInvalidJson: (p: { path: string; error: string }) => `${p.path} isn't valid JSON: ${p.error}`,
+      propertiesNotFound: (p: { path: string }) => `${p.path} not found; using the file name as the app's id/name.`,
+      propertiesInvalidJson: (p: { path: string; error: string }) => `${p.path} isn't valid JSON: ${p.error}`,
+      yamlParseError: (p: { error: string }) => `Failed to parse YAML: ${p.error}`,
+      screenOrderInferred: {
+        message:
+          "Screen order was inferred from the alphabetical order of Src/*.pa.yaml files, not from an authoritative Studio source.",
+        hint: "See docs/FORMAT-NOTES.md — real screen order is a known gap.",
+      },
+    },
+    flow: {
+      invalidJson: (p: { error: string }) => `Couldn't parse the file as JSON: ${p.error}`,
+      notObjectAtRoot: "The JSON doesn't represent an object at the root level.",
+      definitionNotFound: {
+        message: 'Couldn\'t find "triggers"/"actions" at the root level or in "properties.definition".',
+        hint: "Flow definition format not yet verified against a real file — see docs/FORMAT-NOTES.md section 4.",
+      },
+      noTrigger: 'No trigger found in "triggers".',
+      multipleTriggers: (p: { count: number; firstKey: string }) =>
+        `Found ${p.count} triggers; a flow normally has exactly one. Using "${p.firstKey}".`,
+      noTriggerFallbackName: "(no trigger)",
+    },
+    solution: {
+      cantOpenZip: (p: { error: string }) => `Couldn't open the file as a zip: ${p.error}`,
+      solutionXmlNotFound: "solution.xml not found in the zip; solution metadata won't be available.",
+      customizationsNoTables: "customizations.xml found, but no Dataverse table was recognized in it.",
+      noArtifactsRecognized:
+        "No artifact recognized inside the solution (neither CanvasApps/*.msapp, nor Workflows/*.json, nor a valid solution.xml).",
+      solutionXmlInvalid: (p: { error: string }) => `solution.xml isn't valid XML: ${p.error}`,
+      solutionXmlUnexpectedShape: {
+        message: "solution.xml doesn't have the expected shape (ImportExportXml/SolutionManifest not found).",
+        hint: "Format not yet verified against a real file — see docs/FORMAT-NOTES.md section 2.",
+      },
+      solutionXmlNoUniqueName: "solution.xml has no UniqueName.",
+      unknownSolutionName: "Unknown solution",
+      customizationsInvalidXml: (p: { error: string }) => `customizations.xml isn't valid XML: ${p.error}`,
+      relationshipTypeUnrecognized: (p: { name: string; type: string }) =>
+        `Relationship "${p.name}" with EntityRelationshipType "${p.type}" not recognized; skipped.`,
+      dataverseTablesName: "Dataverse tables",
+      childFlowNotFound: {
+        message: (p: { actionName: string; ref: string }) =>
+          `Action "${p.actionName}" seems to invoke another flow (reference "${p.ref}"), but no flow with that name was found in this solution.`,
+        hint: "The child flow might be outside this solution/environment, or the name match failed — extraction not verified against a real definition.json.",
+      },
+    },
+    powerbi: {
+      cardinalityUnexpected: (p: { from: string; to: string }) =>
+        `Relationship with cardinality "${p.from}"/"${p.to}" outside the expected range ("one"/"many"); treated as many-to-one.`,
+      cantOpenZip: (p: { error: string }) => `Couldn't open the file as a zip: ${p.error}`,
+      dataModelSchemaNotFound: 'Couldn\'t find "DataModelSchema" inside the file.',
+      dataModelSchemaInvalidJson: (p: { error: string }) => `"DataModelSchema" isn't valid JSON: ${p.error}`,
+      modelTablesNotFound: 'Couldn\'t find "model.tables" in DataModelSchema; model treated as empty.',
+      reportLayoutInvalidJson: (p: { error: string }) => `"Report/Layout" isn't valid JSON: ${p.error}`,
+      reportSectionsNotFound: 'Couldn\'t find "sections" in "Report/Layout"; report treated as having no pages.',
+      pageFallback: (p: { n: number }) => `Page ${p.n}`,
+      reportName: "Report",
+    },
+  },
 };

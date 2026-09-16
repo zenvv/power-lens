@@ -1,4 +1,5 @@
 import { createEmptyDocument, type CanvasApp, type Diagnostic, type PowerLensDocument } from "../../ir/index.js";
+import { DEFAULT_LOCALE, getMessages, type Locale } from "../../i18n/index.js";
 import { parseAppMetadata } from "./app-metadata.js";
 import { parseDataSources } from "./data-sources.js";
 import { extractReferences, extractVariableUsages } from "./references.js";
@@ -16,7 +17,8 @@ export type MsappSource = {
  * Never throws for malformed input — every failure degrades to a Diagnostic
  * on the returned document (spec principle: "degradação honesta").
  */
-export function parseMsapp(bytes: Uint8Array, source: MsappSource): PowerLensDocument {
+export function parseMsapp(bytes: Uint8Array, source: MsappSource, locale: Locale = DEFAULT_LOCALE): PowerLensDocument {
+  const messages = getMessages(locale).parsers.msapp;
   const document = createEmptyDocument({ ...source, detectedFormat: "msapp" });
   const diagnostics: Diagnostic[] = [];
 
@@ -27,7 +29,7 @@ export function parseMsapp(bytes: Uint8Array, source: MsappSource): PowerLensDoc
     diagnostics.push({
       code: "PL100",
       severity: "error",
-      message: `Não foi possível abrir o arquivo como zip: ${String(err)}`,
+      message: messages.cantOpenZip({ error: String(err) }),
     });
     document.diagnostics = diagnostics;
     return document;
@@ -43,25 +45,25 @@ export function parseMsapp(bytes: Uint8Array, source: MsappSource): PowerLensDoc
     if (inner.kind === "found") {
       const innerBytes = outerEntries[inner.path];
       try {
-        if (!innerBytes) throw new Error("entrada vazia");
+        if (!innerBytes) throw new Error("empty entry");
         entries = unzipNormalized(innerBytes);
         diagnostics.push({
           code: "PL109",
           severity: "info",
-          message: `O arquivo era um pacote de export do Power Apps Studio; o .msapp foi extraído automaticamente de "${inner.path}".`,
+          message: messages.extractedFromPackage({ path: inner.path }),
         });
       } catch (err) {
         diagnostics.push({
           code: "PL111",
           severity: "error",
-          message: `Encontrado "${inner.path}" dentro do pacote, mas não foi possível abri-lo como .msapp: ${String(err)}`,
+          message: messages.cantOpenExtracted({ path: inner.path, error: String(err) }),
         });
       }
     } else if (inner.kind === "ambiguous") {
       diagnostics.push({
         code: "PL110",
         severity: "error",
-        message: `Múltiplos arquivos .msapp encontrados no pacote (${inner.paths.join(", ")}); não é possível determinar qual analisar.`,
+        message: messages.multipleMsappFound({ paths: inner.paths.join(", ") }),
       });
     }
 
@@ -70,15 +72,15 @@ export function parseMsapp(bytes: Uint8Array, source: MsappSource): PowerLensDoc
       diagnostics.push({
         code: "PL112",
         severity: "info",
-        message: `O pacote de export também contém Microsoft.Flow/ (${flowFolderPaths.length} arquivo(s) de fluxo), que ainda não é parseado nesta fase.`,
+        message: messages.flowFolderFound({ count: flowFolderPaths.length }),
       });
     }
   }
 
-  const { screens, components, appOnStart } = parseSourceFiles(entries, diagnostics);
-  const dataSources = parseDataSources(entries, diagnostics);
+  const { screens, components, appOnStart } = parseSourceFiles(entries, diagnostics, locale);
+  const dataSources = parseDataSources(entries, diagnostics, locale);
   const fallbackName = source.fileName.replace(/\.msapp$/i, "");
-  const { id, name } = parseAppMetadata(entries, fallbackName, diagnostics);
+  const { id, name } = parseAppMetadata(entries, fallbackName, diagnostics, locale);
 
   const controlNames = collectControlNames(screens, components);
   const screenNames = new Set(screens.map((screen) => screen.name));

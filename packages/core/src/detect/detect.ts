@@ -1,5 +1,6 @@
 import type { Diagnostic, SourceFormat } from "../ir/index.js";
 import { unzipNormalized } from "../parsers/zip.js";
+import { DEFAULT_LOCALE, getMessages, type Locale } from "../i18n/index.js";
 
 export type DetectionResult =
   | { format: SourceFormat; diagnostics: Diagnostic[] }
@@ -42,7 +43,8 @@ function looksLikeFlowDefinition(bytes: Uint8Array): boolean {
  * (spec section 4). Never throws — an unrecognized file yields
  * `format: undefined` plus a diagnostic explaining what was checked.
  */
-export function detectFormat(bytes: Uint8Array, fileName: string): DetectionResult {
+export function detectFormat(bytes: Uint8Array, fileName: string, locale: Locale = DEFAULT_LOCALE): DetectionResult {
+  const messages = getMessages(locale).parsers.detect;
   const ext = extensionOf(fileName);
 
   if (!looksLikeZip(bytes)) {
@@ -57,9 +59,8 @@ export function detectFormat(bytes: Uint8Array, fileName: string): DetectionResu
           {
             code: "PL201",
             severity: "warning",
-            message:
-              "Arquivos .pbip são apenas um ponteiro; o projeto real está em pastas irmãs (Report/, SemanticModel/) que não foram enviadas.",
-            hint: "Envie a pasta do projeto inteira, não só o arquivo .pbip.",
+            message: messages.pbipPointerOnly.message,
+            hint: messages.pbipPointerOnly.hint,
           },
         ],
       };
@@ -71,7 +72,7 @@ export function detectFormat(bytes: Uint8Array, fileName: string): DetectionResu
         {
           code: "PL200",
           severity: "error",
-          message: "Formato não reconhecido: o arquivo não é um zip nem um JSON de definição de fluxo.",
+          message: messages.notZipOrFlow,
         },
       ],
     };
@@ -87,7 +88,7 @@ export function detectFormat(bytes: Uint8Array, fileName: string): DetectionResu
         {
           code: "PL202",
           severity: "error",
-          message: `O arquivo tem assinatura de zip mas não pôde ser aberto: ${String(err)}`,
+          message: messages.zipCantOpen({ error: String(err) }),
         },
       ],
     };
@@ -134,7 +135,7 @@ export function detectFormat(bytes: Uint8Array, fileName: string): DetectionResu
         {
           code: "PL203",
           severity: "info",
-          message: `Formato assumido pela extensão "${ext}" — a estrutura interna do zip não bateu com nenhuma assinatura conhecida.`,
+          message: messages.extensionFallback({ ext }),
         },
       ],
     };
@@ -146,7 +147,7 @@ export function detectFormat(bytes: Uint8Array, fileName: string): DetectionResu
       {
         code: "PL200",
         severity: "error",
-        message: "Formato não reconhecido: é um zip, mas sem solution.xml, Src/*.pa.yaml, DataModelSchema ou DataModel.",
+        message: messages.zipNoSignature,
       },
     ],
   };

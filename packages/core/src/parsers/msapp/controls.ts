@@ -1,4 +1,5 @@
 import type { Control, Diagnostic, Expression } from "../../ir/index.js";
+import { DEFAULT_LOCALE, getMessages, type Locale } from "../../i18n/index.js";
 import type { RawControlNode, RawScreenOrComponentDef } from "./raw-shapes.js";
 
 /**
@@ -63,8 +64,13 @@ export function mapProperties(raw: Record<string, unknown> | undefined): Record<
   return result;
 }
 
-export function mapChildren(rawChildren: unknown[] | undefined, diagnostics: Diagnostic[]): Control[] {
+export function mapChildren(
+  rawChildren: unknown[] | undefined,
+  diagnostics: Diagnostic[],
+  locale: Locale = DEFAULT_LOCALE,
+): Control[] {
   if (!rawChildren) return [];
+  const messages = getMessages(locale).parsers.msapp;
 
   const controls: Control[] = [];
   for (const child of rawChildren) {
@@ -72,7 +78,7 @@ export function mapChildren(rawChildren: unknown[] | undefined, diagnostics: Dia
       diagnostics.push({
         code: "PL108",
         severity: "warning",
-        message: "Item de Children não é um objeto; ignorado.",
+        message: messages.childrenItemNotObject,
       });
       continue;
     }
@@ -83,24 +89,29 @@ export function mapChildren(rawChildren: unknown[] | undefined, diagnostics: Dia
       diagnostics.push({
         code: "PL108",
         severity: "warning",
-        message: "Item de Children é um objeto vazio; ignorado.",
+        message: messages.childrenItemEmptyObject,
       });
       continue;
     }
 
     const [name, node] = first;
-    controls.push(mapControl(name, node ?? {}, diagnostics));
+    controls.push(mapControl(name, node ?? {}, diagnostics, locale));
   }
   return controls;
 }
 
-export function mapControl(name: string, node: RawControlNode, diagnostics: Diagnostic[]): Control {
+export function mapControl(
+  name: string,
+  node: RawControlNode,
+  diagnostics: Diagnostic[],
+  locale: Locale = DEFAULT_LOCALE,
+): Control {
   return {
     name,
     type: resolveControlType(node),
     ...(node.Variant ? { variant: node.Variant } : {}),
     properties: mapProperties(node.Properties),
-    children: mapChildren(node.Children, diagnostics),
+    children: mapChildren(node.Children, diagnostics, locale),
   };
 }
 
@@ -116,11 +127,12 @@ export function mapRoot(
   type: string,
   def: RawScreenOrComponentDef,
   diagnostics: Diagnostic[],
+  locale: Locale = DEFAULT_LOCALE,
 ): Control {
   return {
     name,
     type,
     properties: mapProperties(def.Properties),
-    children: mapChildren(def.Children, diagnostics),
+    children: mapChildren(def.Children, diagnostics, locale),
   };
 }

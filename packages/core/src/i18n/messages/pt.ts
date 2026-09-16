@@ -105,4 +105,94 @@ export const pt = {
       hint: "Calculado só quando Fill/Color resolvem pra uma cor totalmente opaca (literal ou RGBA constante) — texto grande tem um limite menor (3:1), não diferenciado aqui.",
     },
   },
+  parsers: {
+    common: {
+      noName: "(sem nome)",
+      unknown: "(desconhecida)",
+      missing: "(ausente)",
+    },
+    detect: {
+      pbipPointerOnly: {
+        message:
+          "Arquivos .pbip são apenas um ponteiro; o projeto real está em pastas irmãs (Report/, SemanticModel/) que não foram enviadas.",
+        hint: "Envie a pasta do projeto inteira, não só o arquivo .pbip.",
+      },
+      notZipOrFlow: "Formato não reconhecido: o arquivo não é um zip nem um JSON de definição de fluxo.",
+      zipCantOpen: (p: { error: string }) => `O arquivo tem assinatura de zip mas não pôde ser aberto: ${p.error}`,
+      zipNoSignature:
+        "Formato não reconhecido: é um zip, mas sem solution.xml, Src/*.pa.yaml, DataModelSchema ou DataModel.",
+      extensionFallback: (p: { ext: string }) =>
+        `Formato assumido pela extensão "${p.ext}" — a estrutura interna do zip não bateu com nenhuma assinatura conhecida.`,
+    },
+    msapp: {
+      cantOpenZip: (p: { error: string }) => `Não foi possível abrir o arquivo como zip: ${p.error}`,
+      extractedFromPackage: (p: { path: string }) =>
+        `O arquivo era um pacote de export do Power Apps Studio; o .msapp foi extraído automaticamente de "${p.path}".`,
+      cantOpenExtracted: (p: { path: string; error: string }) =>
+        `Encontrado "${p.path}" dentro do pacote, mas não foi possível abri-lo como .msapp: ${p.error}`,
+      multipleMsappFound: (p: { paths: string }) =>
+        `Múltiplos arquivos .msapp encontrados no pacote (${p.paths}); não é possível determinar qual analisar.`,
+      flowFolderFound: (p: { count: number }) =>
+        `O pacote de export também contém Microsoft.Flow/ (${p.count} arquivo(s) de fluxo), que ainda não é parseado nesta fase.`,
+      childrenItemNotObject: "Item de Children não é um objeto; ignorado.",
+      childrenItemEmptyObject: "Item de Children é um objeto vazio; ignorado.",
+      dataSourcesInvalidJson: (p: { path: string; error: string }) => `${p.path} não é um JSON válido: ${p.error}`,
+      propertiesNotFound: (p: { path: string }) =>
+        `${p.path} não encontrado; usando o nome do arquivo como id/nome do app.`,
+      propertiesInvalidJson: (p: { path: string; error: string }) => `${p.path} não é um JSON válido: ${p.error}`,
+      yamlParseError: (p: { error: string }) => `Falha ao interpretar YAML: ${p.error}`,
+      screenOrderInferred: {
+        message:
+          "A ordem das telas foi inferida pela ordem alfabética dos arquivos Src/*.pa.yaml, não por uma fonte autoritativa do Studio.",
+        hint: "Ver docs/FORMAT-NOTES.md — ordem real de telas é uma lacuna conhecida.",
+      },
+    },
+    flow: {
+      invalidJson: (p: { error: string }) => `Não foi possível interpretar o arquivo como JSON: ${p.error}`,
+      notObjectAtRoot: "O JSON não representa um objeto no nível raiz.",
+      definitionNotFound: {
+        message: 'Não encontrei "triggers"/"actions" no nível raiz nem em "properties.definition".',
+        hint: "Formato de definição de fluxo ainda não verificado contra um arquivo real — ver docs/FORMAT-NOTES.md seção 4.",
+      },
+      noTrigger: 'Nenhum gatilho encontrado em "triggers".',
+      multipleTriggers: (p: { count: number; firstKey: string }) =>
+        `Encontrados ${p.count} gatilhos; um fluxo normalmente tem exatamente um. Usando "${p.firstKey}".`,
+      noTriggerFallbackName: "(sem gatilho)",
+    },
+    solution: {
+      cantOpenZip: (p: { error: string }) => `Não foi possível abrir o arquivo como zip: ${p.error}`,
+      solutionXmlNotFound: "solution.xml não encontrado no zip; metadados da solution não estarão disponíveis.",
+      customizationsNoTables: "customizations.xml encontrado, mas nenhuma tabela Dataverse foi reconhecida nele.",
+      noArtifactsRecognized:
+        "Nenhum artefato reconhecido dentro da solution (nem CanvasApps/*.msapp, nem Workflows/*.json, nem solution.xml válido).",
+      solutionXmlInvalid: (p: { error: string }) => `solution.xml não é um XML válido: ${p.error}`,
+      solutionXmlUnexpectedShape: {
+        message: "solution.xml não tem a forma esperada (ImportExportXml/SolutionManifest não encontrado).",
+        hint: "Formato ainda não verificado contra um arquivo real — ver docs/FORMAT-NOTES.md seção 2.",
+      },
+      solutionXmlNoUniqueName: "solution.xml não tem UniqueName.",
+      unknownSolutionName: "Solution desconhecida",
+      customizationsInvalidXml: (p: { error: string }) => `customizations.xml não é um XML válido: ${p.error}`,
+      relationshipTypeUnrecognized: (p: { name: string; type: string }) =>
+        `Relacionamento "${p.name}" com EntityRelationshipType "${p.type}" não reconhecido; ignorado.`,
+      dataverseTablesName: "Tabelas Dataverse",
+      childFlowNotFound: {
+        message: (p: { actionName: string; ref: string }) =>
+          `A ação "${p.actionName}" parece invocar outro fluxo (referência "${p.ref}"), mas nenhum fluxo com esse nome foi encontrado nesta solution.`,
+        hint: "O fluxo filho pode estar fora desta solution/ambiente, ou o match por nome falhou — extração não verificada contra um definition.json real.",
+      },
+    },
+    powerbi: {
+      cardinalityUnexpected: (p: { from: string; to: string }) =>
+        `Relacionamento com cardinalidade "${p.from}"/"${p.to}" fora do esperado ("one"/"many"); tratado como muitos-para-um.`,
+      cantOpenZip: (p: { error: string }) => `Não foi possível abrir o arquivo como zip: ${p.error}`,
+      dataModelSchemaNotFound: 'Não encontrei "DataModelSchema" dentro do arquivo.',
+      dataModelSchemaInvalidJson: (p: { error: string }) => `"DataModelSchema" não é um JSON válido: ${p.error}`,
+      modelTablesNotFound: 'Não encontrei "model.tables" no DataModelSchema; modelo tratado como vazio.',
+      reportLayoutInvalidJson: (p: { error: string }) => `"Report/Layout" não é um JSON válido: ${p.error}`,
+      reportSectionsNotFound: 'Não encontrei "sections" em "Report/Layout"; relatório tratado como sem páginas.',
+      pageFallback: (p: { n: number }) => `Página ${p.n}`,
+      reportName: "Relatório",
+    },
+  },
 } satisfies typeof en;

@@ -1,4 +1,5 @@
 import type { CanvasApp, CloudFlow, DataModel, DependencyEdge, Diagnostic, FlowNode, PowerLensDocument } from "../../ir/index.js";
+import { DEFAULT_LOCALE, getMessages, type Locale } from "../../i18n/index.js";
 
 /** `dataSource.name`/`table.name` não seguem a mesma convenção de
  * capitalização (nome de exibição do app vs. nome lógico Dataverse) — nunca
@@ -65,7 +66,8 @@ function extractChildFlowRef(node: FlowNode): string | undefined {
   return id.split("/").filter(Boolean).pop();
 }
 
-function linkChildFlows(flows: readonly CloudFlow[], diagnostics: Diagnostic[]): DependencyEdge[] {
+function linkChildFlows(flows: readonly CloudFlow[], diagnostics: Diagnostic[], locale: Locale = DEFAULT_LOCALE): DependencyEdge[] {
+  const messages = getMessages(locale).parsers.solution;
   const edges: DependencyEdge[] = [];
 
   for (const flow of flows) {
@@ -78,10 +80,10 @@ function linkChildFlows(flows: readonly CloudFlow[], diagnostics: Diagnostic[]):
         diagnostics.push({
           code: "PL310",
           severity: "info",
-          message: `A ação "${node.name}" parece invocar outro fluxo (referência "${ref}"), mas nenhum fluxo com esse nome foi encontrado nesta solution.`,
+          message: messages.childFlowNotFound.message({ actionName: node.name, ref }),
           artifactId: flow.id,
           path: node.name,
-          hint: "O fluxo filho pode estar fora desta solution/ambiente, ou o match por nome falhou — extração não verificada contra um definition.json real.",
+          hint: messages.childFlowNotFound.hint,
         });
         continue;
       }
@@ -107,10 +109,14 @@ function linkChildFlows(flows: readonly CloudFlow[], diagnostics: Diagnostic[]):
  * documento inteiro de uma vez). Nunca lança; referência não resolvida vira
  * `Diagnostic`, não erro.
  */
-export function linkDependencies(document: PowerLensDocument, diagnostics: Diagnostic[]): DependencyEdge[] {
+export function linkDependencies(
+  document: PowerLensDocument,
+  diagnostics: Diagnostic[],
+  locale: Locale = DEFAULT_LOCALE,
+): DependencyEdge[] {
   const canvasApps = document.artifacts.filter((a): a is CanvasApp => a.kind === "canvasApp");
   const dataModels = document.artifacts.filter((a): a is DataModel => a.kind === "dataModel");
   const flows = document.artifacts.filter((a): a is CloudFlow => a.kind === "cloudFlow");
 
-  return [...linkCanvasAppsToDataverseTables(canvasApps, dataModels), ...linkChildFlows(flows, diagnostics)];
+  return [...linkCanvasAppsToDataverseTables(canvasApps, dataModels), ...linkChildFlows(flows, diagnostics, locale)];
 }

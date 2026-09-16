@@ -1,4 +1,5 @@
 import type { Diagnostic, Report, ReportPage, Visual } from "../../ir/index.js";
+import { DEFAULT_LOCALE, getMessages, type Locale } from "../../i18n/index.js";
 import type {
   RawReportLayout,
   RawReportSection,
@@ -54,9 +55,9 @@ function mapVisualContainer(raw: RawVisualContainer): Visual | undefined {
   };
 }
 
-function mapSection(raw: RawReportSection, order: number): ReportPage {
+function mapSection(raw: RawReportSection, order: number, pageFallback: (p: { n: number }) => string): ReportPage {
   return {
-    name: raw.displayName ?? raw.name ?? `Página ${order + 1}`,
+    name: raw.displayName ?? raw.name ?? pageFallback({ n: order + 1 }),
     order: raw.ordinal ?? order,
     visuals: (raw.visualContainers ?? [])
       .map(mapVisualContainer)
@@ -73,7 +74,13 @@ function mapSection(raw: RawReportSection, order: number): ReportPage {
  * válido ou não tem `sections` — degradação honesta, o `DataModel` já
  * parseado continua valendo mesmo sem o `Report`.
  */
-export function parseReportLayout(text: string, id: string, diagnostics: Diagnostic[]): Report | undefined {
+export function parseReportLayout(
+  text: string,
+  id: string,
+  diagnostics: Diagnostic[],
+  locale: Locale = DEFAULT_LOCALE,
+): Report | undefined {
+  const messages = getMessages(locale).parsers.powerbi;
   let layout: RawReportLayout;
   try {
     layout = JSON.parse(text) as RawReportLayout;
@@ -81,7 +88,7 @@ export function parseReportLayout(text: string, id: string, diagnostics: Diagnos
     diagnostics.push({
       code: "PL506",
       severity: "warning",
-      message: `"Report/Layout" não é um JSON válido: ${String(err)}`,
+      message: messages.reportLayoutInvalidJson({ error: String(err) }),
     });
     return undefined;
   }
@@ -90,14 +97,14 @@ export function parseReportLayout(text: string, id: string, diagnostics: Diagnos
     diagnostics.push({
       code: "PL507",
       severity: "info",
-      message: 'Não encontrei "sections" em "Report/Layout"; relatório tratado como sem páginas.',
+      message: messages.reportSectionsNotFound,
     });
     return undefined;
   }
 
   const pages = layout.sections
-    .map((section, index) => mapSection(section, index))
+    .map((section, index) => mapSection(section, index, messages.pageFallback))
     .sort((a, b) => a.order - b.order);
 
-  return { kind: "report", id, name: "Relatório", pages };
+  return { kind: "report", id, name: messages.reportName, pages };
 }

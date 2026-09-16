@@ -1,5 +1,6 @@
 import { XMLParser } from "fast-xml-parser";
 import type { DataModel, Diagnostic, ModelColumn, ModelTable, Relationship } from "../../ir/index.js";
+import { DEFAULT_LOCALE, getMessages, type Locale } from "../../i18n/index.js";
 import type {
   RawAttribute,
   RawCustomizationsXml,
@@ -48,7 +49,12 @@ function primaryKeyOf(entityName: string): string {
   return `${entityName}id`;
 }
 
-function mapRelationship(raw: RawEntityRelationship, diagnostics: Diagnostic[]): Relationship | undefined {
+function mapRelationship(
+  raw: RawEntityRelationship,
+  diagnostics: Diagnostic[],
+  locale: Locale = DEFAULT_LOCALE,
+): Relationship | undefined {
+  const messages = getMessages(locale).parsers;
   if (raw.EntityRelationshipType === "ManyToMany") {
     if (!raw.FirstEntityName || !raw.SecondEntityName) return undefined;
     return {
@@ -77,7 +83,10 @@ function mapRelationship(raw: RawEntityRelationship, diagnostics: Diagnostic[]):
   diagnostics.push({
     code: "PL309",
     severity: "info",
-    message: `Relacionamento "${raw["@_Name"] ?? "(sem nome)"}" com EntityRelationshipType "${raw.EntityRelationshipType ?? "(ausente)"}" não reconhecido; ignorado.`,
+    message: messages.solution.relationshipTypeUnrecognized({
+      name: raw["@_Name"] ?? messages.common.noName,
+      type: raw.EntityRelationshipType ?? messages.common.missing,
+    }),
   });
   return undefined;
 }
@@ -94,7 +103,9 @@ export function parseCustomizationsXml(
   text: string,
   id: string,
   diagnostics: Diagnostic[],
+  locale: Locale = DEFAULT_LOCALE,
 ): DataModel | undefined {
+  const messages = getMessages(locale).parsers;
   let parsed: RawCustomizationsXml;
   try {
     parsed = parser.parse(text) as RawCustomizationsXml;
@@ -102,7 +113,7 @@ export function parseCustomizationsXml(
     diagnostics.push({
       code: "PL308",
       severity: "error",
-      message: `customizations.xml não é um XML válido: ${String(err)}`,
+      message: messages.solution.customizationsInvalidXml({ error: String(err) }),
       path: "customizations.xml",
     });
     return undefined;
@@ -115,13 +126,13 @@ export function parseCustomizationsXml(
 
   const rawRelationships = normalizeArray(parsed.ImportExportXml?.EntityRelationships?.EntityRelationship);
   const relationships = rawRelationships
-    .map((rel) => mapRelationship(rel, diagnostics))
+    .map((rel) => mapRelationship(rel, diagnostics, locale))
     .filter((r): r is Relationship => r !== undefined);
 
   return {
     kind: "dataModel",
     id,
-    name: "Tabelas Dataverse",
+    name: messages.solution.dataverseTablesName,
     tables,
     relationships,
     measures: [],
