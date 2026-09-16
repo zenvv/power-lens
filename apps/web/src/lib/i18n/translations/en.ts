@@ -97,8 +97,32 @@ export const en = {
       `${p.tables} table(s) · ${p.relationships} relationship(s) · ${p.measures} measure(s) · scroll to zoom, click the table header to collapse columns, drag to rearrange (position is saved)`,
     appsItemDescription:
       "Static blueprint per screen — literal values/constant arithmetic are resolved, the rest becomes a dashed placeholder marked as dynamic. Not a faithful simulation of the running app.",
+    appsTabs: {
+      wireframe: "Wireframe",
+      navigation: "Navigation",
+      references: "References",
+      components: "Components",
+    },
     docsTitle: "Generated documentation",
     docsDescription: "Deterministic Markdown export, no AI.",
+  },
+  canvasReferences: {
+    selectedLabel: (p: { name: string }) => `References from "${p.name}"`,
+    none: "This control's formulas don't reference anything the shallow extraction captured.",
+    kindLabel: {
+      control: "control",
+      dataSource: "data source",
+      variable: "variable",
+      collection: "collection",
+      function: "function",
+      screen: "screen",
+    },
+  },
+  canvasComponents: {
+    none: "No reusable components in this app.",
+    nameColumn: "Component",
+    usageColumn: "Usage",
+    unused: "unused",
   },
   diagnosticsPanel: {
     title: "Diagnostics",

@@ -9,6 +9,9 @@ import { MeasuresPanel } from "@/components/mer/MeasuresPanel";
 import { LineagePanel } from "@/components/mer/LineagePanel";
 import { DiagnosticsPanel } from "@/components/DiagnosticsPanel";
 import { WireframeView } from "@/components/wireframe/WireframeView";
+import { ScreenNavMap } from "@/components/canvas/ScreenNavMap";
+import { ControlReferencesPanel } from "@/components/canvas/ControlReferencesPanel";
+import { ComponentInventory } from "@/components/canvas/ComponentInventory";
 import { AiExplanationCard } from "@/components/ai/AiExplanationCard";
 import { ArtifactTabs } from "@/components/document/ArtifactTabs";
 import { MarkdownDocView } from "@/components/document/MarkdownDocView";
@@ -144,7 +147,28 @@ export function DocumentView({
             items={canvasApps}
             description={() => t.documentView.appsItemDescription}
           >
-            {(app) => <WireframeView app={app} />}
+            {(app) => (
+              <Tabs defaultValue="wireframe" className="gap-3">
+                <TabsList>
+                  <TabsTrigger value="wireframe">{t.documentView.appsTabs.wireframe}</TabsTrigger>
+                  <TabsTrigger value="navigation">{t.documentView.appsTabs.navigation}</TabsTrigger>
+                  <TabsTrigger value="references">{t.documentView.appsTabs.references}</TabsTrigger>
+                  <TabsTrigger value="components">{t.documentView.appsTabs.components}</TabsTrigger>
+                </TabsList>
+                <TabsContent value="wireframe">
+                  <WireframeView app={app} />
+                </TabsContent>
+                <TabsContent value="navigation">
+                  <ScreenNavMap app={app} />
+                </TabsContent>
+                <TabsContent value="references">
+                  <ControlReferencesPanel app={app} />
+                </TabsContent>
+                <TabsContent value="components">
+                  <ComponentInventory app={app} />
+                </TabsContent>
+              </Tabs>
+            )}
           </ArtifactTabs>
         </TabsContent>
       )}

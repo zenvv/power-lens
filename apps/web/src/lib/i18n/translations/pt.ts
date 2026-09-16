@@ -93,8 +93,32 @@ export const pt = {
       `${p.tables} tabela(s) · ${p.relationships} relacionamento(s) · ${p.measures} medida(s) · role a roda pra dar zoom, clique no cabeçalho da tabela pra recolher as colunas, arraste pra reorganizar (posição fica salva)`,
     appsItemDescription:
       "Blueprint estático por tela — valores literais/aritmética constante são resolvidos, o resto vira placeholder tracejado marcado como dinâmico. Não é uma simulação fiel do app rodando.",
+    appsTabs: {
+      wireframe: "Wireframe",
+      navigation: "Navegação",
+      references: "Referências",
+      components: "Componentes",
+    },
     docsTitle: "Documentação gerada",
     docsDescription: "Exportação Markdown determinística, sem IA.",
+  },
+  canvasReferences: {
+    selectedLabel: (p: { name: string }) => `Referências de "${p.name}"`,
+    none: "As fórmulas deste controle não referenciam nada que a extração rasa capturou.",
+    kindLabel: {
+      control: "controle",
+      dataSource: "fonte de dados",
+      variable: "variável",
+      collection: "coleção",
+      function: "função",
+      screen: "tela",
+    },
+  },
+  canvasComponents: {
+    none: "Nenhum componente reutilizável neste app.",
+    nameColumn: "Componente",
+    usageColumn: "Uso",
+    unused: "não usado",
   },
   diagnosticsPanel: {
     title: "Diagnósticos",

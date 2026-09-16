@@ -93,8 +93,32 @@ export const es = {
       `${p.tables} tabla(s) · ${p.relationships} relación(es) · ${p.measures} medida(s) · gira la rueda para hacer zoom, haz clic en el encabezado de la tabla para colapsar las columnas, arrastra para reorganizar (la posición se guarda)`,
     appsItemDescription:
       "Blueprint estático por pantalla — los valores literales/aritmética constante se resuelven, el resto se convierte en un placeholder punteado marcado como dinámico. No es una simulación fiel de la app en ejecución.",
+    appsTabs: {
+      wireframe: "Wireframe",
+      navigation: "Navegación",
+      references: "Referencias",
+      components: "Componentes",
+    },
     docsTitle: "Documentación generada",
     docsDescription: "Exportación Markdown determinística, sin IA.",
+  },
+  canvasReferences: {
+    selectedLabel: (p: { name: string }) => `Referencias de "${p.name}"`,
+    none: "Las fórmulas de este control no referencian nada que la extracción superficial haya capturado.",
+    kindLabel: {
+      control: "control",
+      dataSource: "fuente de datos",
+      variable: "variable",
+      collection: "colección",
+      function: "función",
+      screen: "pantalla",
+    },
+  },
+  canvasComponents: {
+    none: "Ningún componente reutilizable en esta app.",
+    nameColumn: "Componente",
+    usageColumn: "Uso",
+    unused: "sin usar",
   },
   diagnosticsPanel: {
     title: "Diagnósticos",
