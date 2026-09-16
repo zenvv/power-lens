@@ -19,6 +19,7 @@ import { DocumentView } from "./components/DocumentView.js";
 import { ConfirmDialog } from "./components/ConfirmDialog.js";
 import { MobileGate } from "./components/MobileGate.js";
 import { analyzeFile } from "./lib/analyze.js";
+import { useDocumentDownloads } from "./lib/use-document-downloads.js";
 import type { AppState } from "./lib/app-state.js";
 
 /** Piso artificial pro estado de loading — parsing real costuma terminar em
@@ -48,6 +49,10 @@ export function App() {
 
   const onAiAutoGenerateConsumed = useCallback(() => {
     setAiAutoGenerateArmed(false);
+  }, []);
+
+  const onOpenAi = useCallback(() => {
+    setActiveSection("ai");
   }, []);
 
   const onFile = useCallback((file: File) => {
@@ -104,6 +109,8 @@ export function App() {
   }, [state.status]);
 
   const document = state.status === "parsed" ? state.result.document : null;
+  const { markdown, downloadMarkdown, downloadIr } =
+    useDocumentDownloads(document);
   /** A tela de upload (idle) é o único momento sem navegação lateral — assim
    * que algo começa a acontecer (loading, erro, documento) a navegação passa
    * a fazer sentido e desliza pra dentro. */
@@ -115,35 +122,41 @@ export function App() {
         <MobileGate />
       </div>
 
-      <main className="hidden h-screen flex-col bg-background text-foreground md:flex">
+      <main className="hidden h-screen flex-col bg-sidebar text-foreground md:flex">
         <Navbar
           document={document}
           showSidebarToggle={showSidebar}
           onOpenDiagnostics={() => setActiveSection("diagnostics")}
           onToggleSidebar={() => setSidebarOpen((v) => !v)}
+          onRequestImport={onRequestImport}
+          onDownloadMarkdown={downloadMarkdown}
+          onDownloadIr={downloadIr}
+          onOpenAi={onOpenAi}
         />
 
-        <div className="flex min-h-0 flex-1">
+        <div className="flex min-h-0 flex-1 w-full">
           <AnimatePresence>
             {showSidebar && (
               <Sidebar
                 document={document}
                 activeSection={activeSection}
                 onSectionChange={setActiveSection}
-                onRequestImport={onRequestImport}
                 mobileOpen={sidebarOpen}
                 onMobileClose={() => setSidebarOpen(false)}
               />
             )}
           </AnimatePresence>
 
-          <div className="min-w-0 flex-1 overflow-y-auto">
-            <div className="mx-auto flex w-full max-w-[1600px] flex-1 flex-col px-6 py-6">
+          <div className="min-w-0 flex-1 p-3 pt-0">
+            <div className="mx-auto flex h-full w-full flex-col overflow-y-auto rounded-lg border bg-background px-6 py-6">
               {document ? (
                 <>
                   <DocumentView
                     document={document}
                     activeSection={activeSection}
+                    markdown={markdown}
+                    onDownloadMarkdown={downloadMarkdown}
+                    onDownloadIr={downloadIr}
                     onRequestAiExplanation={onRequestAiExplanation}
                     aiAutoGenerateArmed={aiAutoGenerateArmed}
                     onAiAutoGenerateConsumed={onAiAutoGenerateConsumed}

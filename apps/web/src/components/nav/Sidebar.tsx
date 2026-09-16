@@ -8,7 +8,6 @@ import {
   LayoutDashboard,
   Sparkles,
   TriangleAlert,
-  UploadCloud,
   Workflow,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -29,7 +28,6 @@ type SidebarProps = {
   document: PowerLensDocument | null;
   activeSection: SectionId;
   onSectionChange: (section: SectionId) => void;
-  onRequestImport: () => void;
   /** Controla o drawer em telas estreitas; em `md:` pra cima o rail fica
    * sempre visível e essas props não têm efeito. */
   mobileOpen: boolean;
@@ -57,14 +55,17 @@ function NavItem({
       className={cn(
         "flex w-full items-center gap-2.5 rounded-md px-3 py-2 text-left text-sm font-medium transition-colors",
         active
-          ? "bg-sidebar-accent text-sidebar-primary"
+          ? "bg-linear-to-t from-sidebar-primary/10 to-sidebar-primary/5 text-sidebar-primary"
           : "text-sidebar-foreground/70 hover:bg-sidebar-accent/60 hover:text-sidebar-foreground",
       )}
     >
       <Icon className="size-4 shrink-0" />
       <span className="flex-1 truncate">{label}</span>
       {count !== undefined && (
-        <Badge variant={active ? "default" : "secondary"} className="tabular-nums">
+        <Badge
+          variant={active ? "default" : "secondary"}
+          className="tabular-nums"
+        >
           {count}
         </Badge>
       )}
@@ -83,16 +84,13 @@ function NavGroupLabel({ children }: { children: string }) {
 /** Navegação lateral persistente do app (inspirada no rail com grupos do
  * Power Platform admin center). Só some na tela de upload em si (nenhum
  * arquivo em andamento) — o pai (App.tsx) desmonta este componente nesse
- * momento; a partir daí ("Importar arquivo" já em andamento, erro, ou
- * documento carregado) ela fica montada e entra com slide-in + fade.
- * Trocar de arquivo com uma análise já carregada passa por confirmação
- * (`onRequestImport`); sem documento carregado, o item só reflete que já
- * estamos na seção certa. */
+ * momento; a partir daí (documento em análise, erro, ou carregado) ela fica
+ * montada e entra com slide-in + fade. "Importar arquivo" mora na navbar
+ * (grupo central), não aqui — ver `Navbar.tsx`. */
 export function Sidebar({
   document,
   activeSection,
   onSectionChange,
-  onRequestImport,
   mobileOpen,
   onMobileClose,
 }: SidebarProps) {
@@ -102,11 +100,6 @@ export function Sidebar({
 
   function go(section: SectionId) {
     onSectionChange(section);
-    onMobileClose();
-  }
-
-  function requestImport() {
-    onRequestImport();
     onMobileClose();
   }
 
@@ -126,17 +119,10 @@ export function Sidebar({
         exit={{ opacity: 0, marginLeft: -16 }}
         transition={{ type: "spring", stiffness: 320, damping: 34 }}
         className={cn(
-          "fixed top-12 bottom-0 left-0 z-50 flex w-64 -translate-x-full flex-col gap-0.5 overflow-y-auto border-r border-sidebar-border bg-sidebar px-3 py-4 transition-transform duration-200 md:static md:top-auto md:bottom-auto md:z-auto md:w-60 md:shrink-0 md:translate-x-0",
+          "fixed top-12 bottom-0 left-0 z-50 flex w-64 -translate-x-full flex-col gap-0.5 overflow-y-auto bg-sidebar px-3 py-4 transition-transform duration-200 md:static md:top-auto md:bottom-auto md:z-auto md:w-60 md:shrink-0 md:translate-x-0",
           mobileOpen && "translate-x-0",
         )}
       >
-        <NavItem
-          active={!document}
-          onClick={document ? requestImport : () => go("home")}
-          icon={UploadCloud}
-          label="Importar arquivo"
-        />
-
         {document && (
           <>
             <NavGroupLabel>Análise</NavGroupLabel>

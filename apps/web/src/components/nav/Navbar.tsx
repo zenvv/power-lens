@@ -1,7 +1,8 @@
 import type { PowerLensDocument } from "@power-lens/core";
 import { SearchSparkleColor } from "@fluentui/react-icons";
-import { Menu, TriangleAlert } from "lucide-react";
+import { Download, FileText, Menu, Sparkles, TriangleAlert, UploadCloud } from "lucide-react";
 import { Button } from "../ui/button";
+import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupText } from "../ui/input-group";
 import { ThemeToggle } from "./ThemeToggle";
 import { FormatIcon } from "./FormatIcon";
 
@@ -12,48 +13,71 @@ type NavbarProps = {
   showSidebarToggle: boolean;
   onOpenDiagnostics: () => void;
   onToggleSidebar: () => void;
+  onRequestImport: () => void;
+  onDownloadMarkdown: () => void;
+  onDownloadIr: () => void;
+  onOpenAi: () => void;
 };
 
-/** Barra superior fixa do app. Só identidade e status aqui — a ação de
- * trocar de arquivo mora na navegação lateral (item "Importar arquivo",
- * com confirmação), pra não duplicar o mesmo comando em dois lugares. */
-function Navbar({ document, showSidebarToggle, onOpenDiagnostics, onToggleSidebar }: NavbarProps) {
+/** Barra superior fixa do app. Identidade à esquerda, arquivo atual ao
+ * centro (com o atalho pra trocar de arquivo, que passa por confirmação —
+ * ver `App.tsx`) e ações rápidas à direita. */
+function Navbar({
+  document,
+  showSidebarToggle,
+  onOpenDiagnostics,
+  onToggleSidebar,
+  onRequestImport,
+  onDownloadMarkdown,
+  onDownloadIr,
+  onOpenAi,
+}: NavbarProps) {
   return (
-    <div className="flex h-12 w-full shrink-0 items-center gap-3 border-b bg-background px-4">
-      {showSidebarToggle && (
-        <Button
-          variant="ghost"
-          size="icon"
-          className="md:hidden"
-          aria-label="Abrir navegação"
-          onClick={onToggleSidebar}
-        >
-          <Menu />
-        </Button>
-      )}
+    <div className="grid h-12 w-full shrink-0 grid-cols-[auto_1fr_auto] items-center gap-3 bg-sidebar px-4">
+      <div className="flex items-center gap-3">
+        {showSidebarToggle && (
+          <Button
+            variant="ghost"
+            size="icon"
+            className="md:hidden"
+            aria-label="Abrir navegação"
+            onClick={onToggleSidebar}
+          >
+            <Menu />
+          </Button>
+        )}
 
-      <div className="flex shrink-0 items-center gap-2">
-        <SearchSparkleColor className="size-5" />
-        <div className="flex flex-col leading-none">
-          <span className="font-heading text-sm font-semibold">Power Lens</span>
-          <span className="text-[10px] text-muted-foreground/70">Not afiliated with Microsoft</span>
+        <div className="flex shrink-0 items-center gap-2">
+          <SearchSparkleColor className="size-5" />
+          <div className="flex flex-col leading-none">
+            <span className="font-heading text-sm font-semibold">Power Lens</span>
+            <span className="text-[10px] text-muted-foreground/70">Not afiliated with Microsoft</span>
+          </div>
         </div>
       </div>
 
-      {document && (
-        <>
-          <span className="h-5 w-px shrink-0 bg-border" />
-          <div className="flex min-w-0 items-center gap-2">
-            <FormatIcon document={document} className="size-4 shrink-0 text-muted-foreground" />
-            <p className="truncate text-xs text-muted-foreground">
-              <span className="font-medium text-foreground">{document.source.fileName}</span> ·{" "}
-              {document.source.detectedFormat} · {document.artifacts.length} artefato(s)
-            </p>
-          </div>
-        </>
-      )}
+      <div className="flex justify-center">
+        {document && (
+          <InputGroup className="w-full max-w-md">
+            <InputGroupAddon>
+              <FormatIcon document={document} className="size-4 shrink-0 text-muted-foreground" />
+            </InputGroupAddon>
+            <InputGroupText className="min-w-0 flex-1 justify-start">
+              <span className="truncate">
+                <span className="font-medium text-foreground">{document.source.fileName}</span> ·{" "}
+                {document.source.detectedFormat} · {document.artifacts.length} artefato(s)
+              </span>
+            </InputGroupText>
+            <InputGroupAddon align="inline-end">
+              <InputGroupButton onClick={onRequestImport}>
+                <UploadCloud /> Importar arquivo
+              </InputGroupButton>
+            </InputGroupAddon>
+          </InputGroup>
+        )}
+      </div>
 
-      <div className="ml-auto flex shrink-0 items-center gap-1">
+      <div className="flex shrink-0 items-center justify-end gap-1">
         {document && document.diagnostics.length > 0 && (
           <Button
             variant="ghost"
@@ -64,6 +88,19 @@ function Navbar({ document, showSidebarToggle, onOpenDiagnostics, onToggleSideba
             <TriangleAlert className="text-amber-500" />
             {document.diagnostics.length}
           </Button>
+        )}
+        {document && (
+          <>
+            <Button variant="ghost" size="sm" onClick={onDownloadMarkdown}>
+              <FileText /> Baixar Doc
+            </Button>
+            <Button variant="ghost" size="sm" onClick={onDownloadIr}>
+              <Download /> Baixar IR
+            </Button>
+            <Button variant="default" size="sm" onClick={onOpenAi}>
+              <Sparkles /> Abrir IA
+            </Button>
+          </>
         )}
         <ThemeToggle />
       </div>
