@@ -15,4 +15,15 @@ export {
   DEFAULT_CANVAS_HEIGHT,
 } from "./render/index.js";
 export type { Resolved, ResolvedControl, ResolvedAutoLayout, LayoutContext } from "./render/index.js";
-export { runHealthChecks, HEALTH_CHECK_RULES, type HealthCheckRule } from "./rules/index.js";
+export {
+  runHealthChecks,
+  HEALTH_CHECK_RULES,
+  RULE_REGISTRY,
+  type HealthCheckRule,
+  type RuleOptions,
+  type RuleOptionDef,
+  type RuleDescriptor,
+  type RuleConfig,
+  type RuleConfigMap,
+} from "./rules/index.js";
+export { buildSearchIndex, searchIndex, type SearchEntry, type SearchEntryKind } from "./search/index.js";
