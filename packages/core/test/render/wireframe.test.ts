@@ -5,7 +5,7 @@ import {
   resolveScreenLayout,
   DEFAULT_CANVAS_WIDTH,
 } from "../../src/render/wireframe/index.js";
-import type { Control } from "../../src/ir/index.js";
+import type { Control, Expression } from "../../src/ir/index.js";
 
 describe("evalConstantArithmetic", () => {
   it.each([
@@ -237,6 +237,52 @@ describe("resolveControlLayout — style properties", () => {
     });
 
     expect(resolveControlLayout(root).visible).toEqual({ status: "resolved", value: false });
+  });
+});
+
+describe("resolveControlLayout — referências a irmãos (layout absoluto clássico)", () => {
+  function lit(value: number): Expression {
+    return { raw: `=${value}`, kind: "literal", literal: value, references: [] };
+  }
+  function formula(raw: string): Expression {
+    return { raw, kind: "formula", references: [] };
+  }
+
+  it("resolves a formula that references a sibling's resolved X/Y/Width/Height", () => {
+    const a = control({ name: "A", type: "Label", properties: { Y: lit(10), Height: lit(20) } });
+    const b = control({ name: "B", type: "Label", properties: { Y: formula("=A.Y + A.Height + 8") } });
+    const root = control({ name: "Screen1", type: "Screen", children: [a, b] });
+
+    const resolved = resolveControlLayout(root);
+    expect(resolved.children.find((c) => c.name === "B")?.y).toEqual({ status: "resolved", value: 38 });
+  });
+
+  it("resolves regardless of declaration order (fixpoint over multiple passes)", () => {
+    const b = control({ name: "B", type: "Label", properties: { Y: formula("=A.Y + A.Height + 8") } });
+    const a = control({ name: "A", type: "Label", properties: { Y: lit(10), Height: lit(20) } });
+    const root = control({ name: "Screen1", type: "Screen", children: [b, a] });
+
+    const resolved = resolveControlLayout(root);
+    expect(resolved.children.find((c) => c.name === "B")?.y).toEqual({ status: "resolved", value: 38 });
+  });
+
+  it("keeps a formula dynamic when the referenced sibling itself doesn't resolve", () => {
+    const a = control({ name: "A", type: "Label", properties: { Y: formula("=Parent.Y") } });
+    const b = control({ name: "B", type: "Label", properties: { Y: formula("=A.Y + 8") } });
+    const root = control({ name: "Screen1", type: "Screen", children: [a, b] });
+
+    const resolved = resolveControlLayout(root);
+    expect(resolved.children.find((c) => c.name === "B")?.y.status).toBe("dynamic");
+  });
+
+  it("does not resolve a genuine circular reference (both stay dynamic)", () => {
+    const a = control({ name: "A", type: "Label", properties: { Y: formula("=B.Y + 1") } });
+    const b = control({ name: "B", type: "Label", properties: { Y: formula("=A.Y + 1") } });
+    const root = control({ name: "Screen1", type: "Screen", children: [a, b] });
+
+    const resolved = resolveControlLayout(root);
+    expect(resolved.children.find((c) => c.name === "A")?.y.status).toBe("dynamic");
+    expect(resolved.children.find((c) => c.name === "B")?.y.status).toBe("dynamic");
   });
 });
 

@@ -4,6 +4,13 @@ import type { Resolved, ResolvedAutoLayout } from "@power-lens/core";
 export const PLACEHOLDER_WIDTH = 160;
 export const PLACEHOLDER_HEIGHT = 32;
 
+/** Deslocamento diagonal por posição entre irmãos, aplicado só a um eixo
+ * (X ou Y) que não resolveu — ver `ControlBox`. Sem isso, todo controle
+ * posicionado cuja fórmula não resolve cai em `(0,0)` e empilha
+ * exatamente sobre os outros na mesma situação, ficando ilegível mesmo com
+ * a borda tracejada indicando "dinâmico". */
+export const DYNAMIC_CASCADE_STEP = 28;
+
 /**
  * Um container `AutoLayout` (cada vez mais o padrão no Studio moderno) não
  * escreve X/Y nos filhos — a posição é calculada por um layout flex em

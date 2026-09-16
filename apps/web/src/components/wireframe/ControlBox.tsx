@@ -1,8 +1,13 @@
 import type { CSSProperties } from "react";
 import type { ResolvedControl } from "@power-lens/core";
-import { Ellipsis } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { autoLayoutStyle, hasDeclaredPosition, PLACEHOLDER_HEIGHT, PLACEHOLDER_WIDTH } from "@/lib/wireframe-canvas";
+import {
+  autoLayoutStyle,
+  DYNAMIC_CASCADE_STEP,
+  hasDeclaredPosition,
+  PLACEHOLDER_HEIGHT,
+  PLACEHOLDER_WIDTH,
+} from "@/lib/wireframe-canvas";
 
 type ControlBoxProps = {
   control: ResolvedControl;
@@ -10,6 +15,13 @@ type ControlBoxProps = {
    * vem do `gap` do flex do pai, então não aplica o fallback de margem que
    * o fluxo em bloco normal usa. */
   parentIsAutoLayout?: boolean;
+  /** Posição do controle entre os irmãos — usada só como fallback visual
+   * (ver `DYNAMIC_CASCADE_STEP`) pra eixos que não resolveram, nunca pra
+   * layout de verdade. */
+  siblingIndex?: number;
+  /** Nome do controle selecionado na árvore lateral (`CanvasTreeView`),
+   * pra destacar a caixa correspondente no canvas. */
+  selectedControlName?: string | undefined;
 };
 
 /**
@@ -20,12 +32,17 @@ type ControlBoxProps = {
  * AutoLayout, ver `hasDeclaredPosition`), usa fluxo normal em vez de forçar
  * `(0,0)` e empilhar controles exatamente um em cima do outro.
  */
-export function ControlBox({ control, parentIsAutoLayout }: ControlBoxProps) {
+export function ControlBox({ control, parentIsAutoLayout, siblingIndex = 0, selectedControlName }: ControlBoxProps) {
   if (control.visible.status === "resolved" && !control.visible.value) return null;
 
   const positioned = hasDeclaredPosition(control);
-  const x = control.x.status === "resolved" ? control.x.value : 0;
-  const y = control.y.status === "resolved" ? control.y.value : 0;
+  // Eixo não resolvido: em vez de colapsar todo mundo em (0,0) — o que
+  // empilha caixas dinâmicas exatamente umas sobre as outras e as torna
+  // invisíveis —, escalona pela posição entre os irmãos. Só um fallback
+  // visual (o dashed border já indica "não confiar nesse número").
+  const cascadeFallback = siblingIndex * DYNAMIC_CASCADE_STEP;
+  const x = control.x.status === "resolved" ? control.x.value : cascadeFallback;
+  const y = control.y.status === "resolved" ? control.y.value : cascadeFallback;
   const resolvedWidth = control.width.status === "resolved" ? control.width.value : undefined;
   const resolvedHeight = control.height.status === "resolved" ? control.height.value : undefined;
   // Só força o placeholder de tamanho quando o controle está posicionado
@@ -52,9 +69,11 @@ export function ControlBox({ control, parentIsAutoLayout }: ControlBoxProps) {
   const isDynamic = [control.x, control.y, control.width, control.height].some((r) => r.status === "dynamic");
 
   const childStyle: CSSProperties = control.layout ? autoLayoutStyle(control.layout) : { display: "flex", flexDirection: "column" };
+  const isSelected = selectedControlName === control.name;
 
   return (
     <div
+      data-control-name={control.name}
       title={`${control.name} (${control.type})${isDynamic ? " — posição/tamanho não resolvido, fórmula dinâmica" : ""}`}
       style={{
         ...(positioned ? { left: x, top: y } : {}),
@@ -71,13 +90,9 @@ export function ControlBox({ control, parentIsAutoLayout }: ControlBoxProps) {
         positioned ? "absolute" : parentIsAutoLayout ? "relative" : "relative mb-1 w-full last:mb-0",
         explicitBorder === undefined && !borderIsNone && (isDynamic ? "border border-dashed border-muted-foreground/50" : "border border-border"),
         !background && "bg-card/60",
+        isSelected && "ring-2 ring-primary ring-offset-1",
       )}
     >
-      <div className="flex items-center gap-1 border-b border-black/5 bg-black/5 px-1 py-0.5 text-[9px] text-muted-foreground">
-        {isDynamic && <Ellipsis className="size-2.5 shrink-0" />}
-        <span className="truncate">{control.type}</span>
-      </div>
-
       {control.text.status === "resolved" && (
         <p className="truncate px-1.5 py-1 text-xs" style={{ color, fontSize, fontWeight }}>
           {control.text.value}
@@ -88,8 +103,14 @@ export function ControlBox({ control, parentIsAutoLayout }: ControlBoxProps) {
       )}
 
       <div style={childStyle}>
-        {control.children.map((child) => (
-          <ControlBox key={child.name} control={child} parentIsAutoLayout={Boolean(control.layout)} />
+        {control.children.map((child, index) => (
+          <ControlBox
+            key={child.name}
+            control={child}
+            parentIsAutoLayout={Boolean(control.layout)}
+            siblingIndex={index}
+            selectedControlName={selectedControlName}
+          />
         ))}
       </div>
     </div>

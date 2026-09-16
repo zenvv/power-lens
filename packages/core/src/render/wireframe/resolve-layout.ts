@@ -191,16 +191,52 @@ function tryResolveRgba(body: string): string | undefined {
 export const DEFAULT_CANVAS_WIDTH = 1366;
 export const DEFAULT_CANVAS_HEIGHT = 768;
 
-/** Tamanho resolvido do pai mais próximo, usado só pra substituir
- * `Parent.Width`/`Parent.Height` antes de avaliar aritmética constante —
- * não é um mecanismo geral de resolução de identificador (`Self.X`,
- * `ThisItem...` etc. continuam virando "dynamic", de propósito). */
-export type LayoutContext = { parentWidth?: number; parentHeight?: number };
+/** X/Y/Width/Height já resolvidos de um irmão no mesmo container — usado só
+ * pra substituir referências tipo `Label1.Y` antes de avaliar aritmética
+ * constante (ver `resolveChildLayouts`). Layouts absolutos clássicos do
+ * Studio posicionam um controle relativo a outro controle nomeado, não só
+ * relativo ao pai — sem isso, qualquer formula desse tipo virava "dynamic"
+ * de cara e o wireframe inteiro colapsava pra `(0,0)`. */
+type SiblingLayout = {
+  x: number | undefined;
+  y: number | undefined;
+  width: number | undefined;
+  height: number | undefined;
+};
 
-function substituteParentSize(raw: string, context: LayoutContext): string {
+const SIBLING_NUMERIC_PROPS = ["X", "Y", "Width", "Height"] as const;
+
+/** Tamanho resolvido do pai mais próximo e dos irmãos do mesmo container,
+ * usados só pra substituir identificadores conhecidos (`Parent.Width`,
+ * `Label1.Height`) antes de avaliar aritmética constante — não é um
+ * mecanismo geral de resolução de identificador (`Self.X`, `ThisItem...`
+ * etc. continuam virando "dynamic", de propósito: não há como saber o valor
+ * de `Self` antes de resolver o próprio controle, e `ThisItem` depende de
+ * dados que o wireframe nunca tem). */
+export type LayoutContext = {
+  parentWidth?: number;
+  parentHeight?: number;
+  siblings?: ReadonlyMap<string, SiblingLayout>;
+};
+
+function escapeForRegExp(text: string): string {
+  return text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function substituteKnownIdentifiers(raw: string, context: LayoutContext): string {
   let result = raw;
   if (context.parentWidth !== undefined) result = result.replace(/\bParent\.Width\b/g, String(context.parentWidth));
   if (context.parentHeight !== undefined) result = result.replace(/\bParent\.Height\b/g, String(context.parentHeight));
+  if (context.siblings) {
+    for (const [name, values] of context.siblings) {
+      const escapedName = escapeForRegExp(name);
+      for (const prop of SIBLING_NUMERIC_PROPS) {
+        const value = values[prop.toLowerCase() as "x" | "y" | "width" | "height"];
+        if (value === undefined) continue;
+        result = result.replace(new RegExp(`\\b${escapedName}\\.${prop}\\b`, "g"), String(value));
+      }
+    }
+  }
   return result;
 }
 
@@ -211,7 +247,7 @@ function resolveNumeric(expr: Expression | undefined, context: LayoutContext = {
       ? { status: "resolved", value: expr.literal }
       : { status: "dynamic", raw: expr.raw };
   }
-  const value = evalConstantArithmetic(substituteParentSize(expr.raw.slice(1), context));
+  const value = evalConstantArithmetic(substituteKnownIdentifiers(expr.raw.slice(1), context));
   return value === undefined ? { status: "dynamic", raw: expr.raw } : { status: "resolved", value };
 }
 
@@ -295,9 +331,9 @@ export type ResolvedControl = {
   children: ResolvedControl[];
 };
 
-export function resolveControlLayout(control: Control, context: LayoutContext = {}): ResolvedControl {
-  const width = resolveNumeric(control.properties["Width"], context);
-  const height = resolveNumeric(control.properties["Height"], context);
+function buildResolvedControl(control: Control, ownContext: LayoutContext): ResolvedControl {
+  const width = resolveNumeric(control.properties["Width"], ownContext);
+  const height = resolveNumeric(control.properties["Height"], ownContext);
   const isAutoLayout = control.variant === "AutoLayout";
 
   // Propaga Width/Height pros filhos como o Parent.Width/Height deles: valor
@@ -308,9 +344,9 @@ export function resolveControlLayout(control: Control, context: LayoutContext = 
   // resolver) não propaga nada — não dá pra saber, então os filhos que
   // dependem dela também viram "dynamic" em vez de herdar um número
   // adivinhado (degradação honesta em vez de propagar um valor errado).
-  const childParentWidth = width.status === "resolved" ? width.value : width.status === "absent" ? context.parentWidth : undefined;
+  const childParentWidth = width.status === "resolved" ? width.value : width.status === "absent" ? ownContext.parentWidth : undefined;
   const childParentHeight =
-    height.status === "resolved" ? height.value : height.status === "absent" ? context.parentHeight : undefined;
+    height.status === "resolved" ? height.value : height.status === "absent" ? ownContext.parentHeight : undefined;
   const childContext: LayoutContext = {
     ...(childParentWidth !== undefined ? { parentWidth: childParentWidth } : {}),
     ...(childParentHeight !== undefined ? { parentHeight: childParentHeight } : {}),
@@ -320,35 +356,84 @@ export function resolveControlLayout(control: Control, context: LayoutContext = 
     name: control.name,
     type: control.type,
     ...(control.variant ? { variant: control.variant } : {}),
-    x: resolveNumeric(control.properties["X"], context),
-    y: resolveNumeric(control.properties["Y"], context),
+    x: resolveNumeric(control.properties["X"], ownContext),
+    y: resolveNumeric(control.properties["Y"], ownContext),
     width,
     height,
     text: resolveText(control.properties["Text"]),
     fill: resolveColor(control.properties["Fill"]),
     color: resolveColor(control.properties["Color"]),
-    fontSize: resolveNumeric(control.properties["Size"], context),
+    fontSize: resolveNumeric(control.properties["Size"], ownContext),
     bold: resolveBoolean(control.properties["Bold"], false),
     borderColor: resolveColor(control.properties["BorderColor"]),
-    borderThickness: resolveNumeric(control.properties["BorderThickness"], context),
+    borderThickness: resolveNumeric(control.properties["BorderThickness"], ownContext),
     borderStyle: resolveEnumMember(control.properties["BorderStyle"], "BorderStyle"),
     visible: resolveBoolean(control.properties["Visible"], true),
     ...(isAutoLayout
       ? {
           layout: {
             direction: resolveEnumMember(control.properties["LayoutDirection"], "LayoutDirection"),
-            gap: resolveNumeric(control.properties["LayoutGap"], context),
+            gap: resolveNumeric(control.properties["LayoutGap"], ownContext),
             align: resolveEnumMember(control.properties["LayoutAlignItems"], "LayoutAlignItems"),
             justify: resolveEnumMember(control.properties["LayoutJustifyContent"], "LayoutJustifyContent"),
-            paddingTop: resolveNumeric(control.properties["PaddingTop"], context),
-            paddingRight: resolveNumeric(control.properties["PaddingRight"], context),
-            paddingBottom: resolveNumeric(control.properties["PaddingBottom"], context),
-            paddingLeft: resolveNumeric(control.properties["PaddingLeft"], context),
+            paddingTop: resolveNumeric(control.properties["PaddingTop"], ownContext),
+            paddingRight: resolveNumeric(control.properties["PaddingRight"], ownContext),
+            paddingBottom: resolveNumeric(control.properties["PaddingBottom"], ownContext),
+            paddingLeft: resolveNumeric(control.properties["PaddingLeft"], ownContext),
           },
         }
       : {}),
-    children: control.children.map((child) => resolveControlLayout(child, childContext)),
+    children: resolveChildLayouts(control.children, childContext),
   };
+}
+
+/**
+ * Resolve X/Y/Width/Height de um grupo de irmãos em passadas sucessivas: a
+ * cada passada, tenta resolver cada filho usando os valores dos irmãos já
+ * conhecidos até ali (`context.siblings`); um valor que resolve fica
+ * congelado (nunca é recalculado depois), então o processo é monotônico e
+ * sempre converge — layouts absolutos clássicos do Studio costumam
+ * encadear (`B.Y = A.Y + A.Height + 8`) em qualquer ordem de declaração, daí
+ * precisar de mais de uma passada em vez de uma resolução em passe único.
+ * Uma referência circular real (A depende de B que depende de A) nunca
+ * converge pra nenhum dos dois — ambos ficam "dynamic" honestamente, em vez
+ * de adivinhar.
+ */
+function resolveChildLayouts(children: readonly Control[], context: LayoutContext): ResolvedControl[] {
+  if (children.length === 0) return [];
+
+  const siblings = new Map<string, SiblingLayout>();
+  const maxPasses = children.length + 1;
+
+  for (let pass = 0; pass < maxPasses; pass++) {
+    let changed = false;
+    const passContext: LayoutContext = { ...context, siblings };
+    for (const child of children) {
+      const prev = siblings.get(child.name);
+      const width = resolveNumeric(child.properties["Width"], passContext);
+      const height = resolveNumeric(child.properties["Height"], passContext);
+      const x = resolveNumeric(child.properties["X"], passContext);
+      const y = resolveNumeric(child.properties["Y"], passContext);
+      const next: SiblingLayout = {
+        x: prev?.x ?? (x.status === "resolved" ? x.value : undefined),
+        y: prev?.y ?? (y.status === "resolved" ? y.value : undefined),
+        width: prev?.width ?? (width.status === "resolved" ? width.value : undefined),
+        height: prev?.height ?? (height.status === "resolved" ? height.value : undefined),
+      };
+      if (!prev || next.x !== prev.x || next.y !== prev.y || next.width !== prev.width || next.height !== prev.height) {
+        changed = true;
+        siblings.set(child.name, next);
+      }
+    }
+    if (!changed) break;
+  }
+
+  const finalContext: LayoutContext = { ...context, siblings };
+  return children.map((child) => buildResolvedControl(child, finalContext));
+}
+
+export function resolveControlLayout(control: Control, context: LayoutContext = {}): ResolvedControl {
+  return buildResolvedControl(control, context);
 }
 
 /**
