@@ -2,7 +2,9 @@ import type { FlowNode } from "@power-lens/core";
 import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CONNECTOR_ICONS } from "@/lib/connector-icons";
+import { FlowNodeInputsTree } from "./FlowNodeInputsTree";
 
 type FlowNodeInspectorProps = {
   flowNode: FlowNode;
@@ -65,20 +67,29 @@ export function FlowNodeInspector({ flowNode, onClose }: FlowNodeInspectorProps)
           <section>
             <h4 className="mb-1 font-medium text-muted-foreground">Inputs</h4>
             {flowNode.inputs !== undefined ? (
-              <pre className="rounded-md bg-muted p-2 break-all whitespace-pre-wrap">
-                {typeof flowNode.inputs === "string" ? flowNode.inputs : JSON.stringify(flowNode.inputs, null, 2)}
-              </pre>
+              <Tabs defaultValue="parsed">
+                <TabsList>
+                  <TabsTrigger value="parsed">Leitura</TabsTrigger>
+                  <TabsTrigger value="raw">Raw</TabsTrigger>
+                </TabsList>
+                <TabsContent value="parsed" className="pt-2">
+                  {typeof flowNode.inputs === "string" ? (
+                    <div className="rounded-md border border-input bg-input/20 px-2 py-1 text-xs break-all whitespace-pre-wrap dark:bg-input/30">
+                      {flowNode.inputs}
+                    </div>
+                  ) : (
+                    <FlowNodeInputsTree data={flowNode.inputs} />
+                  )}
+                </TabsContent>
+                <TabsContent value="raw" className="pt-2">
+                  <pre className="rounded-md bg-muted p-2 break-all whitespace-pre-wrap">
+                    {typeof flowNode.inputs === "string" ? flowNode.inputs : JSON.stringify(flowNode.inputs, null, 2)}
+                  </pre>
+                </TabsContent>
+              </Tabs>
             ) : (
               <p className="text-muted-foreground">Este passo não declara inputs na definição.</p>
             )}
-          </section>
-
-          <section>
-            <h4 className="mb-1 font-medium text-muted-foreground">Outputs</h4>
-            <p className="text-muted-foreground">
-              Não disponível: a definição estática do fluxo não carrega exemplos de saída — isso só existe no
-              histórico de execuções, que não é lido por esta ferramenta.
-            </p>
           </section>
         </div>
       </ScrollArea>
