@@ -11,10 +11,12 @@ type StatTileProps = {
 /** Card de métrica curta (ícone + número grande + rótulo), no padrão do
  * admin center: uma fileira de fatos rápidos sobre o documento carregado.
  * Superfície de vidro fosco (`bg-card/*` + `backdrop-blur`) pra deixar o
- * gradiente de fundo do Resumo (ver `DocumentView`) passar por baixo. */
+ * wallpaper do Resumo (ver `SummarySection`) passar por baixo; no hover a
+ * opacidade some (bg sólido) e a sombra cresce, como feedback de que o
+ * card é "tocável" mesmo sem ação de clique associada. */
 export function StatTile({ label, value, detail, icon: Icon }: StatTileProps) {
   return (
-    <Card className="gap-3 bg-card/60 px-4 py-3 backdrop-blur-xl dark:bg-card/40">
+    <Card className="h-full gap-3 bg-card/60 px-4 py-3 shadow-md backdrop-blur-xl transition-all duration-200 hover:bg-card hover:shadow-lg dark:bg-card/40 dark:hover:bg-card">
       <div className="flex items-center gap-3">
         <div className="flex size-10 shrink-0 items-center justify-center">
           <Icon className="size-8" />
