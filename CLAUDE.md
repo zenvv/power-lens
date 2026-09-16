@@ -38,6 +38,12 @@ Spec completa em `docs/SPEC.md`. Conhecimento empírico sobre os formatos em
   supor. Suposição errada sobre estrutura de `.msapp` custa mais caro do que uma
   pergunta.
 
+## Desktop only
+
+O app é feito só pra desktop — não precisa adaptar layout, componentes ou interações pra
+mobile. Em telas pequenas, mostrar apenas uma tela informando que o app precisa ser
+aberto em um desktop pra funcionar, em vez de tentar renderizar a UI normal.
+
 ## `reference/`
 
 `reference/CMPA/` é material de projeto anterior, **leitura apenas**. Não portar
