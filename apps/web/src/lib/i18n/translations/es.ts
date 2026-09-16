@@ -156,6 +156,12 @@ export const es = {
     aiDescription: "Opcional: pídele a un LLM que explique este artefacto en lenguaje natural, con tu propia clave.",
     aiButton: "Generar explicación por IA",
   },
+  search: {
+    title: "Buscar",
+    placeholder: "Buscar pantallas, controles, fuentes de datos, flujos, tablas...",
+    empty: "Ningún resultado encontrado.",
+    openButton: "Buscar",
+  },
   ai: {
     settingsDialog: {
       title: "Clave de API (BYOK)",

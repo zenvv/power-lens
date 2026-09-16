@@ -8,10 +8,7 @@ import { MerView } from "@/components/mer/MerView";
 import { MeasuresPanel } from "@/components/mer/MeasuresPanel";
 import { LineagePanel } from "@/components/mer/LineagePanel";
 import { DiagnosticsPanel } from "@/components/DiagnosticsPanel";
-import { WireframeView } from "@/components/wireframe/WireframeView";
-import { ScreenNavMap } from "@/components/canvas/ScreenNavMap";
-import { ControlReferencesPanel } from "@/components/canvas/ControlReferencesPanel";
-import { ComponentInventory } from "@/components/canvas/ComponentInventory";
+import { CanvasAppView } from "@/components/canvas/CanvasAppView";
 import { AiExplanationCard } from "@/components/ai/AiExplanationCard";
 import { ArtifactTabs } from "@/components/document/ArtifactTabs";
 import { MarkdownDocView } from "@/components/document/MarkdownDocView";
@@ -19,6 +16,7 @@ import { SectionHeader } from "@/components/document/SectionHeader";
 import { SummarySection } from "@/components/document/SummarySection";
 import { useI18n } from "@/lib/i18n/context";
 import type { SectionId } from "@/components/nav/Sidebar";
+import type { SearchNavigation } from "@/components/search/GlobalSearch";
 
 type DocumentViewProps = {
   document: PowerLensDocument;
@@ -29,6 +27,9 @@ type DocumentViewProps = {
   onRequestAiExplanation: () => void;
   aiAutoGenerateArmed: boolean;
   onAiAutoGenerateConsumed: () => void;
+  /** Vindo da busca global (Fase 9) — troca o artefato selecionado no
+   * `ArtifactTabs` certo e, pra apps, a tela/controle dentro do Wireframe. */
+  searchNavigation?: SearchNavigation | undefined;
 };
 
 /** Conteúdo de um documento analisado, por seção. A navegação entre seções
@@ -43,6 +44,7 @@ export function DocumentView({
   onRequestAiExplanation,
   aiAutoGenerateArmed,
   onAiAutoGenerateConsumed,
+  searchNavigation,
 }: DocumentViewProps) {
   const { t } = useI18n();
   const { flows, models, canvasApps, reports } = useMemo(
@@ -78,6 +80,7 @@ export function DocumentView({
           />
           <ArtifactTabs
             items={flows}
+            activeId={searchNavigation?.section === "flows" ? searchNavigation.artifactId : undefined}
             description={(flow) =>
               t.documentView.flowItemDescription({
                 triggerName: flow.trigger.name,
@@ -103,6 +106,7 @@ export function DocumentView({
           />
           <ArtifactTabs
             items={models}
+            activeId={searchNavigation?.section === "models" ? searchNavigation.artifactId : undefined}
             contentClassName="flex flex-col gap-4 lg:flex-row"
             description={(model) =>
               t.documentView.modelItemDescription({
@@ -145,29 +149,20 @@ export function DocumentView({
           />
           <ArtifactTabs
             items={canvasApps}
+            activeId={searchNavigation?.section === "apps" ? searchNavigation.artifactId : undefined}
             description={() => t.documentView.appsItemDescription}
           >
             {(app) => (
-              <Tabs defaultValue="wireframe" className="gap-3">
-                <TabsList>
-                  <TabsTrigger value="wireframe">{t.documentView.appsTabs.wireframe}</TabsTrigger>
-                  <TabsTrigger value="navigation">{t.documentView.appsTabs.navigation}</TabsTrigger>
-                  <TabsTrigger value="references">{t.documentView.appsTabs.references}</TabsTrigger>
-                  <TabsTrigger value="components">{t.documentView.appsTabs.components}</TabsTrigger>
-                </TabsList>
-                <TabsContent value="wireframe">
-                  <WireframeView app={app} />
-                </TabsContent>
-                <TabsContent value="navigation">
-                  <ScreenNavMap app={app} />
-                </TabsContent>
-                <TabsContent value="references">
-                  <ControlReferencesPanel app={app} />
-                </TabsContent>
-                <TabsContent value="components">
-                  <ComponentInventory app={app} />
-                </TabsContent>
-              </Tabs>
+              <CanvasAppView
+                app={app}
+                initialSelection={
+                  searchNavigation?.section === "apps" &&
+                  searchNavigation.artifactId === app.id &&
+                  searchNavigation.screenName
+                    ? { screenName: searchNavigation.screenName, controlName: searchNavigation.controlName }
+                    : undefined
+                }
+              />
             )}
           </ArtifactTabs>
         </TabsContent>

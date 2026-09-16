@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import {
   Card,
   CardContent,
@@ -23,13 +23,22 @@ export function ArtifactTabs<T extends { id: string; name: string }>({
   description,
   contentClassName,
   children,
+  activeId,
 }: {
   items: T[];
   description: (item: T) => ReactNode;
   contentClassName?: string;
   children: (item: T) => ReactNode;
+  /** Troca o artefato selecionado de fora (busca global, Fase 9) — não
+   * controlado no sentido estrito: o usuário ainda pode trocar pelo dropdown
+   * livremente depois, isso só define o ponto de partida quando muda. */
+  activeId?: string | undefined;
 }) {
   const [selectedId, setSelectedId] = useState(items[0]!.id);
+  useEffect(() => {
+    if (activeId && items.some((item) => item.id === activeId)) setSelectedId(activeId);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeId]);
   const selected = items.find((item) => item.id === selectedId) ?? items[0]!;
 
   return (

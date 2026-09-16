@@ -23,6 +23,7 @@ import { analyzeFile } from "./lib/analyze.js";
 import { useDocumentDownloads } from "./lib/use-document-downloads.js";
 import { useI18n } from "./lib/i18n/context.js";
 import { loadRuleConfig } from "./lib/rules/rule-config-storage.js";
+import { GlobalSearch, type SearchNavigation } from "./components/search/GlobalSearch.js";
 import type { AppState } from "./lib/app-state.js";
 
 /** Piso artificial pro estado de loading — parsing real costuma terminar em
@@ -43,6 +44,26 @@ export function App() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [aiAutoGenerateArmed, setAiAutoGenerateArmed] = useState(false);
   const [ruleConfig, setRuleConfig] = useState<RuleConfigMap | undefined>(() => loadRuleConfig());
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchNavigation, setSearchNavigation] = useState<SearchNavigation>();
+
+  /** Atalho global Cmd/Ctrl+K pra abrir a busca (Fase 9) — mesmo padrão do
+   * `cmdk`/paletas de comando em geral. */
+  useEffect(() => {
+    function onKeyDown(event: KeyboardEvent) {
+      if ((event.metaKey || event.ctrlKey) && event.key === "k") {
+        event.preventDefault();
+        setSearchOpen((v) => !v);
+      }
+    }
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, []);
+
+  const onSearchNavigate = useCallback((navigation: SearchNavigation) => {
+    setSearchNavigation(navigation);
+    setActiveSection(navigation.section);
+  }, []);
 
   /** Atalho "Gerar explicação por IA" do Resumo: navega pra aba de IA e
    * arma a geração automática (só dispara de fato se já houver chave
@@ -170,7 +191,17 @@ export function App() {
           onDownloadMarkdown={downloadMarkdown}
           onDownloadIr={downloadIr}
           onOpenAi={onOpenAi}
+          onOpenSearch={() => setSearchOpen(true)}
         />
+
+        {document && (
+          <GlobalSearch
+            document={document}
+            open={searchOpen}
+            onOpenChange={setSearchOpen}
+            onNavigate={onSearchNavigate}
+          />
+        )}
 
         <div className="flex min-h-0 flex-1 w-full">
           <AnimatePresence>
@@ -200,6 +231,7 @@ export function App() {
                     onRequestAiExplanation={onRequestAiExplanation}
                     aiAutoGenerateArmed={aiAutoGenerateArmed}
                     onAiAutoGenerateConsumed={onAiAutoGenerateConsumed}
+                    searchNavigation={searchNavigation}
                   />
                 </>
               ) : (

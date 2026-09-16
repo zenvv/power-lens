@@ -160,6 +160,12 @@ export const en = {
     aiDescription: "Optional: ask an LLM to explain this artifact in natural language, using your own key.",
     aiButton: "Generate AI explanation",
   },
+  search: {
+    title: "Search",
+    placeholder: "Search screens, controls, data sources, flows, tables...",
+    empty: "No results found.",
+    openButton: "Search",
+  },
   ai: {
     settingsDialog: {
       title: "API Key (BYOK)",

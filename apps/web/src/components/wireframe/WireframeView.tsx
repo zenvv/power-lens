@@ -6,19 +6,30 @@ import { useI18n } from "@/lib/i18n/context";
 
 type WireframeViewProps = {
   app: CanvasApp;
+  /** Seleção inicial vinda de fora (busca global, Fase 9) — aplicada uma
+   * vez quando muda, não controlada: o usuário continua livre pra navegar
+   * pela tree view depois disso. */
+  initialSelection?: { screenName: string; controlName?: string | undefined } | undefined;
 };
 
 /**
  * Renderização estática por tela (spec seção 7) — nunca chamar de "preview"
  * na UI, é um blueprint aproximado, não uma simulação fiel do app rodando.
  */
-export function WireframeView({ app }: WireframeViewProps) {
+export function WireframeView({ app, initialSelection }: WireframeViewProps) {
   const { t } = useI18n();
   const sortedScreens = useMemo(() => [...app.screens].sort((a, b) => a.order - b.order), [app.screens]);
   const [selectedName, setSelectedName] = useState<string | undefined>(sortedScreens[0]?.name);
   const [selectedControlName, setSelectedControlName] = useState<string>();
   const selectedScreen = sortedScreens.find((s) => s.name === selectedName) ?? sortedScreens[0];
   const canvasRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!initialSelection) return;
+    setSelectedName(initialSelection.screenName);
+    setSelectedControlName(initialSelection.controlName);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialSelection]);
 
   const resolved = useMemo(() => (selectedScreen ? resolveScreenLayout(selectedScreen) : undefined), [selectedScreen]);
 

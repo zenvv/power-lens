@@ -1,10 +1,25 @@
 import type { PowerLensDocument } from "@power-lens/core";
 import { SearchSparkleColor } from "@fluentui/react-icons";
-import { Download, FileText, Menu, Sparkles, TriangleAlert, UploadCloud } from "lucide-react";
+import {
+  Download,
+  FileText,
+  Menu,
+  Search,
+  Sparkles,
+  TriangleAlert,
+  UploadCloud,
+} from "lucide-react";
 import { Button } from "../ui/button";
-import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupText } from "../ui/input-group";
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupButton,
+  InputGroupText,
+} from "../ui/input-group";
 import { useI18n } from "@/lib/i18n/context";
 import { FormatIcon } from "./FormatIcon";
+import Logo from "./Logo";
+import { SettingsCorner } from "./SettingsCorner";
 
 type NavbarProps = {
   document?: PowerLensDocument | null;
@@ -17,6 +32,7 @@ type NavbarProps = {
   onDownloadMarkdown: () => void;
   onDownloadIr: () => void;
   onOpenAi: () => void;
+  onOpenSearch: () => void;
 };
 
 /** Barra superior fixa do app. Identidade à esquerda, arquivo atual ao
@@ -31,51 +47,48 @@ function Navbar({
   onDownloadMarkdown,
   onDownloadIr,
   onOpenAi,
+  onOpenSearch,
 }: NavbarProps) {
   const { t } = useI18n();
 
   return (
-    <div className="grid h-12 w-full shrink-0 grid-cols-[auto_1fr_auto] items-center gap-3 bg-sidebar px-4">
-      <div className="flex items-center gap-3">
-        {showSidebarToggle && (
-          <Button
-            variant="ghost"
-            size="icon"
-            className="md:hidden"
-            aria-label={t.navbar.openNav}
-            onClick={onToggleSidebar}
-          >
-            <Menu />
-          </Button>
-        )}
+    <div className="flex justify-start h-12 w-full shrink-0  items-center gap-1 bg-sidebar px-4">
+      <div className="flex shrink-0 items-center gap-2 group transition-all select-none w-58">
+        <Logo className="size-6 text-foreground group-hover:text-sidebar-primary transition-all" />
 
-        <div className="flex shrink-0 items-center gap-2">
-          <SearchSparkleColor className="size-5" />
-          <div className="flex flex-col leading-none">
-            <span className="font-heading text-sm font-semibold">Power Lens</span>
-            <span className="text-[10px] text-muted-foreground/70">{t.navbar.notAffiliated}</span>
-          </div>
+        <div className="flex flex-col leading-none">
+          <span className="font-heading text-sm font-semibold group-hover:text-sidebar-primary group-hover:shimmer">
+            Power Lens
+          </span>
+          <span className="text-[10px] text-muted-foreground/70 group-hover:text-muted-foreground">
+            {t.navbar.notAffiliated}
+          </span>
         </div>
       </div>
-
-      <div className="flex justify-center">
+      <div className="flex-1 flex justify-start">
         {document && (
-          <InputGroup className="w-full max-w-md">
-            <InputGroupAddon>
-              <FormatIcon document={document} className="size-4 shrink-0 text-muted-foreground" />
-            </InputGroupAddon>
-            <InputGroupText className="min-w-0 flex-1 justify-start">
-              <span className="truncate">
-                <span className="font-medium text-foreground">{document.source.fileName}</span> ·{" "}
-                {document.source.detectedFormat} · {t.navbar.artifactsCount({ count: document.artifacts.length })}
+          <div className="w-full max-w-md m-0! h-10.5 rounded-lg bg-background/20 px-1 gap-2 flex items-center justify-start border text-xs border-border/30 hover:border-border hover:bg-background/40 transition-all">
+            <div className="size-8 flex p-1 items-center justify-center bg-linear-to-t from-muted/50 to-transparent border rounded-md">
+              <FormatIcon
+                document={document}
+                className="size-6 shrink-0 text-muted-foreground"
+              />
+            </div>
+            <div className="min-w-0 flex-1 justify-center flex flex-col h-full">
+              <span className="font-medium text-foreground w-full truncate leading-none">
+                {document.source.fileName}
+              </span>{" "}
+              <span className="truncate text-[10px]line-clamp-1 text-muted-foreground leading-none">
+                {document.source.detectedFormat} ·{" "}
+                {t.navbar.artifactsCount({ count: document.artifacts.length })}
               </span>
-            </InputGroupText>
-            <InputGroupAddon align="inline-end">
-              <InputGroupButton onClick={onRequestImport}>
+            </div>
+            <div>
+              <Button variant="ghost" onClick={onRequestImport}>
                 <UploadCloud /> {t.navbar.importFile}
-              </InputGroupButton>
-            </InputGroupAddon>
-          </InputGroup>
+              </Button>
+            </div>
+          </div>
         )}
       </div>
 
@@ -85,7 +98,9 @@ function Navbar({
             variant="ghost"
             size="sm"
             onClick={onOpenDiagnostics}
-            aria-label={t.navbar.diagnosticsAria({ count: document.diagnostics.length })}
+            aria-label={t.navbar.diagnosticsAria({
+              count: document.diagnostics.length,
+            })}
           >
             <TriangleAlert className="text-amber-500" />
             {document.diagnostics.length}
@@ -93,6 +108,9 @@ function Navbar({
         )}
         {document && (
           <>
+            <Button variant="ghost" size="sm" onClick={onOpenSearch} aria-label={t.search.openButton}>
+              <Search /> {t.search.openButton}
+            </Button>
             <Button variant="ghost" size="sm" onClick={onDownloadMarkdown}>
               <FileText /> {t.navbar.downloadDoc}
             </Button>
@@ -104,6 +122,7 @@ function Navbar({
             </Button>
           </>
         )}
+        {!showSidebarToggle && <SettingsCorner />}
       </div>
     </div>
   );
