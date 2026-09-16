@@ -40,6 +40,27 @@ rápido de chegar lá a partir do Resumo.
   `App.tsx` é consumido (resetado) assim que a `AiExplanationCard` monta e usa — navegar
   de volta pra aba de IA depois pela sidebar não regera sozinho.
 
+## Nota — passe de polish (`/impeccable`)
+
+Depois da primeira versão funcional, rodado um passe de polish dedicado (usuário
+descreveu a interface como "meio confusa ainda"):
+
+- Card de configuração vira uma faixa de identidade compacta (provedor · modelo ·
+  chave mascarada, ícone `KeyRound`) com um botão "Trocar" discreto, em vez de embutida
+  na frase da descrição — mais fácil de escanear.
+- Estado "sem chave" ganhou uma caixa de borda tracejada — reaproveita a mesma
+  linguagem visual que o wireframe já usa pra "valor dinâmico/não resolvido", em vez de
+  inventar um padrão novo.
+- Erros de geração e de PDF viraram `Alert` (`shadcn/ui`, adicionado via
+  `npx shadcn add alert`) em vez de um parágrafo vermelho solto.
+- Botão "Gerar explicação" virou a ação primária, com label de estado ("Gerando
+  explicação…" / "Gerar novamente"); "Trocar" chave passou a `ghost` pra não competir.
+- Removido o ícone do `CardTitle` do novo card "Explicação por IA" no Resumo — nenhum
+  outro `CardTitle` do app usa ícone, então era uma inconsistência local, não um padrão.
+- Botão "Copiar" do `MarkdownDocView` ganhou `min-w` fixo pra não empurrar os botões
+  vizinhos quando o texto muda pra "Copiado".
+- Detector mecânico do Impeccable (`detect.mjs`) rodou limpo nos arquivos alterados.
+
 ## Nota — inclui trabalho anterior não commitado
 
 O `MarkdownDocView` (abas Leitura/Raw + baixar `.md` pra Documentação gerada) e a

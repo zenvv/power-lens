@@ -149,16 +149,14 @@ export function DocumentView({
 
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Sparkles className="size-4" /> Explicação por IA
-            </CardTitle>
+            <CardTitle>Explicação por IA</CardTitle>
             <CardDescription>
-              Peça pra um LLM da sua escolha explicar este artefato em linguagem natural — chamada
-              direta do seu navegador, com a sua própria chave (BYOK).
+              Opcional: peça pra um LLM explicar este artefato em linguagem natural, com a
+              sua própria chave.
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Button variant="secondary" onClick={onRequestAiExplanation}>
+            <Button variant="outline" onClick={onRequestAiExplanation}>
               <Sparkles /> Gerar explicação por IA
             </Button>
           </CardContent>

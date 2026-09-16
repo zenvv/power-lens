@@ -1,8 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { KeyRound, TriangleAlert } from "lucide-react";
 import { buildPromptMd, type PowerLensDocument } from "@power-lens/core";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { AiSettingsDialog } from "./AiSettingsDialog";
 import { MarkdownDocView } from "@/components/document/MarkdownDocView";
 import { callAiProvider, PROVIDERS } from "@/lib/ai/providers";
@@ -83,47 +85,78 @@ export function AiExplanationCard({
     }
   };
 
+  const isBusy = state.status === "loading";
+
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Explicação por IA (opcional, BYOK)</CardTitle>
+        <CardTitle>Explicação por IA</CardTitle>
         <CardDescription>
-          {settings ? (
-            <>
-              Chamada direta do seu navegador pro {PROVIDERS[settings.provider].label}, modelo{" "}
-              <code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.85em]">
-                {settings.model}
-              </code>
-              , com a chave {maskApiKey(settings.apiKey)}. Nada passa pelo Power Lens.
-            </>
-          ) : (
-            "Configure sua própria chave de API pra pedir uma explicação em linguagem natural do artefato — chamada direta do seu navegador pro provedor, sem passar pelo Power Lens."
-          )}
+          Peça pra um LLM da sua escolha explicar este artefato em linguagem natural. A
+          chamada é direta do seu navegador pro provedor, com a sua própria chave — nada
+          passa pelo Power Lens.
         </CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col gap-3">
-        <div className="flex flex-wrap items-center gap-2">
-          <AiSettingsDialog
-            onSettingsChange={setSettings}
-            trigger={
-              <Button variant="outline" size="sm">
-                {settings ? "Trocar chave/provedor" : "Configurar chave de API"}
-              </Button>
-            }
-          />
-          {settings && (
-            <Button size="sm" onClick={onGenerate} disabled={state.status === "loading"}>
-              {state.status === "loading" && <Spinner className="size-4" />}
-              {state.status === "done" || state.status === "error" ? "Gerar novamente" : "Gerar explicação"}
-            </Button>
-          )}
-        </div>
-
-        {state.status === "error" && (
-          <p className="text-sm text-destructive">{state.message}</p>
+        {settings ? (
+          <div className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-border bg-muted/40 px-3 py-2">
+            <div className="flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
+              <KeyRound className="size-3.5 shrink-0" />
+              <span className="font-medium text-foreground">
+                {PROVIDERS[settings.provider].label}
+              </span>
+              <span aria-hidden="true">·</span>
+              <code className="rounded bg-background px-1 py-0.5 font-mono text-[0.7rem]">
+                {settings.model}
+              </code>
+              <span aria-hidden="true">·</span>
+              <span className="font-mono">chave {maskApiKey(settings.apiKey)}</span>
+            </div>
+            <AiSettingsDialog
+              onSettingsChange={setSettings}
+              trigger={
+                <Button variant="ghost" size="sm" disabled={isBusy}>
+                  Trocar
+                </Button>
+              }
+            />
+          </div>
+        ) : (
+          <div className="flex flex-col items-start gap-2 rounded-md border border-dashed border-border px-3 py-3">
+            <p className="text-xs text-muted-foreground">Nenhuma chave de API configurada ainda.</p>
+            <AiSettingsDialog
+              onSettingsChange={setSettings}
+              trigger={<Button size="sm">Configurar chave de API</Button>}
+            />
+          </div>
         )}
 
-        {pdfError && <p className="text-sm text-destructive">{pdfError}</p>}
+        {settings && (
+          <Button onClick={onGenerate} disabled={isBusy} className="self-start">
+            {isBusy && <Spinner className="size-4" />}
+            {isBusy
+              ? "Gerando explicação…"
+              : state.status === "done" || state.status === "error"
+                ? "Gerar novamente"
+                : "Gerar explicação"}
+          </Button>
+        )}
+
+        {state.status === "error" && (
+          <Alert variant="destructive">
+            <TriangleAlert />
+            <AlertTitle>Não deu pra gerar a explicação</AlertTitle>
+            <AlertDescription>{state.message}</AlertDescription>
+          </Alert>
+        )}
+
+        {pdfError && (
+          <Alert variant="destructive">
+            <TriangleAlert />
+            <AlertTitle>Não deu pra abrir o PDF</AlertTitle>
+            <AlertDescription>{pdfError}</AlertDescription>
+          </Alert>
+        )}
 
         {state.status === "done" && (
           <MarkdownDocView
