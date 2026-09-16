@@ -8,7 +8,7 @@ import type { Diagnostic, PowerLensDocument } from "../ir/index.js";
  * super-detectar: a ausência de aviso aqui não é prova de que o conector é
  * standard, só que não está nesta lista.
  */
-const KNOWN_PREMIUM_CONNECTOR_IDS = new Set([
+export const KNOWN_PREMIUM_CONNECTOR_IDS = new Set([
   "sql",
   "salesforce",
   "sap",

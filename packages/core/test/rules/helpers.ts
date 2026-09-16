@@ -1,9 +1,11 @@
 import {
   createEmptyDocument,
   type CanvasApp,
+  type CloudFlow,
   type Control,
   type DataModel,
   type Expression,
+  type FlowNode,
   type PowerLensDocument,
   type Reference,
 } from "../../src/ir/index.js";
@@ -37,6 +39,22 @@ export function canvasApp(overrides: Partial<CanvasApp> = {}): CanvasApp {
     components: [],
     dataSources: [],
     variables: [],
+    ...overrides,
+  };
+}
+
+export function flowNode(overrides: Partial<FlowNode> & Pick<FlowNode, "id">): FlowNode {
+  return { name: overrides.id, type: "Unknown", runAfter: [], ...overrides };
+}
+
+export function cloudFlow(overrides: Partial<CloudFlow> = {}): CloudFlow {
+  return {
+    kind: "cloudFlow",
+    id: "flow-1",
+    name: "Flow",
+    trigger: flowNode({ id: "trigger", type: "Recurrence" }),
+    actions: [],
+    connections: [],
     ...overrides,
   };
 }

@@ -4,7 +4,7 @@ import { canvasApp, control, dataModel, emptyDocument } from "./helpers.js";
 
 describe("runHealthChecks", () => {
   it("runs every registered rule and concatenates their diagnostics", () => {
-    expect(HEALTH_CHECK_RULES).toHaveLength(10);
+    expect(HEALTH_CHECK_RULES).toHaveLength(14);
 
     const doc = emptyDocument();
     doc.artifacts = [
