@@ -46,3 +46,11 @@ export function clearAiSettings(): void {
     // idem
   }
 }
+
+/** Mostra só os últimos 4 caracteres da chave, pra confirmar qual chave está
+ * configurada sem expor o segredo inteiro na tela (screenshots, telas
+ * compartilhadas). */
+export function maskApiKey(apiKey: string): string {
+  if (apiKey.length <= 4) return "••••";
+  return `••••${apiKey.slice(-4)}`;
+}

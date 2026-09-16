@@ -36,20 +36,42 @@ export function App() {
   const [activeSection, setActiveSection] = useState<SectionId>("home");
   const [confirmImportOpen, setConfirmImportOpen] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [aiAutoGenerateArmed, setAiAutoGenerateArmed] = useState(false);
+
+  /** Atalho "Gerar explicação por IA" do Resumo: navega pra aba de IA e
+   * arma a geração automática (só dispara de fato se já houver chave
+   * configurada — ver `AiExplanationCard`). */
+  const onRequestAiExplanation = useCallback(() => {
+    setActiveSection("ai");
+    setAiAutoGenerateArmed(true);
+  }, []);
+
+  const onAiAutoGenerateConsumed = useCallback(() => {
+    setAiAutoGenerateArmed(false);
+  }, []);
 
   const onFile = useCallback((file: File) => {
-    setState({ status: "loading", fileName: file.name, stage: "Detectando formato do arquivo" });
+    setState({
+      status: "loading",
+      fileName: file.name,
+      stage: "Detectando formato do arquivo",
+    });
     const startedAt = performance.now();
 
     analyzeFile(file, {
-      onStage: (stage) => setState((s) => (s.status === "loading" ? { ...s, stage } : s)),
+      onStage: (stage) =>
+        setState((s) => (s.status === "loading" ? { ...s, stage } : s)),
     })
       .then(async (result) => {
         const elapsed = performance.now() - startedAt;
         if (elapsed < MIN_LOADING_MS) await wait(MIN_LOADING_MS - elapsed);
 
         if (result.status === "unrecognized") {
-          setState({ status: "unrecognized", fileName: result.fileName, diagnostics: result.diagnostics });
+          setState({
+            status: "unrecognized",
+            fileName: result.fileName,
+            diagnostics: result.diagnostics,
+          });
           setActiveSection("home");
         } else {
           setState({ status: "parsed", result });
@@ -118,9 +140,21 @@ export function App() {
           <div className="min-w-0 flex-1 overflow-y-auto">
             <div className="mx-auto flex w-full max-w-[1600px] flex-1 flex-col px-6 py-6">
               {document ? (
-                <DocumentView document={document} activeSection={activeSection} />
+                <>
+                  <DocumentView
+                    document={document}
+                    activeSection={activeSection}
+                    onRequestAiExplanation={onRequestAiExplanation}
+                    aiAutoGenerateArmed={aiAutoGenerateArmed}
+                    onAiAutoGenerateConsumed={onAiAutoGenerateConsumed}
+                  />
+                </>
               ) : (
-                <HomeSection state={state} onFile={onFile} onRetry={resetToIdle} />
+                <HomeSection
+                  state={state}
+                  onFile={onFile}
+                  onRetry={resetToIdle}
+                />
               )}
             </div>
           </div>
