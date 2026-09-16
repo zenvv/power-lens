@@ -10,6 +10,7 @@ import {
   type ReactFlowInstance,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
+import { useTheme } from "next-themes";
 import { ArrowDown, ArrowRight } from "lucide-react";
 import type { CloudFlow, FlowNode as FlowNodeIR } from "@power-lens/core";
 import { Button } from "@/components/ui/button";
@@ -25,6 +26,7 @@ type FlowDagViewProps = {
 };
 
 export function FlowDagView({ flow }: FlowDagViewProps) {
+  const { resolvedTheme } = useTheme();
   const [collapsed, setCollapsed] = useState<ReadonlySet<string>>(() => new Set());
   const [nodes, setNodes] = useState<Node<FlowRfNodeData>[]>([]);
   const [edges, setEdges] = useState<Edge[]>([]);
@@ -90,6 +92,7 @@ export function FlowDagView({ flow }: FlowDagViewProps) {
         nodes={nodesWithToggle}
         edges={edges}
         nodeTypes={nodeTypes}
+        colorMode={resolvedTheme === "dark" ? "dark" : "light"}
         fitView
         fitViewOptions={{ padding: 0.2 }}
         proOptions={{ hideAttribution: true }}

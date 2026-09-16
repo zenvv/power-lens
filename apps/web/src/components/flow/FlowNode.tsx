@@ -60,7 +60,7 @@ function FlowNodeComponent({ id, data }: FlowNodeProps) {
         "flex  w-full flex-col rounded-lg border text-left",
         isGroup
           ? "border-border/70 bg-muted/20 h-full"
-          : "border-border bg-card p-2 h-max cursor-pointer hover:border-muted-foreground/50",
+          : "border-border bg-card p-2 h-full justify-center cursor-pointer hover:border-muted-foreground/50",
         isSelected && "border-primary ring-1 ring-primary",
       )}
     >

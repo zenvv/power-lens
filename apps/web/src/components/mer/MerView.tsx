@@ -10,6 +10,7 @@ import {
   type NodeTypes,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
+import { useTheme } from "next-themes";
 import type { DataModel } from "@power-lens/core";
 import { layoutModel, type MerRfNodeData } from "@/lib/mer-layout";
 import { savePosition } from "@/lib/mer-positions";
@@ -22,6 +23,7 @@ type MerViewProps = {
 };
 
 export function MerView({ model }: MerViewProps) {
+  const { resolvedTheme } = useTheme();
   const [expanded, setExpanded] = useState<ReadonlySet<string>>(() => new Set(model.tables.map((t) => t.name)));
   const [nodes, setNodes] = useState<Node<MerRfNodeData>[]>([]);
   const [edges, setEdges] = useState<Edge[]>([]);
@@ -76,6 +78,7 @@ export function MerView({ model }: MerViewProps) {
         edges={edges}
         nodeTypes={nodeTypes}
         onNodesChange={onNodesChange}
+        colorMode={resolvedTheme === "dark" ? "dark" : "light"}
         fitView
         fitViewOptions={{ padding: 0.2 }}
         proOptions={{ hideAttribution: true }}
