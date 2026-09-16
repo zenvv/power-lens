@@ -152,7 +152,7 @@ Detalhes completos da arquitetura e do formato de cada arquivo em [`docs/SPEC.md
 
 ## Rodando localmente
 
-Requer Node ≥ 20 e [pnpm](https://pnpm.io/).
+Requer Node ≥ 22.13 (exigido pelo próprio `pnpm@11`) e [pnpm](https://pnpm.io/).
 
 ```bash
 pnpm install
