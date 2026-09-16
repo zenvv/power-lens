@@ -34,7 +34,10 @@ function Navbar({ document, showSidebarToggle, onOpenDiagnostics, onToggleSideba
 
       <div className="flex shrink-0 items-center gap-2">
         <SearchSparkleColor className="size-5" />
-        <span className="font-heading text-sm font-semibold">Power Lens</span>
+        <div className="flex flex-col leading-none">
+          <span className="font-heading text-sm font-semibold">Power Lens</span>
+          <span className="text-[10px] text-muted-foreground/70">Not afiliated with Microsoft</span>
+        </div>
       </div>
 
       {document && (

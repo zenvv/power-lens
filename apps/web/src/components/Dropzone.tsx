@@ -55,7 +55,7 @@ export function Dropzone({ onFile, disabled }: DropzoneProps) {
       aria-disabled={disabled}
       aria-label="Solte um arquivo ou clique para escolher"
       className={cn(
-        "relative z-10 flex flex-col items-center gap-3 rounded-2xl px-8 py-6 text-center outline-none",
+        "relative z-10 flex flex-col items-center gap-2 rounded-2xl px-4 py-4 text-center outline-none sm:gap-3 sm:px-8 sm:py-6",
         disabled ? "cursor-wait" : "cursor-pointer",
       )}
     >
@@ -68,7 +68,7 @@ export function Dropzone({ onFile, disabled }: DropzoneProps) {
         disabled={disabled}
       />
 
-      <div className="relative flex size-16 items-center justify-center">
+      <div className="relative flex size-12 items-center justify-center sm:size-16">
         <motion.div
           className="absolute inset-0 rounded-full bg-primary/25 blur-md"
           animate={
@@ -82,10 +82,10 @@ export function Dropzone({ onFile, disabled }: DropzoneProps) {
               : { duration: 2.8, repeat: Infinity, ease: "easeInOut" }
           }
         />
-        <FileText className="relative size-8 text-foreground/70" strokeWidth={1.5} />
+        <FileText className="relative size-6 text-foreground/70 sm:size-8" strokeWidth={1.5} />
       </div>
 
-      <p className="max-w-56 text-sm text-muted-foreground">
+      <p className="max-w-28 text-xs text-muted-foreground sm:max-w-56 sm:text-sm">
         {disabled
           ? "Recebendo o arquivo..."
           : "Solte um .msapp, solution .zip, .pbit ou .pbip aqui, ou clique para escolher"}
