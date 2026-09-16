@@ -210,6 +210,17 @@ export const FlowNodeSchema = z.object({
    * Scope/Foreach child (there's only one branch to be in).
    */
   branch: z.string().optional(),
+  /**
+   * Added for the DAG viewer's If/Foreach group headers — "which condition
+   * is this branching on?", "what array is this looping over?" were
+   * previously invisible without opening the raw `inputs` JSON. Only set for
+   * `type: "If"` (human-readable rendering of the raw `expression` operator
+   * tree/string, via `stringifyCondition` in parsers/flow/condition.ts) and
+   * `type: "Foreach"` (the raw `foreach` expression string, `@`-prefix
+   * stripped) respectively — never both on the same node.
+   */
+  condition: z.string().optional(),
+  iterateOver: z.string().optional(),
 });
 export type FlowNode = z.infer<typeof FlowNodeSchema>;
 

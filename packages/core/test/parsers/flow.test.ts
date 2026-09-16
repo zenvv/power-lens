@@ -101,6 +101,52 @@ describe("parseFlow — actions", () => {
   });
 });
 
+describe("parseFlow — If condition", () => {
+  it("stores a readable rendering of the If's expression as `condition`", () => {
+    const doc = parseFixture();
+    const flow = doc.artifacts.find((a) => a.kind === "cloudFlow");
+    if (flow?.kind !== "cloudFlow") throw new Error("expected cloudFlow artifact");
+
+    const condition = flow.actions.find((a) => a.id === "Condition");
+    expect(condition?.condition).toBe("triggerBody()?['Total'] > 1000");
+  });
+
+  it("does not set `condition` on non-If actions", () => {
+    const doc = parseFixture();
+    const flow = doc.artifacts.find((a) => a.kind === "cloudFlow");
+    if (flow?.kind !== "cloudFlow") throw new Error("expected cloudFlow artifact");
+
+    const scope = flow.actions.find((a) => a.id === "Scope");
+    expect(scope?.condition).toBeUndefined();
+  });
+});
+
+describe("parseFlow — Foreach iterateOver", () => {
+  it("stores the foreach expression as `iterateOver`, with the @ prefix stripped", () => {
+    const raw = {
+      triggers: { Manual: { type: "Request" } },
+      actions: {
+        Apply_to_each: {
+          type: "Foreach",
+          foreach: "@triggerBody()?['links']",
+          actions: {
+            Send_an_email: { type: "OpenApiConnection", runAfter: {} },
+          },
+          runAfter: {},
+        },
+      },
+    };
+    const bytes = new TextEncoder().encode(JSON.stringify(raw));
+    const doc = parseFlow(bytes, { fileName: "flow.json", fileSize: bytes.byteLength });
+
+    const flow = doc.artifacts.find((a) => a.kind === "cloudFlow");
+    if (flow?.kind !== "cloudFlow") throw new Error("expected cloudFlow artifact");
+
+    const foreach = flow.actions.find((a) => a.id === "Apply_to_each");
+    expect(foreach?.iterateOver).toBe("triggerBody()?['links']");
+  });
+});
+
 describe("parseFlow — connections", () => {
   it("deduplicates connector names across trigger and actions", () => {
     const doc = parseFixture();

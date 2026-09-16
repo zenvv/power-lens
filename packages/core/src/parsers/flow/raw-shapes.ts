@@ -36,6 +36,22 @@ export type RawAction = {
   else?: { actions?: Record<string, RawAction> };
   cases?: Record<string, { actions?: Record<string, RawAction> }>;
   default?: { actions?: Record<string, RawAction> };
+  /**
+   * [LACUNA] Presente numa action `type: "If"`, segundo o schema publicamente
+   * documentado do Workflow Definition Language — nunca visto num
+   * definition.json real deste projeto. Ora um objeto em árvore de operador
+   * (`{"and": [{"equals": [a, b]}]}`), ora uma string de expressão crua
+   * (`"@equals(a, b)"`). `stringifyCondition` (condition.ts) trata os dois.
+   */
+  expression?: unknown;
+  /**
+   * [LACUNA] Presente numa action `type: "Foreach"` — a expressão (sempre
+   * string, segundo a doc pública) que resolve pro array iterado. Não existe
+   * campo de "nome da variável de iteração": o item corrente é referenciado
+   * dentro do loop via `items('<nome-da-action>')`, implícito pelo próprio
+   * nome da action.
+   */
+  foreach?: string;
 };
 
 export type RawTrigger = {

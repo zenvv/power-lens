@@ -1,4 +1,5 @@
 import type { ConnectionRef, FlowNode, RunAfter } from "../../ir/index.js";
+import { cleanExpressionString, stringifyCondition } from "./condition.js";
 import type { RawAction, RawActionInputs, RawRunAfter } from "./raw-shapes.js";
 
 function isActionInputs(value: unknown): value is RawActionInputs {
@@ -41,6 +42,12 @@ function buildNode(id: string, action: RawAction, parentId: string | undefined, 
     ...(connectorName ? { connectorName } : {}),
     ...(action.description ? { summary: action.description } : {}),
     ...(action.inputs !== undefined ? { inputs: action.inputs } : {}),
+    ...(action.type === "If" && action.expression !== undefined
+      ? { condition: stringifyCondition(action.expression) }
+      : {}),
+    ...(action.type === "Foreach" && typeof action.foreach === "string"
+      ? { iterateOver: cleanExpressionString(action.foreach) }
+      : {}),
   };
 }
 

@@ -15,12 +15,13 @@ function loadFlow() {
 }
 
 describe("layoutFlow", () => {
-  it("produces one node per trigger + action, all with computed positions", async () => {
+  it("produces one node per trigger + action + branch container, all with computed positions", async () => {
     const flow = loadFlow();
     const { nodes } = await layoutFlow(flow, new Set());
 
     // trigger + 6 actions (Condition, Send_an_email, Terminate, Scope, Compose, Final_step)
-    expect(nodes).toHaveLength(7);
+    // + 2 synthetic branch containers (Condition's true/false sides)
+    expect(nodes).toHaveLength(9);
     for (const node of nodes) {
       expect(typeof node.position.x).toBe("number");
       expect(typeof node.position.y).toBe("number");
@@ -29,13 +30,22 @@ describe("layoutFlow", () => {
     }
   });
 
-  it("nests branch children under their If node via parentId", async () => {
+  it("nests an If's true/false children under a synthetic branch container, not the If node directly", async () => {
     const flow = loadFlow();
     const { nodes } = await layoutFlow(flow, new Set());
 
+    const trueBranch = nodes.find((n) => n.type === "flowBranch" && n.parentId === "Condition" && n.data.kind === "branch" && n.data.branch === "true");
+    const falseBranch = nodes.find((n) => n.type === "flowBranch" && n.parentId === "Condition" && n.data.kind === "branch" && n.data.branch === "false");
+    expect(trueBranch).toBeDefined();
+    expect(falseBranch).toBeDefined();
+    if (trueBranch?.data.kind === "branch") expect(trueBranch.data.ownerType).toBe("If");
+
     const sendEmail = nodes.find((n) => n.id === "Send_an_email");
-    expect(sendEmail?.parentId).toBe("Condition");
+    expect(sendEmail?.parentId).toBe(trueBranch?.id);
     expect(sendEmail?.extent).toBe("parent");
+
+    const terminate = nodes.find((n) => n.id === "Terminate");
+    expect(terminate?.parentId).toBe(falseBranch?.id);
   });
 
   it("collapsing a group removes its children from the node list", async () => {
@@ -62,7 +72,7 @@ describe("layoutFlow", () => {
     const flow = loadFlow();
     const { nodes } = await layoutFlow(flow, new Set(), "RIGHT");
 
-    expect(nodes).toHaveLength(7);
+    expect(nodes).toHaveLength(9);
     for (const node of nodes) {
       expect(Number.isNaN(node.position.x)).toBe(false);
       expect(Number.isNaN(node.position.y)).toBe(false);

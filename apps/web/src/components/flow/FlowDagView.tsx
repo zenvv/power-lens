@@ -21,10 +21,11 @@ import {
   type FlowDirection,
   type FlowRfNodeData,
 } from "@/lib/flow-layout";
+import { FlowBranchNode } from "./FlowBranchNode";
 import { FlowNode, type FlowRfNodeDataWithToggle } from "./FlowNode";
 import { FlowNodeInspector } from "./FlowNodeInspector";
 
-const nodeTypes: NodeTypes = { flowNode: FlowNode };
+const nodeTypes: NodeTypes = { flowNode: FlowNode, flowBranch: FlowBranchNode };
 
 type FlowDagViewProps = {
   flow: CloudFlow;
@@ -65,7 +66,7 @@ export function FlowDagView({ flow }: FlowDagViewProps) {
   // disparar nesse caso; por isso a seleção vive aqui, não lá.
   const onNodeClick = useCallback<NodeMouseHandler<Node<FlowRfNodeDataWithToggle>>>(
     (_event, node) => {
-      if (node.data.isGroup) return;
+      if (node.data.kind !== "action" || node.data.isGroup) return;
       onSelect(node.id);
     },
     [onSelect],

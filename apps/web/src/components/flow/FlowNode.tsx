@@ -3,7 +3,7 @@ import { Handle, Position, type NodeProps } from "@xyflow/react";
 import { ChevronDown, ChevronRight, Plug } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { GROUP_HEADER_HEIGHT } from "@/lib/flow-layout";
-import type { FlowRfNodeData } from "@/lib/flow-layout";
+import type { FlowRfActionNodeData, FlowRfNodeData } from "@/lib/flow-layout";
 import { CONNECTOR_ICONS } from "@/lib/connector-icons";
 import {
   FLOW_ACTION_FALLBACK_ICON,
@@ -58,7 +58,20 @@ export type FlowRfNodeDataWithToggle = FlowRfNodeData & {
 
 type FlowNodeProps = NodeProps & { data: FlowRfNodeDataWithToggle };
 
+/** Detalhe mostrado no cabeçalho de um grupo If/Foreach no lugar do
+ * "(If)"/"(Foreach)" genérico — a condição sendo avaliada ou a coleção
+ * sendo iterada, já que "o que esse bloco tá fazendo" era invisível sem
+ * abrir o inspector. Só existe pra esses dois tipos (branch.ts/actions.ts
+ * só preenchem `condition`/`iterateOver` pra eles). */
+function groupDetail(flowNode: FlowRfActionNodeData["flowNode"]): string | undefined {
+  if (flowNode.type === "If") return flowNode.condition;
+  if (flowNode.type === "Foreach") return flowNode.iterateOver;
+  return undefined;
+}
+
 function FlowNodeComponent({ id, data }: FlowNodeProps) {
+  if (data.kind !== "action") return null;
+
   const {
     flowNode,
     isGroup,
@@ -72,6 +85,7 @@ function FlowNodeComponent({ id, data }: FlowNodeProps) {
   } = data;
   const isHorizontal = direction === "RIGHT";
   const iconColor = !flowNode.connectorName ? FLOW_ACTION_TYPE_COLORS[flowNode.type] : undefined;
+  const detail = isGroup ? groupDetail(flowNode) : undefined;
 
   return (
     <div
@@ -80,8 +94,12 @@ function FlowNodeComponent({ id, data }: FlowNodeProps) {
         isGroup
           ? "border-border/70 bg-muted/20 h-full"
           : "border-border bg-card p-2 h-full justify-center cursor-pointer hover:border-muted-foreground/50",
-        isTrigger && "border-emerald-500/70 bg-emerald-500/5",
-        isEnd && "border-rose-500/70 bg-rose-500/5",
+        // Cor de início/fim só no bloco específico da action, nunca no
+        // contêiner de um grupo (If/Foreach/Scope/Switch) — senão o mesmo
+        // "fim de ramo" pinta tanto a ação final de um branch quanto a
+        // caixa inteira que a envolve, virando ruído visual redundante.
+        !isGroup && isTrigger && "border-emerald-500/70 bg-emerald-500/5",
+        !isGroup && isEnd && "border-rose-500/70 bg-rose-500/5",
         isSelected && "border-primary ring-1 ring-primary",
       )}
     >
@@ -100,24 +118,31 @@ function FlowNodeComponent({ id, data }: FlowNodeProps) {
         <button
           type="button"
           onClick={() => onToggle?.(id)}
+          title={detail}
           className="nopan flex items-center gap-1.5 rounded-t-lg px-2 text-xs font-medium text-muted-foreground hover:text-foreground"
           style={{ height: GROUP_HEADER_HEIGHT }}
         >
           {collapsed ? (
-            <ChevronRight className="size-3.5" />
+            <ChevronRight className="size-3.5 shrink-0" />
           ) : (
-            <ChevronDown className="size-3.5" />
+            <ChevronDown className="size-3.5 shrink-0" />
           )}
           <NodeIcon
             connectorName={flowNode.connectorName}
             type={flowNode.type}
-            className="size-3.5"
+            className="size-3.5 shrink-0"
           />
-          <span className="truncate">{flowNode.name}</span>
-          <span className="text-[10px] opacity-70">
-            ({flowNode.type}
-            {collapsed ? `, ${childCount} ação(ões) ocultas` : ""})
-          </span>
+          <span className="shrink-0">{flowNode.name}</span>
+          {detail ? (
+            <span className="min-w-0 flex-1 truncate opacity-70">· {detail}</span>
+          ) : (
+            <span className="shrink-0 text-[10px] opacity-70">({flowNode.type})</span>
+          )}
+          {collapsed && (
+            <span className="shrink-0 text-[10px] opacity-70">
+              ({childCount} ação(ões) ocultas)
+            </span>
+          )}
         </button>
       ) : (
         <>
