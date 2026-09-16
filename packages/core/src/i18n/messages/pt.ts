@@ -267,4 +267,47 @@ export const pt = {
       insideParent: (p: { parentId: string; branch: string }) => ` (dentro de ${p.parentId}${p.branch})`,
     },
   },
+  contextPack: {
+    promptMd: (p: { fileName: string; format: string }) => `# Instruções para o LLM
+
+Você recebeu um pacote de contexto gerado pelo Power Lens sobre o arquivo
+"${p.fileName}" (${p.format}).
+
+O arquivo \`ir.json\` neste pacote é uma representação estrutural completa e
+determinística do artefato — telas, controles, fórmulas, fontes de dados,
+fluxos, tabelas, conforme o caso. \`summary.md\` é a mesma informação já
+formatada como documentação legível.
+
+Use **apenas** o conteúdo de \`ir.json\`/\`summary.md\` como fonte de verdade
+sobre a estrutura do artefato. Não invente controles, telas, fontes de dados
+ou fórmulas que não apareçam nesses arquivos.
+
+Tarefas sugeridas (adapte à sua necessidade):
+
+1. Escreva um resumo em linguagem natural do que este artefato faz.
+2. Liste riscos ou pontos de atenção que você observar na estrutura (nomes
+   genéricos de controle, fórmulas repetidas, dependências externas).
+3. Sugira um plano de teste manual cobrindo os principais fluxos de tela.
+
+Diagnósticos em \`ir.json\` (campo \`diagnostics\`) apontam problemas que o
+Power Lens já detectou estruturalmente — não repita esses achados como se
+fossem seus, mas pode expandir sobre eles.
+`,
+    readmeTitle: "Power Lens — pacote de contexto",
+    readmeBody: (p: { fileName: string; format: string; parsedAt: string }) => `Arquivo original: ${p.fileName}
+Formato: ${p.format}
+Gerado em: ${p.parsedAt}
+
+Conteúdo deste pacote:
+
+- ir.json      -> representação estrutural completa do artefato (a IR do Power Lens)
+- summary.md   -> a mesma informação, já formatada como documentação Markdown
+- PROMPT.md    -> instruções prontas para colar em um LLM (ChatGPT, Copilot, etc.)
+
+Como usar: abra uma conversa com o LLM de sua preferência, cole o conteúdo de
+PROMPT.md, e em seguida cole o conteúdo de ir.json (ou anexe o arquivo, se o
+LLM aceitar anexos). Nenhum arquivo original da Power Platform está neste
+pacote — apenas a estrutura extraída pelo Power Lens.
+`,
+  },
 } satisfies typeof en;

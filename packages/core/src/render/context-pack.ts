@@ -1,5 +1,6 @@
 import { zipSync } from "fflate";
 import type { PowerLensDocument } from "../ir/index.js";
+import { DEFAULT_LOCALE, getMessages, type Locale } from "../i18n/index.js";
 import { renderMarkdown } from "./markdown/index.js";
 
 const encoder = new TextEncoder();
@@ -10,53 +11,22 @@ const encoder = new TextEncoder();
  * automática ao provedor é só a versão automatizada de "cole PROMPT.md e
  * ir.json num LLM".
  */
-export function buildPromptMd(document: PowerLensDocument): string {
-  return `# Instruções para o LLM
-
-Você recebeu um pacote de contexto gerado pelo Power Lens sobre o arquivo
-"${document.source.fileName}" (${document.source.detectedFormat}).
-
-O arquivo \`ir.json\` neste pacote é uma representação estrutural completa e
-determinística do artefato — telas, controles, fórmulas, fontes de dados,
-fluxos, tabelas, conforme o caso. \`summary.md\` é a mesma informação já
-formatada como documentação legível.
-
-Use **apenas** o conteúdo de \`ir.json\`/\`summary.md\` como fonte de verdade
-sobre a estrutura do artefato. Não invente controles, telas, fontes de dados
-ou fórmulas que não apareçam nesses arquivos.
-
-Tarefas sugeridas (adapte à sua necessidade):
-
-1. Escreva um resumo em linguagem natural do que este artefato faz.
-2. Liste riscos ou pontos de atenção que você observar na estrutura (nomes
-   genéricos de controle, fórmulas repetidas, dependências externas).
-3. Sugira um plano de teste manual cobrindo os principais fluxos de tela.
-
-Diagnósticos em \`ir.json\` (campo \`diagnostics\`) apontam problemas que o
-Power Lens já detectou estruturalmente — não repita esses achados como se
-fossem seus, mas pode expandir sobre eles.
-`;
+export function buildPromptMd(document: PowerLensDocument, locale: Locale = DEFAULT_LOCALE): string {
+  return getMessages(locale).contextPack.promptMd({
+    fileName: document.source.fileName,
+    format: document.source.detectedFormat,
+  });
 }
 
-function buildReadme(document: PowerLensDocument): string {
-  return `Power Lens — pacote de contexto
-================================
-
-Arquivo original: ${document.source.fileName}
-Formato: ${document.source.detectedFormat}
-Gerado em: ${document.source.parsedAt}
-
-Conteúdo deste pacote:
-
-- ir.json      -> representação estrutural completa do artefato (a IR do Power Lens)
-- summary.md   -> a mesma informação, já formatada como documentação Markdown
-- PROMPT.md    -> instruções prontas para colar em um LLM (ChatGPT, Copilot, etc.)
-
-Como usar: abra uma conversa com o LLM de sua preferência, cole o conteúdo de
-PROMPT.md, e em seguida cole o conteúdo de ir.json (ou anexe o arquivo, se o
-LLM aceitar anexos). Nenhum arquivo original da Power Platform está neste
-pacote — apenas a estrutura extraída pelo Power Lens.
-`;
+function buildReadme(document: PowerLensDocument, locale: Locale = DEFAULT_LOCALE): string {
+  const messages = getMessages(locale).contextPack;
+  const title = messages.readmeTitle;
+  const body = messages.readmeBody({
+    fileName: document.source.fileName,
+    format: document.source.detectedFormat,
+    parsedAt: document.source.parsedAt,
+  });
+  return `${title}\n${"=".repeat(title.length)}\n\n${body}`;
 }
 
 /**
@@ -66,12 +36,12 @@ pacote — apenas a estrutura extraída pelo Power Lens.
  * (spec mentions a future `toPromptPayload(doc, { maxDepth, includeExpressions })`)
  * — out of scope for Fase 1.
  */
-export function buildContextPack(document: PowerLensDocument): Uint8Array {
+export function buildContextPack(document: PowerLensDocument, locale: Locale = DEFAULT_LOCALE): Uint8Array {
   const files: Record<string, Uint8Array> = {
     "power-lens-pack/ir.json": encoder.encode(JSON.stringify(document, null, 2)),
-    "power-lens-pack/summary.md": encoder.encode(renderMarkdown(document)),
-    "power-lens-pack/PROMPT.md": encoder.encode(buildPromptMd(document)),
-    "power-lens-pack/README.txt": encoder.encode(buildReadme(document)),
+    "power-lens-pack/summary.md": encoder.encode(renderMarkdown(document, locale)),
+    "power-lens-pack/PROMPT.md": encoder.encode(buildPromptMd(document, locale)),
+    "power-lens-pack/README.txt": encoder.encode(buildReadme(document, locale)),
   };
   return zipSync(files);
 }
