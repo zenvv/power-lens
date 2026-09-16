@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useId, useLayoutEffect, useRef } from "react";
 import { animate, useAnimationFrame, useReducedMotion } from "motion/react";
-import { ORBIT_EDGES, ORBIT_NODES } from "./orbit-config";
+import { GHOST_EDGES, GHOST_NODES, ORBIT_EDGES, ORBIT_NODES } from "./orbit-config";
 
 type OrbitFieldProps = {
   /** Dispara a convergência dos nodos pro centro (início do loading). */
@@ -16,15 +16,6 @@ const REFERENCE_SIZE = 520;
 const MAIN_RADIUS = 190;
 const CHIP_SIZE = 56;
 
-/** Segunda cópia dos mesmos nodos — menor, mais transparente, num raio maior
- * e girando mais devagar — só pra dar sensação de profundidade (leitura de
- * "camada mais distante"). Puramente decorativa: sem linhas de conexão. */
-const GHOST_RADIUS_RATIO = 1.24;
-const GHOST_SCALE = 0.56;
-const GHOST_OPACITY = 0.32;
-const GHOST_SPEED_RATIO = 0.55;
-const GHOST_ANGLE_OFFSET = Math.PI / ORBIT_NODES.length; // intercalado, não atrás do nodo real
-
 type Position = { x: number; y: number };
 
 const NODE_INDEX_BY_ID = new Map(ORBIT_NODES.map((node, i) => [node.id, i]));
@@ -37,21 +28,22 @@ function withAlpha(oklch: string, alpha: number): string {
   return oklch.replace(/\)$/, ` / ${alpha})`);
 }
 
-function emptyPositions(): Position[] {
-  return ORBIT_NODES.map(() => ({ x: 0, y: 0 }));
+function emptyPositions(count: number): Position[] {
+  return Array.from({ length: count }, () => ({ x: 0, y: 0 }));
 }
 
 /**
  * Fundo decorativo da tela de upload: nodos dos apps da Power Platform e do
  * Microsoft 365 orbitando o dropzone central num único anel, com drift
  * orgânico (velocidade angular + "respiração" radial próprias por nodo, não
- * um keyframe CSS fixo) e linhas de conexão coloridas (gradiente entre a cor
- * de cada ponta) desenhando as integrações reais entre eles. Uma segunda
- * cópia menor/mais transparente dos mesmos nodos, num raio maior e mais
- * lenta, dá profundidade. Posição é escrita direto no DOM via ref a cada
- * frame (fora do ciclo de render do React) por performance; só a
- * convergência final pro centro usa a `motion` (tween) porque aí sim
- * queremos orquestração de biblioteca.
+ * um keyframe CSS fixo) e linhas de conexão sólidas em gradiente (cor de um
+ * nodo pra cor do outro) desenhando as integrações reais entre eles. Uma
+ * segunda camada de nodos menores/mais transparentes, espalhados como galhos
+ * (posição e ícone aleatórios — não um espelho dos nodos reais), com suas
+ * próprias conexões esparsas, dá profundidade. Posição é escrita direto no
+ * DOM via ref a cada frame (fora do ciclo de render do React) por
+ * performance; só a convergência final pro centro usa a `motion` (tween)
+ * porque aí sim queremos orquestração de biblioteca.
  */
 export function OrbitField({ collapsing, onCollapseComplete }: OrbitFieldProps) {
   const gradientId = useId();
@@ -63,8 +55,9 @@ export function OrbitField({ collapsing, onCollapseComplete }: OrbitFieldProps) 
   const ghostRefs = useRef<(HTMLDivElement | null)[]>([]);
   const lineRefs = useRef<(SVGLineElement | null)[]>([]);
   const gradientRefs = useRef<(SVGLinearGradientElement | null)[]>([]);
-  const positionsRef = useRef<Position[]>(emptyPositions());
-  const ghostPositionsRef = useRef<Position[]>(emptyPositions());
+  const ghostLineRefs = useRef<(SVGLineElement | null)[]>([]);
+  const positionsRef = useRef<Position[]>(emptyPositions(ORBIT_NODES.length));
+  const ghostPositionsRef = useRef<Position[]>(emptyPositions(GHOST_NODES.length));
   const scaleRef = useRef(1);
   const runningRef = useRef(true);
   const collapseStartedRef = useRef(false);
@@ -85,11 +78,9 @@ export function OrbitField({ collapsing, onCollapseComplete }: OrbitFieldProps) 
       const r = MAIN_RADIUS * scale + node.wobbleAmp * Math.sin(t * node.wobbleFreq + node.phase);
       return { x: Math.cos(angle) * r, y: Math.sin(angle) * r };
     });
-    const ghost = ORBIT_NODES.map((node) => {
-      const angle = node.angle + GHOST_ANGLE_OFFSET + node.angularSpeed * GHOST_SPEED_RATIO * t;
-      const r =
-        MAIN_RADIUS * GHOST_RADIUS_RATIO * scale +
-        node.wobbleAmp * 0.7 * Math.sin(t * node.wobbleFreq + node.phase + 1.2);
+    const ghost = GHOST_NODES.map((ghost) => {
+      const angle = ghost.angle + ghost.angularSpeed * t;
+      const r = MAIN_RADIUS * ghost.radiusRatio * scale + ghost.wobbleAmp * Math.sin(t * ghost.wobbleFreq + ghost.phase);
       return { x: Math.cos(angle) * r, y: Math.sin(angle) * r };
     });
     return { main, ghost };
@@ -102,9 +93,11 @@ export function OrbitField({ collapsing, onCollapseComplete }: OrbitFieldProps) 
       const pos = positions[i]!;
       const el = nodeRefs.current[i];
       if (el) el.style.transform = `translate3d(${pos.x}px, ${pos.y}px, 0)`;
-      const ghostPos = ghostPositions[i]!;
-      const ghostEl = ghostRefs.current[i];
-      if (ghostEl) ghostEl.style.transform = `translate3d(${ghostPos.x}px, ${ghostPos.y}px, 0)`;
+    });
+    GHOST_NODES.forEach((_, i) => {
+      const pos = ghostPositions[i]!;
+      const el = ghostRefs.current[i];
+      if (el) el.style.transform = `translate3d(${pos.x}px, ${pos.y}px, 0)`;
     });
     EDGE_NODE_INDICES.forEach(([fromIndex, toIndex], i) => {
       const line = lineRefs.current[i];
@@ -122,6 +115,16 @@ export function OrbitField({ collapsing, onCollapseComplete }: OrbitFieldProps) 
         gradient.setAttribute("x2", String(to.x));
         gradient.setAttribute("y2", String(to.y));
       }
+    });
+    GHOST_EDGES.forEach(([fromIndex, toIndex], i) => {
+      const line = ghostLineRefs.current[i];
+      if (!line) return;
+      const from = ghostPositions[fromIndex]!;
+      const to = ghostPositions[toIndex]!;
+      line.setAttribute("x1", String(from.x));
+      line.setAttribute("y1", String(from.y));
+      line.setAttribute("x2", String(to.x));
+      line.setAttribute("y2", String(to.y));
     });
   }, []);
 
@@ -168,13 +171,13 @@ export function OrbitField({ collapsing, onCollapseComplete }: OrbitFieldProps) 
     const ease = [0.16, 1, 0.3, 1] as const; // expo-out
     const collapseOne = (el: HTMLDivElement | null, pos: Position, i: number) => {
       if (!el) return Promise.resolve();
-      const delay = reduceMotion ? 0 : i * 0.014;
+      const delay = reduceMotion ? 0 : i * 0.012;
       return reduceMotion
         ? animate(el, { opacity: [1, 0] }, { duration })
         : animate(el, { x: [pos.x, 0], y: [pos.y, 0], scale: [1, 0.3], opacity: [1, 0] }, { duration, ease, delay });
     };
     const tasks = ORBIT_NODES.map((_, i) => collapseOne(nodeRefs.current[i] ?? null, positionsRef.current[i]!, i));
-    ORBIT_NODES.forEach((_, i) => {
+    GHOST_NODES.forEach((_, i) => {
       tasks.push(collapseOne(ghostRefs.current[i] ?? null, ghostPositionsRef.current[i]!, i));
     });
     if (svgRef.current) {
@@ -206,6 +209,17 @@ export function OrbitField({ collapsing, onCollapseComplete }: OrbitFieldProps) 
           })}
         </defs>
         <g ref={groupRef}>
+          {GHOST_EDGES.map(([fromIndex, toIndex], i) => (
+            <line
+              key={`ghost-edge-${fromIndex}-${toIndex}-${i}`}
+              ref={(el) => {
+                ghostLineRefs.current[i] = el;
+              }}
+              stroke={withAlpha(ORBIT_NODES[GHOST_NODES[fromIndex]!.nodeIndex]!.tint, 0.22)}
+              strokeWidth={1}
+              strokeLinecap="round"
+            />
+          ))}
           {ORBIT_EDGES.map(([from, to], i) => (
             <line
               key={`${from}-${to}`}
@@ -214,31 +228,32 @@ export function OrbitField({ collapsing, onCollapseComplete }: OrbitFieldProps) 
               }}
               stroke={`url(#${gradientId}-edge-${i})`}
               strokeWidth={1.25}
-              strokeDasharray="2 7"
               strokeLinecap="round"
             />
           ))}
         </g>
       </svg>
 
-      {ORBIT_NODES.map((node, i) => {
+      {GHOST_NODES.map((ghost, i) => {
+        const node = ORBIT_NODES[ghost.nodeIndex]!;
         const Icon = node.visual.kind === "icon" ? node.visual.Icon : null;
+        const size = CHIP_SIZE * ghost.sizeRatio;
         return (
           <div
-            key={`ghost-${node.id}`}
+            key={`ghost-${i}`}
             ref={(el) => {
               ghostRefs.current[i] = el;
             }}
             aria-hidden="true"
             className="absolute top-1/2 left-1/2 flex items-center justify-center rounded-full border backdrop-blur-sm"
             style={{
-              width: CHIP_SIZE * GHOST_SCALE,
-              height: CHIP_SIZE * GHOST_SCALE,
-              marginLeft: (-CHIP_SIZE * GHOST_SCALE) / 2,
-              marginTop: (-CHIP_SIZE * GHOST_SCALE) / 2,
+              width: size,
+              height: size,
+              marginLeft: -size / 2,
+              marginTop: -size / 2,
               borderColor: withAlpha(node.tint, 0.5),
               backgroundColor: withAlpha(node.tint, 0.12),
-              opacity: GHOST_OPACITY,
+              opacity: ghost.opacity,
             }}
           >
             {node.visual.kind === "image" ? (

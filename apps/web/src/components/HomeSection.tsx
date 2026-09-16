@@ -73,6 +73,14 @@ export function HomeSection({ state, onFile, onRetry }: HomeSectionProps) {
               className="absolute inset-0 flex items-center justify-center"
             >
               <OrbitField collapsing={phase === "collapsing"} onCollapseComplete={() => setPhase("done")} />
+              <div
+                aria-hidden="true"
+                className="pointer-events-none absolute top-1/2 left-1/2 aspect-square w-[70%] -translate-x-1/2 -translate-y-1/2"
+                style={{
+                  background:
+                    "radial-gradient(circle, var(--background) 0%, var(--background) 42%, transparent 74%)",
+                }}
+              />
               <Dropzone onFile={handleDroppedFile} disabled={phase !== "idle"} />
             </motion.div>
           ) : state.status === "loading" ? (
