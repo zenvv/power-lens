@@ -10,6 +10,7 @@ import {
   type Diagnostic,
   type Locale,
   type PowerLensDocument,
+  type RuleConfigMap,
 } from "@power-lens/core";
 import { en } from "./i18n/translations/en";
 import { pt } from "./i18n/translations/pt";
@@ -30,6 +31,13 @@ type AnalyzeOptions = {
    * loading pra mostrar o que está acontecendo, não um progresso fabricado. */
   onStage?: (label: string) => void;
   locale?: Locale;
+  /** Liga/desliga regra + limiar customizado (Fase 8 do plano de novas
+   * features) — sem isso, `runHealthChecks` roda todas as regras com os
+   * defaults, igual antes desta opção existir. `| undefined` explícito
+   * porque `exactOptionalPropertyTypes` distingue "campo ausente" de "campo
+   * presente com undefined", e o estado em `App.tsx` pode legitimamente ser
+   * `undefined` (config resetada/nunca configurada). */
+  ruleConfig?: RuleConfigMap | undefined;
 };
 
 /**
@@ -41,7 +49,7 @@ type AnalyzeOptions = {
  * produced it (spec seção 7: as regras são funções puras sobre o IR).
  */
 export async function analyzeFile(file: File, options: AnalyzeOptions = {}): Promise<AnalysisResult> {
-  const { onStage, locale = DEFAULT_LOCALE } = options;
+  const { onStage, locale = DEFAULT_LOCALE, ruleConfig } = options;
   const messages = ANALYZE_MESSAGES[locale];
   onStage?.(messages.stageDetecting);
   const buffer = await file.arrayBuffer();
@@ -82,6 +90,6 @@ export async function analyzeFile(file: File, options: AnalyzeOptions = {}): Pro
   }
 
   onStage?.(messages.stageVerifyingIntegrity);
-  document.diagnostics = [...detection.diagnostics, ...document.diagnostics, ...runHealthChecks(document, undefined, locale)];
+  document.diagnostics = [...detection.diagnostics, ...document.diagnostics, ...runHealthChecks(document, ruleConfig, locale)];
   return { status: "parsed", document };
 }

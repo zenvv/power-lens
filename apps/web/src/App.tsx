@@ -12,7 +12,7 @@
  */
 import { useCallback, useEffect, useRef, useState } from "react";
 import { AnimatePresence } from "motion/react";
-import type { Locale } from "@power-lens/core";
+import type { RuleConfigMap } from "@power-lens/core";
 import Navbar from "./components/nav/Navbar.js";
 import { Sidebar, type SectionId } from "./components/nav/Sidebar.js";
 import { HomeSection } from "./components/HomeSection.js";
@@ -22,6 +22,7 @@ import { MobileGate } from "./components/MobileGate.js";
 import { analyzeFile } from "./lib/analyze.js";
 import { useDocumentDownloads } from "./lib/use-document-downloads.js";
 import { useI18n } from "./lib/i18n/context.js";
+import { loadRuleConfig } from "./lib/rules/rule-config-storage.js";
 import type { AppState } from "./lib/app-state.js";
 
 /** Piso artificial pro estado de loading — parsing real costuma terminar em
@@ -41,6 +42,7 @@ export function App() {
   const [confirmImportOpen, setConfirmImportOpen] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [aiAutoGenerateArmed, setAiAutoGenerateArmed] = useState(false);
+  const [ruleConfig, setRuleConfig] = useState<RuleConfigMap | undefined>(() => loadRuleConfig());
 
   /** Atalho "Gerar explicação por IA" do Resumo: navega pra aba de IA e
    * arma a geração automática (só dispara de fato se já houver chave
@@ -69,6 +71,7 @@ export function App() {
 
       analyzeFile(file, {
         locale,
+        ruleConfig,
         onStage: (stage) =>
           setState((s) => (s.status === "loading" ? { ...s, stage } : s)),
       })
@@ -103,31 +106,36 @@ export function App() {
           setActiveSection("home");
         });
     },
-    [locale, t],
+    [locale, ruleConfig, t],
   );
 
-  /** Troca de idioma depois de já ter importado um arquivo re-roda a análise
-   * inteira (parse + health checks) com o novo locale, em vez de deixar
-   * diagnóstico/documentação "presos" no idioma da importação original — o
-   * `File` original fica guardado em `state` exatamente pra isso. Não passa
-   * por `status: "loading"` de propósito: isso desmontaria a sidebar/doc
-   * view (`showSidebar`/`document` abaixo) e causaria flicker; é um refresh
-   * silencioso, aceitável porque o pipeline já é sub-segundo. `latestLocale`
-   * evita aplicar um resultado desatualizado se o usuário trocar de idioma
-   * de novo antes da primeira reanálise terminar. */
-  const latestLocaleRef = useRef(locale);
+  /** Troca de idioma ou de config de regras (Fase 8) depois de já ter
+   * importado um arquivo re-roda a análise inteira (parse + health checks),
+   * em vez de deixar diagnóstico/documentação "presos" no idioma/config da
+   * importação original — o `File` original fica guardado em `state`
+   * exatamente pra isso. Não passa por `status: "loading"` de propósito:
+   * isso desmontaria a sidebar/doc view (`showSidebar`/`document` abaixo) e
+   * causaria flicker; é um refresh silencioso, aceitável porque o pipeline
+   * já é sub-segundo. `latestRequestRef` evita aplicar um resultado
+   * desatualizado se o usuário mudar de novo (idioma ou config) antes da
+   * reanálise em andamento terminar. */
+  const latestRequestRef = useRef(0);
   useEffect(() => {
-    latestLocaleRef.current = locale;
     if (state.status !== "parsed") return;
     const { file } = state;
+    const requestId = ++latestRequestRef.current;
 
-    analyzeFile(file, { locale }).then((result) => {
-      if (result.status === "parsed" && latestLocaleRef.current === locale) {
+    analyzeFile(file, { locale, ruleConfig }).then((result) => {
+      if (result.status === "parsed" && latestRequestRef.current === requestId) {
         setState({ status: "parsed", result, file });
       }
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [locale]);
+  }, [locale, ruleConfig]);
+
+  const onRuleConfigChange = useCallback((config: RuleConfigMap | undefined) => {
+    setRuleConfig(config);
+  }, []);
 
   const resetToIdle = useCallback(() => {
     setState({ status: "idle" });
@@ -174,6 +182,7 @@ export function App() {
                 onRequestImport={onRequestImport}
                 mobileOpen={sidebarOpen}
                 onMobileClose={() => setSidebarOpen(false)}
+                onRuleConfigChange={onRuleConfigChange}
               />
             )}
           </AnimatePresence>

@@ -1,5 +1,5 @@
 import { useEffect, useState, type ComponentType } from "react";
-import type { PowerLensDocument } from "@power-lens/core";
+import type { PowerLensDocument, RuleConfigMap } from "@power-lens/core";
 import { motion } from "motion/react";
 import { useTheme } from "next-themes";
 import {
@@ -11,6 +11,7 @@ import {
   LayoutDashboard,
   Monitor,
   Moon,
+  SlidersHorizontal,
   Sparkles,
   Sun,
   Trash2,
@@ -29,6 +30,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { RuleConfigDialog } from "@/components/rules/RuleConfigDialog";
 import { groupArtifactsByKind } from "@/lib/artifact-groups";
 import { cn } from "@/lib/utils";
 import { useI18n } from "@/lib/i18n/context";
@@ -56,6 +58,10 @@ type SidebarProps = {
    * sempre visível e essas props não têm efeito. */
   mobileOpen: boolean;
   onMobileClose: () => void;
+  /** Repassa a config salva no `RuleConfigDialog` pro `App.tsx` re-rodar a
+   * análise (Fase 8 do plano de novas features) — `undefined` quando o
+   * usuário restaura pro padrão. */
+  onRuleConfigChange: (config: RuleConfigMap | undefined) => void;
 };
 
 function NavItem({
@@ -116,9 +122,11 @@ const LOCALE_CODE: Record<Locale, string> = { en: "EN", pt: "PT", es: "ES" };
 function SidebarFooter({
   hasDocument,
   onRequestReset,
+  onRuleConfigChange,
 }: {
   hasDocument: boolean;
   onRequestReset: () => void;
+  onRuleConfigChange: (config: RuleConfigMap | undefined) => void;
 }) {
   const { t, locale, setLocale } = useI18n();
   const { theme, setTheme } = useTheme();
@@ -192,6 +200,19 @@ function SidebarFooter({
         </DropdownMenuContent>
       </DropdownMenu>
 
+      <RuleConfigDialog
+        onConfigChange={onRuleConfigChange}
+        trigger={
+          <Button
+            variant="ghost"
+            className="w-full justify-start gap-2.5 px-3 text-sidebar-foreground/70 hover:text-sidebar-foreground"
+          >
+            <SlidersHorizontal className="size-4 shrink-0" />
+            {t.sidebarFooter.rules}
+          </Button>
+        }
+      />
+
       <Button variant="ghost" className="w-full justify-start gap-2.5 px-3 text-sidebar-foreground/70 hover:text-sidebar-foreground" asChild>
         <a href="https://github.com/zenvv/power-lens" target="_blank" rel="noreferrer">
           <ExternalLink className="size-4 shrink-0" />
@@ -218,6 +239,7 @@ export function Sidebar({
   onRequestImport,
   mobileOpen,
   onMobileClose,
+  onRuleConfigChange,
 }: SidebarProps) {
   const { t } = useI18n();
   const { flows, models, canvasApps } = document
@@ -311,7 +333,11 @@ export function Sidebar({
           </>
         )}
 
-        <SidebarFooter hasDocument={document !== null} onRequestReset={onRequestImport} />
+        <SidebarFooter
+          hasDocument={document !== null}
+          onRequestReset={onRequestImport}
+          onRuleConfigChange={onRuleConfigChange}
+        />
       </motion.nav>
     </>
   );

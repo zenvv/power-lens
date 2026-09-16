@@ -33,6 +33,9 @@ export const es = {
     titleAfter: "",
     subtitle:
       "Suelta un archivo para ver el resumen estructural, la visualización y la documentación generada — sin abrir el Studio, sin necesidad de entorno.",
+    diagramOutcomeLabel: "Contenido legible",
+    diagramOutcomeAlt:
+      "Ilustración que representa el archivo convertido en contenido legible",
     unrecognizedBefore: "No pude reconocer ",
     unrecognizedAfter: " como un archivo compatible.",
     tryAnotherFile: "Probar otro archivo",
@@ -54,6 +57,7 @@ export const es = {
   },
   sidebarFooter: {
     resetData: "Restablecer datos",
+    rules: "Reglas de health check",
     language: "Idioma",
     languageNames: { en: "Inglés", pt: "Portugués", es: "Español" },
     theme: "Tema",
@@ -61,6 +65,12 @@ export const es = {
     themeDark: "Oscuro",
     themeSystem: "Sistema",
     githubLink: "Power Lens en GitHub",
+  },
+  ruleConfig: {
+    title: "Reglas de health check",
+    description: "Apaga una regla, o ajusta su umbral, sin tocar el archivo — el cambio vale desde el próximo análisis del documento.",
+    resetAll: "Restaurar valores por defecto",
+    save: "Guardar",
   },
   app: {
     unexpectedError: (p: { error: string }) => `Error inesperado al analizar el archivo: ${p.error}`,

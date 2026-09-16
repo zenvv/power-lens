@@ -37,6 +37,9 @@ export const en = {
     titleAfter: " artifact",
     subtitle:
       "Drop a file to see the structural summary, the visualization, and the generated documentation — no Studio, no environment needed.",
+    diagramOutcomeLabel: "Readable content",
+    diagramOutcomeAlt:
+      "Illustration representing the file turned into readable content",
     unrecognizedBefore: "I couldn't recognize ",
     unrecognizedAfter: " as a supported file.",
     tryAnotherFile: "Try another file",
@@ -58,6 +61,7 @@ export const en = {
   },
   sidebarFooter: {
     resetData: "Reset data",
+    rules: "Health check rules",
     language: "Language",
     languageNames: { en: "English", pt: "Portuguese", es: "Spanish" },
     theme: "Theme",
@@ -65,6 +69,12 @@ export const en = {
     themeDark: "Dark",
     themeSystem: "System",
     githubLink: "Power Lens on GitHub",
+  },
+  ruleConfig: {
+    title: "Health check rules",
+    description: "Turn a rule off, or adjust its threshold, without touching the file — changes apply the next time the document is analyzed.",
+    resetAll: "Reset to defaults",
+    save: "Save",
   },
   app: {
     unexpectedError: (p: { error: string }) => `Unexpected error while analyzing the file: ${p.error}`,
