@@ -29,15 +29,26 @@ export {
   type RuleConfigMap,
 } from "./rules/index.js";
 export { buildSearchIndex, searchIndex, type SearchEntry, type SearchEntryKind } from "./search/index.js";
-export { buildLineageIndex, type LineageEntry, type LineageVisualRef } from "./analysis/index.js";
-export { summarizeTrigger, type TriggerSummary, type TriggerCategory } from "./analysis/index.js";
 export {
+  buildLineageIndex,
+  summarizeTrigger,
   buildScreenNavigationGraph,
   buildControlReferenceGraph,
   buildComponentInventory,
   APP_START_NODE,
+  type LineageEntry,
+  type LineageVisualRef,
+  type TriggerSummary,
+  type TriggerCategory,
   type ScreenNavigationGraph,
   type ScreenNavEdge,
   type ControlReferenceEdge,
   type ComponentUsage,
 } from "./analysis/index.js";
+export {
+  diffDocuments,
+  type ArtifactDiff,
+  type ArtifactDiffStatus,
+  type DocumentDiff,
+  type DiffEntry,
+} from "./diff/index.js";
