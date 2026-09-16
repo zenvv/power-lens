@@ -16,13 +16,13 @@ function parseFixtureDoc() {
 
 describe("renderMarkdown", () => {
   it("includes the source file name and format in the header", () => {
-    const md = renderMarkdown(parseFixtureDoc());
+    const md = renderMarkdown(parseFixtureDoc(), "pt");
     expect(md).toContain("# sample-app.msapp");
     expect(md).toContain(".msapp (Canvas App)");
   });
 
   it("renders the canvas app's screens, components and data sources", () => {
-    const md = renderMarkdown(parseFixtureDoc());
+    const md = renderMarkdown(parseFixtureDoc(), "pt");
     expect(md).toContain("## App Canvas: Sample App");
     expect(md).toContain("### Tela: Screen1");
     expect(md).toContain("### Componente: NavBar");
@@ -30,13 +30,13 @@ describe("renderMarkdown", () => {
   });
 
   it("renders the app-level OnStart when present", () => {
-    const md = renderMarkdown(parseFixtureDoc());
+    const md = renderMarkdown(parseFixtureDoc(), "pt");
     expect(md).toContain("### OnStart do app");
     expect(md).toContain("Set(glb");
   });
 
   it("renders the control tree with type annotations", () => {
-    const md = renderMarkdown(parseFixtureDoc());
+    const md = renderMarkdown(parseFixtureDoc(), "pt");
     expect(md).toContain("**HeaderContainer** _(GroupContainer)_");
     expect(md).toContain("**SubmitButton** _(Button)_");
     expect(md).toContain("**NavBar1** _(NavBar)_");
@@ -45,7 +45,7 @@ describe("renderMarkdown", () => {
   it("renders a diagnostics table when there are diagnostics", () => {
     const doc = parseFixtureDoc();
     doc.diagnostics.push({ code: "PL999", severity: "warning", message: "teste | com barra" });
-    const md = renderMarkdown(doc);
+    const md = renderMarkdown(doc, "pt");
     expect(md).toContain("## Diagnósticos");
     expect(md).toContain("PL999");
     expect(md).toContain("teste \\| com barra");
@@ -54,7 +54,7 @@ describe("renderMarkdown", () => {
   it("says there are no diagnostics when the list is empty", () => {
     const doc = parseFixtureDoc();
     doc.diagnostics = [];
-    const md = renderMarkdown(doc);
+    const md = renderMarkdown(doc, "pt");
     expect(md).toContain("Nenhum diagnóstico.");
   });
 
@@ -63,10 +63,17 @@ describe("renderMarkdown", () => {
     expect(renderMarkdown(doc)).toBe(renderMarkdown(doc));
   });
 
+  it("defaults to English and switches with the locale param", () => {
+    const doc = parseFixtureDoc();
+    expect(renderMarkdown(doc)).toContain("## Canvas App: Sample App");
+    expect(renderMarkdown(doc, "es")).toContain("## App Canvas: Sample App");
+    expect(renderMarkdown(doc, "es")).toContain("### Pantalla: Screen1");
+  });
+
   it("renders a cloud flow's trigger, actions and branch annotations", () => {
     const bytes = readFileSync(FLOW_FIXTURE_PATH);
     const doc = parseFlow(bytes, { fileName: "definition.json", fileSize: bytes.byteLength });
-    const md = renderMarkdown(doc);
+    const md = renderMarkdown(doc, "pt");
 
     expect(md).toContain("## Fluxo: definition");
     expect(md).toContain("When_an_item_is_created");

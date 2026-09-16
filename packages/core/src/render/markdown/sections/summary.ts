@@ -1,21 +1,14 @@
-import type { PowerLensDocument, SourceFormat } from "../../../ir/index.js";
+import type { PowerLensDocument } from "../../../ir/index.js";
+import { DEFAULT_LOCALE, getMessages, type Locale } from "../../../i18n/index.js";
 
-const FORMAT_LABEL: Record<SourceFormat, string> = {
-  msapp: ".msapp (Canvas App)",
-  solution: "Solution .zip",
-  flow: "Definição de fluxo",
-  pbit: ".pbit",
-  pbip: ".pbip",
-  pbix: ".pbix",
-};
-
-export function renderSummarySection(document: PowerLensDocument): string {
+export function renderSummarySection(document: PowerLensDocument, locale: Locale = DEFAULT_LOCALE): string {
+  const messages = getMessages(locale).render.summary;
   const lines = [`# ${document.source.fileName}`, ""];
-  lines.push(`- **Formato:** ${FORMAT_LABEL[document.source.detectedFormat]}`);
-  lines.push(`- **Tamanho:** ${document.source.fileSize} bytes`);
-  lines.push(`- **Analisado em:** ${document.source.parsedAt}`);
-  lines.push(`- **Versão do parser:** ${document.source.parserVersion}`);
-  lines.push(`- **Artefatos:** ${document.artifacts.length}`);
+  lines.push(`- **${messages.format}** ${messages.formatLabel[document.source.detectedFormat]}`);
+  lines.push(`- **${messages.size}** ${document.source.fileSize} bytes`);
+  lines.push(`- **${messages.analyzedAt}** ${document.source.parsedAt}`);
+  lines.push(`- **${messages.parserVersion}** ${document.source.parserVersion}`);
+  lines.push(`- **${messages.artifacts}** ${document.artifacts.length}`);
   lines.push("");
   return lines.join("\n");
 }
