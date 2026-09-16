@@ -6,6 +6,7 @@ import {
   ReactFlow,
   type Edge,
   type Node,
+  type NodeMouseHandler,
   type NodeTypes,
   type ReactFlowInstance,
 } from "@xyflow/react";
@@ -15,7 +16,11 @@ import { ArrowDown, ArrowRight } from "lucide-react";
 import type { CloudFlow, FlowNode as FlowNodeIR } from "@power-lens/core";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { layoutFlow, type FlowDirection, type FlowRfNodeData } from "@/lib/flow-layout";
+import {
+  layoutFlow,
+  type FlowDirection,
+  type FlowRfNodeData,
+} from "@/lib/flow-layout";
 import { FlowNode, type FlowRfNodeDataWithToggle } from "./FlowNode";
 import { FlowNodeInspector } from "./FlowNodeInspector";
 
@@ -27,12 +32,17 @@ type FlowDagViewProps = {
 
 export function FlowDagView({ flow }: FlowDagViewProps) {
   const { resolvedTheme } = useTheme();
-  const [collapsed, setCollapsed] = useState<ReadonlySet<string>>(() => new Set());
+  const [collapsed, setCollapsed] = useState<ReadonlySet<string>>(
+    () => new Set(),
+  );
   const [nodes, setNodes] = useState<Node<FlowRfNodeData>[]>([]);
   const [edges, setEdges] = useState<Edge[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [direction, setDirection] = useState<FlowDirection>("DOWN");
-  const rfInstanceRef = useRef<ReactFlowInstance<Node<FlowRfNodeDataWithToggle>, Edge> | null>(null);
+  const rfInstanceRef = useRef<ReactFlowInstance<
+    Node<FlowRfNodeDataWithToggle>,
+    Edge
+  > | null>(null);
 
   const onToggle = useCallback((id: string) => {
     setCollapsed((prev) => {
@@ -47,13 +57,29 @@ export function FlowDagView({ flow }: FlowDagViewProps) {
     setSelectedId((prev) => (prev === id ? null : id));
   }, []);
 
+  // Handler no nível do <ReactFlow>, não no componente do node: nodes com
+  // `selectable`/`draggable` false só recebem eventos de ponteiro quando o
+  // React Flow enxerga algum handler de clique registrado (senão a lib marca
+  // o wrapper do node com `pointer-events: none` — otimização dela pra nodes
+  // totalmente estáticos). Um onClick dentro do FlowNode nunca chegaria a
+  // disparar nesse caso; por isso a seleção vive aqui, não lá.
+  const onNodeClick = useCallback<NodeMouseHandler<Node<FlowRfNodeDataWithToggle>>>(
+    (_event, node) => {
+      if (node.data.isGroup) return;
+      onSelect(node.id);
+    },
+    [onSelect],
+  );
+
   const flowNodesById = useMemo<Map<string, FlowNodeIR>>(() => {
     const map = new Map<string, FlowNodeIR>([[flow.trigger.id, flow.trigger]]);
     for (const action of flow.actions) map.set(action.id, action);
     return map;
   }, [flow]);
 
-  const selectedFlowNode = selectedId ? flowNodesById.get(selectedId) : undefined;
+  const selectedFlowNode = selectedId
+    ? flowNodesById.get(selectedId)
+    : undefined;
 
   useEffect(() => {
     let cancelled = false;
@@ -78,16 +104,23 @@ export function FlowDagView({ flow }: FlowDagViewProps) {
     () =>
       nodes.map((node) => ({
         ...node,
-        data: { ...node.data, onToggle, onSelect, isSelected: node.id === selectedId },
+        data: {
+          ...node.data,
+          onToggle,
+          isSelected: node.id === selectedId,
+        },
       })),
-    [nodes, onToggle, onSelect, selectedId],
+    [nodes, onToggle, selectedId],
   );
 
   // TODO: exportar este diagrama como PNG/SVG. Pedido do usuário depois de ver
   // o DAG renderizado — @xyflow/react tem getNodesBounds/getViewportForBounds
   // prontos pra isso, falta só o botão e a serialização do canvas.
   return (
-    <div style={{ height: "70vh" }} className="relative overflow-hidden rounded-lg border bg-background/50">
+    <div
+      style={{ height: "70vh" }}
+      className="relative overflow-hidden rounded-lg border bg-background/50"
+    >
       <ReactFlow
         nodes={nodesWithToggle}
         edges={edges}
@@ -98,6 +131,7 @@ export function FlowDagView({ flow }: FlowDagViewProps) {
         proOptions={{ hideAttribution: true }}
         nodesConnectable={false}
         elementsSelectable={false}
+        onNodeClick={onNodeClick}
         onPaneClick={() => setSelectedId(null)}
         onInit={(instance) => {
           rfInstanceRef.current = instance;
@@ -105,7 +139,10 @@ export function FlowDagView({ flow }: FlowDagViewProps) {
       >
         <Background />
         <Controls showInteractive={false} />
-        <Panel position="top-right" className="flex gap-0.5 rounded-md border bg-card p-0.5 shadow-sm">
+        <Panel
+          position="top-right"
+          className="flex gap-0.5 rounded-md border bg-card p-0.5 shadow-sm"
+        >
           <Button
             variant="ghost"
             size="icon-sm"
@@ -128,7 +165,12 @@ export function FlowDagView({ flow }: FlowDagViewProps) {
           </Button>
         </Panel>
       </ReactFlow>
-      {selectedFlowNode && <FlowNodeInspector flowNode={selectedFlowNode} onClose={() => setSelectedId(null)} />}
+      {selectedFlowNode && (
+        <FlowNodeInspector
+          flowNode={selectedFlowNode}
+          onClose={() => setSelectedId(null)}
+        />
+      )}
     </div>
   );
 }

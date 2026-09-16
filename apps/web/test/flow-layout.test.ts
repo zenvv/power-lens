@@ -87,4 +87,25 @@ describe("layoutFlow", () => {
     const plainSucceeded = edges.find((e) => e.source === "Condition" && e.target === "Scope");
     expect(plainSucceeded?.label).toBeUndefined();
   });
+
+  it("marks only the trigger node as isTrigger", async () => {
+    const flow = loadFlow();
+    const { nodes } = await layoutFlow(flow, new Set());
+
+    const trigger = nodes.find((n) => n.id === flow.trigger.id);
+    expect(trigger?.data.isTrigger).toBe(true);
+    expect(nodes.filter((n) => n.data.isTrigger)).toHaveLength(1);
+  });
+
+  it("marks every action nothing runs after as isEnd, one per branch", async () => {
+    const flow = loadFlow();
+    const { nodes } = await layoutFlow(flow, new Set());
+
+    const endIds = nodes.filter((n) => n.data.isEnd).map((n) => n.id).sort();
+    expect(endIds).toEqual(["Compose", "Final_step", "Send_an_email", "Terminate"].sort());
+
+    // Condition/Scope têm outra action rodando depois delas — não são fim.
+    expect(nodes.find((n) => n.id === "Condition")?.data.isEnd).toBe(false);
+    expect(nodes.find((n) => n.id === "Scope")?.data.isEnd).toBe(false);
+  });
 });

@@ -1,36 +1,62 @@
-import type { ReactNode } from "react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useState, type ReactNode } from "react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { shortArtifactName } from "@/lib/artifact-name";
 
-/** Sub-navegação de uma categoria de artefato (fluxos, modelos, apps). Com
- * um único artefato mostra o conteúdo direto; com mais de um, ganha abas —
- * "quase uma subguia" dentro da seção, não mais uma guia solta misturada
- * com as gerais. */
+/** Card de uma categoria de artefato (fluxos, modelos, apps). Com um único
+ * artefato, o título é texto simples; com mais de um, o título vira um
+ * dropdown — trocar de artefato sem abas ocupando espaço horizontal. */
 export function ArtifactTabs<T extends { id: string; name: string }>({
   items,
+  description,
+  contentClassName,
   children,
 }: {
   items: T[];
+  description: (item: T) => ReactNode;
+  contentClassName?: string;
   children: (item: T) => ReactNode;
 }) {
-  if (items.length === 1) return <>{children(items[0]!)}</>;
+  const [selectedId, setSelectedId] = useState(items[0]!.id);
+  const selected = items.find((item) => item.id === selectedId) ?? items[0]!;
 
   return (
-    <Tabs defaultValue={items[0]!.id} className="gap-4">
-      <div className="overflow-x-auto">
-        <TabsList variant={"line"} className="w-max">
-          {items.map((item) => (
-            <TabsTrigger key={item.id} value={item.id} title={item.name}>
-              <span className="max-w-48 truncate">{shortArtifactName(item.name)}</span>
-            </TabsTrigger>
-          ))}
-        </TabsList>
-      </div>
-      {items.map((item) => (
-        <TabsContent key={item.id} value={item.id}>
-          {children(item)}
-        </TabsContent>
-      ))}
-    </Tabs>
+    <Card>
+      <CardHeader>
+        {items.length > 1 ? (
+          <Select value={selectedId} onValueChange={setSelectedId}>
+            <SelectTrigger
+              className="h-auto w-fit max-w-full border-none bg-transparent p-0 font-heading text-sm font-medium shadow-none hover:bg-transparent"
+              title={selected.name}
+            >
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {items.map((item) => (
+                <SelectItem key={item.id} value={item.id} title={item.name}>
+                  {shortArtifactName(item.name)}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        ) : (
+          <CardTitle title={selected.name}>{shortArtifactName(selected.name)}</CardTitle>
+        )}
+        <CardDescription>{description(selected)}</CardDescription>
+      </CardHeader>
+      <CardContent className={contentClassName}>{children(selected)}</CardContent>
+    </Card>
   );
 }

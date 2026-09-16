@@ -5,7 +5,6 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { downloadBytes } from "@/lib/download";
-import { shortArtifactName } from "@/lib/artifact-name";
 import { groupArtifactsByKind } from "@/lib/artifact-groups";
 import { FlowDagView } from "@/components/flow/FlowDagView";
 import { MerView } from "@/components/mer/MerView";
@@ -106,21 +105,16 @@ export function DocumentView({ document, activeSection }: DocumentViewProps) {
       {flows.length > 0 && (
         <TabsContent value="flows" className="flex flex-col gap-4">
           <SectionHeader title="Fluxos" description={`${flows.length} fluxo(s) encontrado(s) neste artefato.`} />
-          <ArtifactTabs items={flows}>
-            {(flow) => (
-              <Card>
-                <CardHeader>
-                  <CardTitle>{shortArtifactName(flow.name)}</CardTitle>
-                  <CardDescription>
-                    Gatilho: {flow.trigger.name} · {flow.actions.length} ação(ões) · role a roda pra dar zoom,
-                    clique nos grupos pra recolher
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <FlowDagView flow={flow} />
-                </CardContent>
-              </Card>
+          <ArtifactTabs
+            items={flows}
+            description={(flow) => (
+              <>
+                Gatilho: {flow.trigger.name} · {flow.actions.length} ação(ões) · role a roda pra dar zoom, clique
+                nos grupos pra recolher
+              </>
             )}
+          >
+            {(flow) => <FlowDagView flow={flow} />}
           </ArtifactTabs>
         </TabsContent>
       )}
@@ -131,26 +125,26 @@ export function DocumentView({ document, activeSection }: DocumentViewProps) {
             title="Modelos de dados"
             description={`${models.length} modelo(s) encontrado(s) neste artefato.`}
           />
-          <ArtifactTabs items={models}>
+          <ArtifactTabs
+            items={models}
+            contentClassName="flex flex-col gap-4 lg:flex-row"
+            description={(model) => (
+              <>
+                {model.tables.length} tabela(s) · {model.relationships.length} relacionamento(s) ·{" "}
+                {model.measures.length} medida(s) · role a roda pra dar zoom, clique no cabeçalho da tabela pra
+                recolher as colunas, arraste pra reorganizar (posição fica salva)
+              </>
+            )}
+          >
             {(model) => (
-              <Card>
-                <CardHeader>
-                  <CardTitle>{shortArtifactName(model.name)}</CardTitle>
-                  <CardDescription>
-                    {model.tables.length} tabela(s) · {model.relationships.length} relacionamento(s) ·{" "}
-                    {model.measures.length} medida(s) · role a roda pra dar zoom, clique no cabeçalho da tabela
-                    pra recolher as colunas, arraste pra reorganizar (posição fica salva)
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="flex flex-col gap-4 lg:flex-row">
-                  <div className="min-w-0 flex-1">
-                    <MerView model={model} />
-                  </div>
-                  <div className="h-[70vh] w-full shrink-0 rounded-lg border lg:w-70">
-                    <MeasuresPanel measures={model.measures} />
-                  </div>
-                </CardContent>
-              </Card>
+              <>
+                <div className="min-w-0 flex-1">
+                  <MerView model={model} />
+                </div>
+                <div className="h-[70vh] w-full shrink-0 rounded-lg border lg:w-70">
+                  <MeasuresPanel measures={model.measures} />
+                </div>
+              </>
             )}
           </ArtifactTabs>
         </TabsContent>
@@ -159,21 +153,16 @@ export function DocumentView({ document, activeSection }: DocumentViewProps) {
       {canvasApps.length > 0 && (
         <TabsContent value="apps" className="flex flex-col gap-4">
           <SectionHeader title="Apps" description={`${canvasApps.length} canvas app(s) encontrado(s) neste artefato.`} />
-          <ArtifactTabs items={canvasApps}>
-            {(app) => (
-              <Card>
-                <CardHeader>
-                  <CardTitle>{shortArtifactName(app.name)}</CardTitle>
-                  <CardDescription>
-                    Blueprint estático por tela — valores literais/aritmética constante são resolvidos, o resto
-                    vira placeholder tracejado marcado como dinâmico. Não é uma simulação fiel do app rodando.
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <WireframeView app={app} />
-                </CardContent>
-              </Card>
+          <ArtifactTabs
+            items={canvasApps}
+            description={() => (
+              <>
+                Blueprint estático por tela — valores literais/aritmética constante são resolvidos, o resto vira
+                placeholder tracejado marcado como dinâmico. Não é uma simulação fiel do app rodando.
+              </>
             )}
+          >
+            {(app) => <WireframeView app={app} />}
           </ArtifactTabs>
         </TabsContent>
       )}

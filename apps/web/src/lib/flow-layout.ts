@@ -32,6 +32,8 @@ export type FlowRfNodeData = {
   collapsed: boolean;
   childCount: number;
   direction: FlowDirection;
+  isTrigger: boolean;
+  isEnd: boolean;
 };
 
 type PlainEdge = { id: string; source: string; target: string; statuses: string[] };
@@ -87,6 +89,8 @@ function collectRfNodes(
   byParent: Map<string | undefined, FlowNode[]>,
   collapsed: ReadonlySet<string>,
   direction: FlowDirection,
+  triggerId: string,
+  endIds: ReadonlySet<string>,
   out: Node<FlowRfNodeData>[],
 ): void {
   for (const child of elkNode.children ?? []) {
@@ -110,13 +114,23 @@ function collectRfNodes(
         collapsed: isGroup && collapsed.has(child.id),
         childCount: childActions.length,
         direction,
+        isTrigger: child.id === triggerId,
+        isEnd: endIds.has(child.id),
       },
     });
 
     if (child.children) {
-      collectRfNodes(child, child.id, flowNodesById, byParent, collapsed, direction, out);
+      collectRfNodes(child, child.id, flowNodesById, byParent, collapsed, direction, triggerId, endIds, out);
     }
   }
+}
+
+/** Uma action é "fim" de fluxo quando nenhuma outra action roda depois dela
+ * (não aparece como `runAfter` de ninguém) — pode haver mais de uma, uma por
+ * ramo (branch de If/Switch, por exemplo). O gatilho nunca conta como fim. */
+function findEndIds(flow: CloudFlow): Set<string> {
+  const referenced = new Set(flow.actions.flatMap((a) => a.runAfter.map((r) => r.id)));
+  return new Set(flow.actions.filter((a) => !referenced.has(a.id)).map((a) => a.id));
 }
 
 export async function layoutFlow(
@@ -167,7 +181,8 @@ export async function layoutFlow(
   // The root graph's children already include the trigger (first entry) and
   // every top-level action, so one recursive walk covers the whole tree.
   const nodes: Node<FlowRfNodeData>[] = [];
-  collectRfNodes(laidOut, undefined, flowNodesById, byParent, collapsed, direction, nodes);
+  const endIds = findEndIds(flow);
+  collectRfNodes(laidOut, undefined, flowNodesById, byParent, collapsed, direction, flow.trigger.id, endIds, nodes);
 
   const edges: Edge[] = edgesOut.map((edge) => ({
     id: edge.id,
