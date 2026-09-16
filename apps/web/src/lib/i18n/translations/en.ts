@@ -294,6 +294,22 @@ export const en = {
       flow: "flow",
     },
   },
+  diff: {
+    compareTrigger: "Compare with another file",
+    compareDialogTitle: "Compare with another file",
+    compareDialogDescription: "Drop a second file of the same kind — the comparison matches artifacts by name, not by internal id, so it works across two independent exports.",
+    compareErrorTitle: "Couldn't compare",
+    compareError: "Couldn't recognize or parse the second file.",
+    title: "Comparison",
+    back: "Back",
+    comparing: (p: { fileNameA: string; fileNameB: string }) => `${p.fileNameA} vs. ${p.fileNameB}`,
+    noDifferences: "No differences found between the two files.",
+    statusLabel: {
+      added: "added",
+      removed: "removed",
+      changed: "changed",
+    },
+  },
   analyze: {
     formatLabel: {
       msapp: "canvas app (.msapp)",

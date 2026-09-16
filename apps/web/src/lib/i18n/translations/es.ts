@@ -290,6 +290,22 @@ export const es = {
       flow: "flujo",
     },
   },
+  diff: {
+    compareTrigger: "Comparar con otro archivo",
+    compareDialogTitle: "Comparar con otro archivo",
+    compareDialogDescription: "Suelta un segundo archivo del mismo tipo — la comparación empareja artefactos por nombre, no por id interno, así que funciona entre dos exportaciones independientes.",
+    compareErrorTitle: "No se pudo comparar",
+    compareError: "No se pudo reconocer o procesar el segundo archivo.",
+    title: "Comparación",
+    back: "Volver",
+    comparing: (p: { fileNameA: string; fileNameB: string }) => `${p.fileNameA} vs. ${p.fileNameB}`,
+    noDifferences: "No se encontraron diferencias entre los dos archivos.",
+    statusLabel: {
+      added: "agregado",
+      removed: "eliminado",
+      changed: "cambiado",
+    },
+  },
   analyze: {
     formatLabel: {
       msapp: "app canvas (.msapp)",

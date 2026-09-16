@@ -7,6 +7,7 @@ import {
   Database,
   ExternalLink,
   FileText,
+  GitCompare,
   Languages,
   LayoutDashboard,
   Monitor,
@@ -32,6 +33,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { RuleConfigDialog } from "@/components/rules/RuleConfigDialog";
+import { CompareDialog } from "@/components/diff/CompareDialog";
 import { groupArtifactsByKind } from "@/lib/artifact-groups";
 import { cn } from "@/lib/utils";
 import { useI18n } from "@/lib/i18n/context";
@@ -64,6 +66,9 @@ type SidebarProps = {
    * análise (Fase 8 do plano de novas features) — `undefined` quando o
    * usuário restaura pro padrão. */
   onRuleConfigChange: (config: RuleConfigMap | undefined) => void;
+  /** Roda o diff contra um segundo arquivo (Fase 14) — só faz sentido com
+   * um documento já carregado como base, por isso some quando `!document`. */
+  onCompareFile: (file: File) => Promise<{ ok: boolean; message?: string | undefined }>;
 };
 
 function NavItem({
@@ -125,10 +130,12 @@ function SidebarFooter({
   hasDocument,
   onRequestReset,
   onRuleConfigChange,
+  onCompareFile,
 }: {
   hasDocument: boolean;
   onRequestReset: () => void;
   onRuleConfigChange: (config: RuleConfigMap | undefined) => void;
+  onCompareFile: (file: File) => Promise<{ ok: boolean; message?: string | undefined }>;
 }) {
   const { t, locale, setLocale } = useI18n();
   const { theme, setTheme } = useTheme();
@@ -215,6 +222,21 @@ function SidebarFooter({
         }
       />
 
+      {hasDocument && (
+        <CompareDialog
+          onCompareFile={onCompareFile}
+          trigger={
+            <Button
+              variant="ghost"
+              className="w-full justify-start gap-2.5 px-3 text-sidebar-foreground/70 hover:text-sidebar-foreground"
+            >
+              <GitCompare className="size-4 shrink-0" />
+              {t.diff.compareTrigger}
+            </Button>
+          }
+        />
+      )}
+
       <Button variant="ghost" className="w-full justify-start gap-2.5 px-3 text-sidebar-foreground/70 hover:text-sidebar-foreground" asChild>
         <a href="https://github.com/zenvv/power-lens" target="_blank" rel="noreferrer">
           <ExternalLink className="size-4 shrink-0" />
@@ -242,6 +264,7 @@ export function Sidebar({
   mobileOpen,
   onMobileClose,
   onRuleConfigChange,
+  onCompareFile,
 }: SidebarProps) {
   const { t } = useI18n();
   const { flows, models, canvasApps } = document
@@ -348,6 +371,7 @@ export function Sidebar({
           hasDocument={document !== null}
           onRequestReset={onRequestImport}
           onRuleConfigChange={onRuleConfigChange}
+          onCompareFile={onCompareFile}
         />
       </motion.nav>
     </>

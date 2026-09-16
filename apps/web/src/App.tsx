@@ -12,7 +12,7 @@
  */
 import { useCallback, useEffect, useRef, useState } from "react";
 import { AnimatePresence } from "motion/react";
-import type { RuleConfigMap } from "@power-lens/core";
+import { diffDocuments, type ArtifactDiff, type RuleConfigMap } from "@power-lens/core";
 import Navbar from "./components/nav/Navbar.js";
 import { Sidebar, type SectionId } from "./components/nav/Sidebar.js";
 import { HomeSection } from "./components/HomeSection.js";
@@ -24,6 +24,7 @@ import { useDocumentDownloads } from "./lib/use-document-downloads.js";
 import { useI18n } from "./lib/i18n/context.js";
 import { loadRuleConfig } from "./lib/rules/rule-config-storage.js";
 import { GlobalSearch, type SearchNavigation } from "./components/search/GlobalSearch.js";
+import { DiffResultPanel } from "./components/diff/DiffResultPanel.js";
 import type { AppState } from "./lib/app-state.js";
 
 /** Piso artificial pro estado de loading — parsing real costuma terminar em
@@ -46,6 +47,25 @@ export function App() {
   const [ruleConfig, setRuleConfig] = useState<RuleConfigMap | undefined>(() => loadRuleConfig());
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchNavigation, setSearchNavigation] = useState<SearchNavigation>();
+  const [diffResult, setDiffResult] = useState<{ fileNameB: string; artifacts: ArtifactDiff[] }>();
+
+  /** Roda `analyzeFile` + `diffDocuments` contra um segundo arquivo (Fase
+   * 14) — o documento atual (`state.result.document`) vira a base "antes",
+   * o arquivo novo vira "depois". Só existe com um documento já carregado
+   * (o `CompareDialog` só aparece nesse caso, ver `Sidebar`). */
+  const onCompareFile = useCallback(
+    async (file: File): Promise<{ ok: boolean; message?: string | undefined }> => {
+      if (state.status !== "parsed") return { ok: false };
+      const analyzed = await analyzeFile(file, { locale, ruleConfig });
+      if (analyzed.status !== "parsed") {
+        return { ok: false, message: analyzed.diagnostics.map((d) => d.message).join(" ") || undefined };
+      }
+      const { artifacts } = diffDocuments(state.result.document, analyzed.document);
+      setDiffResult({ fileNameB: file.name, artifacts });
+      return { ok: true };
+    },
+    [state, locale, ruleConfig],
+  );
 
   /** Atalho global Cmd/Ctrl+K pra abrir a busca (Fase 9) — mesmo padrão do
    * `cmdk`/paletas de comando em geral. */
@@ -214,13 +234,21 @@ export function App() {
                 mobileOpen={sidebarOpen}
                 onMobileClose={() => setSidebarOpen(false)}
                 onRuleConfigChange={onRuleConfigChange}
+                onCompareFile={onCompareFile}
               />
             )}
           </AnimatePresence>
 
           <div className="min-w-0 flex-1 p-3 pt-0">
             <div className="mx-auto flex h-full w-full flex-col overflow-y-auto rounded-lg border bg-background ">
-              {document ? (
+              {document && diffResult ? (
+                <DiffResultPanel
+                  fileNameA={document.source.fileName}
+                  fileNameB={diffResult.fileNameB}
+                  artifacts={diffResult.artifacts}
+                  onBack={() => setDiffResult(undefined)}
+                />
+              ) : document ? (
                 <>
                   <DocumentView
                     document={document}
