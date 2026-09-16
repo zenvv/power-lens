@@ -473,6 +473,20 @@ contra arquivo real" até eu abrir um de verdade:
    avisar que existe), e degrada para diagnóstico por arquivo se o shape não bater — mas
    isso continua sendo uma suposição de continuidade de formato entre dois contextos
    diferentes (solution vs. export avulso de app), não uma confirmação.
+16. **[SUPOSIÇÃO fundamentada em documentação pública, não em arquivo do projeto]**
+    `parsers/solution/link-dependencies.ts` (Fase 13 do plano de novas features) assume que
+    uma ação "Executar um Fluxo Filho"/"Run a Child Flow" aparece como
+    `{ type: "Workflow", inputs: { host: { workflow: { id: "<path terminando no guid do
+    fluxo filho>" } } } }` — nunca visto num `definition.json` real. Se o shape real for
+    diferente, o vínculo "fluxo pai → fluxo filho" simplesmente não é encontrado (nenhuma
+    aresta é criada, nenhum erro) — degradação honesta, mas vale confirmar contra um
+    arquivo real com uma ação desse tipo.
+17. Ligado à pergunta 5: `link-dependencies.ts` também tenta ligar `CanvasApp.dataSources`
+    a `DataModel.tables` (Dataverse) por nome (exato ou substring, marcado
+    `confidence: "heuristic"` quando não é exato) — sem um exemplo real de app conectado a
+    uma tabela Dataverse dentro de uma solution, não há como confirmar se o nome do
+    datasource no `.msapp` embutido bate com o nome lógico ou de exibição da tabela em
+    `customizations.xml`, ou se são convenções completamente diferentes.
 
 **`.msapp` — pontas soltas mesmo com o app real disponível:**
 

@@ -3,6 +3,7 @@ import { parseFlow } from "../flow/index.js";
 import { parseMsapp } from "../msapp/index.js";
 import { readText, unzipNormalized } from "../zip.js";
 import { parseCustomizationsXml } from "./customizations-xml.js";
+import { linkDependencies } from "./link-dependencies.js";
 import { parseSolutionXml } from "./solution-xml.js";
 
 export type SolutionSource = {
@@ -116,6 +117,7 @@ export function parseSolution(bytes: Uint8Array, source: SolutionSource): PowerL
     });
   }
 
+  document.dependencies = linkDependencies(document, diagnostics);
   document.diagnostics = diagnostics;
   return document;
 }

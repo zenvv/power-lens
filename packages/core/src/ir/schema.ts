@@ -324,6 +324,31 @@ export const SolutionMetaSchema = z.object({
 });
 export type SolutionMeta = z.infer<typeof SolutionMetaSchema>;
 
+// ── Dependências entre artefatos ─────────────────────────────────────────
+// Não fazia parte do rascunho original do IR (spec seção 5) — uma solution
+// já produz múltiplos artefatos no mesmo documento (CanvasApp + CloudFlow +
+// DataModel Dataverse), mas nada cruzava um com o outro. Resolvido no parse
+// da solution (parsers/solution/link-dependencies.ts), não com join solto
+// por string em cada renderer — regra de arquitetura 2 do CLAUDE.md ("se
+// falta um dado, o IR cresce"), já que o match é heurístico e só tem a info
+// bruta disponível durante o parse. `confidence: "heuristic"` existe porque
+// nenhum dos dois vínculos capturados (datasource de app ↔ tabela Dataverse,
+// fluxo pai ↔ fluxo filho) foi validado contra uma solution real — ver
+// docs/FORMAT-NOTES.md.
+
+export const DependencyEdgeSchema = z.object({
+  fromArtifactId: z.string(),
+  from: z.object({
+    kind: z.enum(["dataSource", "connection", "flowAction"]),
+    name: z.string(),
+  }),
+  toArtifactId: z.string(),
+  toKind: z.enum(["table", "connection", "flow"]),
+  toName: z.string(),
+  confidence: z.enum(["exact", "heuristic"]),
+});
+export type DependencyEdge = z.infer<typeof DependencyEdgeSchema>;
+
 // ── Artifact union & document ────────────────────────────────────────────
 
 export const ArtifactSchema = z.discriminatedUnion("kind", [
@@ -340,5 +365,8 @@ export const PowerLensDocumentSchema = z.object({
   source: SourceSchema,
   artifacts: z.array(ArtifactSchema),
   diagnostics: z.array(DiagnosticSchema),
+  /** Vínculos entre artefatos do mesmo documento — vazio pra `.msapp`/`.pbit`
+   * avulso (nada pra cruzar), populado só pelo parser de solution. */
+  dependencies: z.array(DependencyEdgeSchema).default([]),
 });
 export type PowerLensDocument = z.infer<typeof PowerLensDocumentSchema>;

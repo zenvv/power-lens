@@ -22,6 +22,7 @@ export function createEmptyDocument(source: NewSource): PowerLensDocument {
     },
     artifacts: [],
     diagnostics: [],
+    dependencies: [],
   };
 }
 

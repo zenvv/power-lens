@@ -169,6 +169,26 @@ describe("parseSolution — Dataverse tables (customizations.xml)", () => {
   });
 });
 
+describe("parseSolution — dependências entre artefatos", () => {
+  it("populates document.dependencies (possibly empty) without throwing", () => {
+    const bytes = buildSolutionZip({ includeCustomizations: true });
+    const doc = parseSolution(bytes, { fileName: "SampleSolution.zip", fileSize: bytes.byteLength });
+
+    expect(Array.isArray(doc.dependencies)).toBe(true);
+    // A fixture do app (SharePoint) e a de customizations.xml (Dataverse) não
+    // compartilham nome nenhum de propósito — cobre o caminho "sem vínculo
+    // encontrado", não um falso positivo por coincidência de fixture.
+    expect(doc.dependencies).toHaveLength(0);
+  });
+
+  it("is empty for a solution with only an embedded app (nothing to cross-reference)", () => {
+    const bytes = buildSolutionZip({ includeCustomizations: false });
+    const doc = parseSolution(bytes, { fileName: "SampleSolution.zip", fileSize: bytes.byteLength });
+
+    expect(doc.dependencies).toHaveLength(0);
+  });
+});
+
 describe("parseSolution — output validity", () => {
   it("produces a document that passes the IR schema", () => {
     const bytes = buildSolutionZip({ includeWorkflow: true, includeCustomizations: true });

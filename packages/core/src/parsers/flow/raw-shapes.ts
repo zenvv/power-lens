@@ -13,6 +13,14 @@ export type RawRunAfter = Record<string, string[]>;
 export type RawActionHost = {
   apiId?: string;
   connectionName?: string;
+  /**
+   * [LACUNA] Presente numa ação "Executar um Fluxo Filho"/"Run a Child
+   * Flow" (`type: "Workflow"`), segundo o schema publicamente documentado
+   * do Workflow Definition Language — nunca visto num definition.json real
+   * deste projeto. `id` é o identificador do fluxo filho (geralmente um
+   * path terminando no GUID interno dele), não o nome de exibição.
+   */
+  workflow?: { id?: string };
 };
 
 export type RawActionInputs = {
