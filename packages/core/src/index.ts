@@ -30,3 +30,4 @@ export {
 } from "./rules/index.js";
 export { buildSearchIndex, searchIndex, type SearchEntry, type SearchEntryKind } from "./search/index.js";
 export { buildLineageIndex, type LineageEntry, type LineageVisualRef } from "./analysis/index.js";
+export { summarizeTrigger, type TriggerSummary, type TriggerCategory } from "./analysis/index.js";

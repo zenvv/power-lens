@@ -87,6 +87,7 @@ export function parseFlow(bytes: Uint8Array, source: FlowSource, locale: Locale 
           ? { connectorName: extractConnectorName(firstTrigger[1].inputs) }
           : {}),
         ...(firstTrigger[1].inputs !== undefined ? { inputs: firstTrigger[1].inputs } : {}),
+        ...(firstTrigger[1].recurrence !== undefined ? { recurrence: firstTrigger[1].recurrence } : {}),
       }
     : { id: messages.noTriggerFallbackName, name: messages.noTriggerFallbackName, type: "Unknown", runAfter: [] };
 

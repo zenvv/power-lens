@@ -487,6 +487,12 @@ contra arquivo real" até eu abrir um de verdade:
     uma tabela Dataverse dentro de uma solution, não há como confirmar se o nome do
     datasource no `.msapp` embutido bate com o nome lógico ou de exibição da tabela em
     `customizations.xml`, ou se são convenções completamente diferentes.
+18. **[SUPOSIÇÃO fundamentada em documentação pública, não em arquivo do projeto]** Um
+    trigger `type: "Recurrence"` carrega `recurrence: { frequency, interval, timeZone?,
+    schedule? }` como irmão de `type` (não dentro de `inputs`, diferente de como um
+    conector guarda config em `inputs.host`) — `FlowNode.recurrence` (Fase 10 do plano de
+    novas features) guarda esse valor como `unknown`, sem validar a forma interna. Nunca
+    visto num `definition.json` real deste projeto.
 
 **`.msapp` — pontas soltas mesmo com o app real disponível:**
 

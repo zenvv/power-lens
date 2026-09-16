@@ -57,6 +57,16 @@ export type RawAction = {
 export type RawTrigger = {
   type?: string;
   inputs?: RawActionInputs | unknown;
+  /**
+   * [LACUNA] Presente num trigger `type: "Recurrence"`, segundo o schema
+   * publicamente documentado do Workflow Definition Language — irmão de
+   * `type`, não dentro de `inputs` (diferente de conector, que fica em
+   * `inputs.host`). Nunca visto num definition.json real deste projeto.
+   * Formato esperado: `{ frequency: "Day"|"Week"|"Month"|"Hour"|"Minute",
+   * interval: number, timeZone?: string, schedule?: unknown }`, mas o
+   * parser guarda como `unknown` e não valida — só passa adiante.
+   */
+  recurrence?: unknown;
 };
 
 export type RawWorkflowDefinition = {

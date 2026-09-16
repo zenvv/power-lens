@@ -147,6 +147,30 @@ describe("parseFlow — Foreach iterateOver", () => {
   });
 });
 
+describe("parseFlow — trigger de recorrência", () => {
+  it("keeps the trigger's raw recurrence config", () => {
+    const raw = {
+      triggers: { Recorrencia: { type: "Recurrence", recurrence: { frequency: "Day", interval: 1 } } },
+      actions: {},
+    };
+    const bytes = new TextEncoder().encode(JSON.stringify(raw));
+    const doc = parseFlow(bytes, { fileName: "flow.json", fileSize: bytes.byteLength });
+
+    const flow = doc.artifacts.find((a) => a.kind === "cloudFlow");
+    if (flow?.kind !== "cloudFlow") throw new Error("expected cloudFlow artifact");
+
+    expect(flow.trigger.recurrence).toEqual({ frequency: "Day", interval: 1 });
+  });
+
+  it("leaves recurrence undefined for a trigger without one", () => {
+    const doc = parseFixture();
+    const flow = doc.artifacts.find((a) => a.kind === "cloudFlow");
+    if (flow?.kind !== "cloudFlow") throw new Error("expected cloudFlow artifact");
+
+    expect(flow.trigger.recurrence).toBeUndefined();
+  });
+});
+
 describe("parseFlow — connections", () => {
   it("deduplicates connector names across trigger and actions", () => {
     const doc = parseFixture();

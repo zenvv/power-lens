@@ -221,6 +221,13 @@ export const FlowNodeSchema = z.object({
    */
   condition: z.string().optional(),
   iterateOver: z.string().optional(),
+  /**
+   * Config bruta de agendamento de um trigger `type: "Recurrence"` — irmão
+   * de `type`, não de `inputs` (schema público do Workflow Definition
+   * Language, docs/FORMAT-NOTES.md seção 4). Guardado como `unknown`, sem
+   * validar forma interna; só populado na `trigger`, nunca numa `action`.
+   */
+  recurrence: z.unknown().optional(),
 });
 export type FlowNode = z.infer<typeof FlowNodeSchema>;
 
