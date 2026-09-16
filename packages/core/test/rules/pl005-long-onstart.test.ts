@@ -26,4 +26,12 @@ describe("pl005LongOnStart", () => {
 
     expect(pl005LongOnStart(doc)).toHaveLength(0);
   });
+
+  it("respects a custom maxLines option", () => {
+    const doc = emptyDocument();
+    doc.artifacts = [canvasApp({ onStart: formula("=Set(x, 1);\nSet(y, 2);\nSet(z, 3);") })];
+
+    expect(pl005LongOnStart(doc)).toHaveLength(0);
+    expect(pl005LongOnStart(doc, { maxLines: 2 })).toHaveLength(1);
+  });
 });

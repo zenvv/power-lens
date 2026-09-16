@@ -56,4 +56,30 @@ describe("pl006DuplicateFormula", () => {
 
     expect(pl006DuplicateFormula(doc)).toHaveLength(0);
   });
+
+  it("respects a custom minOccurrences option", () => {
+    const doc = emptyDocument();
+    const shared = formula("=true");
+    doc.artifacts = [
+      canvasApp({
+        screens: [
+          {
+            name: "Screen1",
+            order: 0,
+            root: control({
+              name: "Screen1",
+              type: "Screen",
+              children: [
+                control({ name: "Button1", type: "Button", properties: { Visible: shared } }),
+                control({ name: "Button2", type: "Button", properties: { Visible: shared } }),
+              ],
+            }),
+          },
+        ],
+      }),
+    ];
+
+    expect(pl006DuplicateFormula(doc)).toHaveLength(0);
+    expect(pl006DuplicateFormula(doc, { minOccurrences: 2 })).toHaveLength(1);
+  });
 });

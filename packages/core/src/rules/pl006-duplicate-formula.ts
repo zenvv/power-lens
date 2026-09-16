@@ -1,11 +1,17 @@
 import type { Diagnostic, PowerLensDocument } from "../ir/index.js";
+import type { RuleOptions } from "./index.js";
 import { forEachControl } from "./walk-canvas-app.js";
 
-const MIN_OCCURRENCES = 3;
+/** Ajustável via `options.minOccurrences` (Fase 8 do plano de features:
+ * regras configuráveis). */
+export const MIN_OCCURRENCES = 3;
 
-/** PL006 — a mesma fórmula (texto idêntico) aparece em 3+ controles
- * diferentes — candidata a virar uma função nomeada ou variável. */
-export function pl006DuplicateFormula(doc: PowerLensDocument): Diagnostic[] {
+/** PL006 — a mesma fórmula (texto idêntico) aparece em N+ controles
+ * diferentes (default `MIN_OCCURRENCES`, ajustável via
+ * `options.minOccurrences`) — candidata a virar uma função nomeada ou
+ * variável. */
+export function pl006DuplicateFormula(doc: PowerLensDocument, options?: RuleOptions): Diagnostic[] {
+  const minOccurrences = options?.minOccurrences ?? MIN_OCCURRENCES;
   const diagnostics: Diagnostic[] = [];
 
   for (const artifact of doc.artifacts) {
@@ -22,7 +28,7 @@ export function pl006DuplicateFormula(doc: PowerLensDocument): Diagnostic[] {
     });
 
     for (const [formula, controls] of controlsByFormula) {
-      if (controls.size < MIN_OCCURRENCES) continue;
+      if (controls.size < minOccurrences) continue;
       const preview = formula.length > 80 ? `${formula.slice(0, 80)}…` : formula;
       diagnostics.push({
         code: "PL006",
