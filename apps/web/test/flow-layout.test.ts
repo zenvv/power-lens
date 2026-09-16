@@ -58,6 +58,25 @@ describe("layoutFlow", () => {
     expect(edges.some((e) => e.source === flow.trigger.id && e.target === "Condition")).toBe(true);
   });
 
+  it("lays out left-to-right when direction is RIGHT, still with valid positions", async () => {
+    const flow = loadFlow();
+    const { nodes } = await layoutFlow(flow, new Set(), "RIGHT");
+
+    expect(nodes).toHaveLength(7);
+    for (const node of nodes) {
+      expect(Number.isNaN(node.position.x)).toBe(false);
+      expect(Number.isNaN(node.position.y)).toBe(false);
+      expect(node.data.direction).toBe("RIGHT");
+    }
+  });
+
+  it("defaults to DOWN when no direction is given", async () => {
+    const flow = loadFlow();
+    const { nodes } = await layoutFlow(flow, new Set());
+
+    expect(nodes.every((n) => n.data.direction === "DOWN")).toBe(true);
+  });
+
   it("labels a multi-status runAfter edge but not a plain Succeeded one", async () => {
     const flow = loadFlow();
     const { edges } = await layoutFlow(flow, new Set());

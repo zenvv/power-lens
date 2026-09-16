@@ -50,7 +50,8 @@ export type FlowRfNodeDataWithToggle = FlowRfNodeData & {
 type FlowNodeProps = NodeProps & { data: FlowRfNodeDataWithToggle };
 
 function FlowNodeComponent({ id, data }: FlowNodeProps) {
-  const { flowNode, isGroup, collapsed, childCount, onToggle, onSelect, isSelected } = data;
+  const { flowNode, isGroup, collapsed, childCount, onToggle, onSelect, isSelected, direction } = data;
+  const isHorizontal = direction === "RIGHT";
 
   return (
     <div
@@ -65,12 +66,12 @@ function FlowNodeComponent({ id, data }: FlowNodeProps) {
     >
       <Handle
         type="target"
-        position={Position.Top}
+        position={isHorizontal ? Position.Left : Position.Top}
         className="!bg-muted-foreground"
       />
       <Handle
         type="source"
-        position={Position.Bottom}
+        position={isHorizontal ? Position.Right : Position.Bottom}
         className="!bg-muted-foreground"
       />
 

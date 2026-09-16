@@ -8,19 +8,30 @@ export const NODE_WIDTH = 220;
 export const NODE_HEIGHT = 60;
 export const GROUP_HEADER_HEIGHT = 40;
 
-const GROUP_LAYOUT_OPTIONS = {
-  "elk.algorithm": "layered",
-  "elk.direction": "DOWN",
-  "elk.spacing.nodeNode": "28",
-  "elk.layered.spacing.nodeNodeBetweenLayers": "40",
-  "elk.padding": `[top=${GROUP_HEADER_HEIGHT + 16},left=16,bottom=16,right=16]`,
-} as const;
+/** Sentido do DAG: "DOWN" (padrão, cima pra baixo) ou "RIGHT" (esquerda pra
+ * direita) — passado direto pro `elk.direction` do ELK, que já suporta os
+ * dois nativamente. */
+export type FlowDirection = "DOWN" | "RIGHT";
+
+function groupLayoutOptions(direction: FlowDirection) {
+  return {
+    "elk.algorithm": "layered",
+    "elk.direction": direction,
+    "elk.spacing.nodeNode": "28",
+    "elk.layered.spacing.nodeNodeBetweenLayers": "40",
+    // O cabeçalho do grupo (chevron + nome) sempre fica na faixa de cima da
+    // caixa, independente do sentido do fluxo dos filhos — por isso o
+    // padding-top reservado pro header não muda com a direção.
+    "elk.padding": `[top=${GROUP_HEADER_HEIGHT + 16},left=16,bottom=16,right=16]`,
+  } as const;
+}
 
 export type FlowRfNodeData = {
   flowNode: FlowNode;
   isGroup: boolean;
   collapsed: boolean;
   childCount: number;
+  direction: FlowDirection;
 };
 
 type PlainEdge = { id: string; source: string; target: string; statuses: string[] };
@@ -40,6 +51,7 @@ function buildElkNode(
   byParent: Map<string | undefined, FlowNode[]>,
   collapsed: ReadonlySet<string>,
   edgesOut: PlainEdge[],
+  direction: FlowDirection,
 ): ElkNode {
   const children = byParent.get(flowNode.id) ?? [];
   const isGroup = children.length > 0;
@@ -62,8 +74,8 @@ function buildElkNode(
 
   return {
     id: flowNode.id,
-    layoutOptions: GROUP_LAYOUT_OPTIONS,
-    children: children.map((child) => buildElkNode(child, byParent, collapsed, edgesOut)),
+    layoutOptions: groupLayoutOptions(direction),
+    children: children.map((child) => buildElkNode(child, byParent, collapsed, edgesOut, direction)),
     edges: localEdges,
   };
 }
@@ -74,6 +86,7 @@ function collectRfNodes(
   flowNodesById: Map<string, FlowNode>,
   byParent: Map<string | undefined, FlowNode[]>,
   collapsed: ReadonlySet<string>,
+  direction: FlowDirection,
   out: Node<FlowRfNodeData>[],
 ): void {
   for (const child of elkNode.children ?? []) {
@@ -96,11 +109,12 @@ function collectRfNodes(
         isGroup,
         collapsed: isGroup && collapsed.has(child.id),
         childCount: childActions.length,
+        direction,
       },
     });
 
     if (child.children) {
-      collectRfNodes(child, child.id, flowNodesById, byParent, collapsed, out);
+      collectRfNodes(child, child.id, flowNodesById, byParent, collapsed, direction, out);
     }
   }
 }
@@ -108,6 +122,7 @@ function collectRfNodes(
 export async function layoutFlow(
   flow: CloudFlow,
   collapsed: ReadonlySet<string>,
+  direction: FlowDirection = "DOWN",
 ): Promise<{ nodes: Node<FlowRfNodeData>[]; edges: Edge[] }> {
   const byParent = groupByParent(flow.actions);
   const topLevel = byParent.get(undefined) ?? [];
@@ -136,13 +151,13 @@ export async function layoutFlow(
     id: "root",
     layoutOptions: {
       "elk.algorithm": "layered",
-      "elk.direction": "DOWN",
+      "elk.direction": direction,
       "elk.spacing.nodeNode": "48",
       "elk.layered.spacing.nodeNodeBetweenLayers": "64",
     },
     children: [
       { id: flow.trigger.id, width: NODE_WIDTH, height: NODE_HEIGHT },
-      ...topLevel.map((action) => buildElkNode(action, byParent, collapsed, edgesOut)),
+      ...topLevel.map((action) => buildElkNode(action, byParent, collapsed, edgesOut, direction)),
     ],
     edges: rootLocalEdges,
   };
@@ -152,7 +167,7 @@ export async function layoutFlow(
   // The root graph's children already include the trigger (first entry) and
   // every top-level action, so one recursive walk covers the whole tree.
   const nodes: Node<FlowRfNodeData>[] = [];
-  collectRfNodes(laidOut, undefined, flowNodesById, byParent, collapsed, nodes);
+  collectRfNodes(laidOut, undefined, flowNodesById, byParent, collapsed, direction, nodes);
 
   const edges: Edge[] = edgesOut.map((edge) => ({
     id: edge.id,

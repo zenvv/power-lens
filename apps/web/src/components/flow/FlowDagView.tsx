@@ -1,8 +1,20 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { Background, Controls, ReactFlow, type Edge, type Node, type NodeTypes } from "@xyflow/react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  Background,
+  Controls,
+  Panel,
+  ReactFlow,
+  type Edge,
+  type Node,
+  type NodeTypes,
+  type ReactFlowInstance,
+} from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
+import { ArrowDown, ArrowRight } from "lucide-react";
 import type { CloudFlow, FlowNode as FlowNodeIR } from "@power-lens/core";
-import { layoutFlow, type FlowRfNodeData } from "@/lib/flow-layout";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+import { layoutFlow, type FlowDirection, type FlowRfNodeData } from "@/lib/flow-layout";
 import { FlowNode, type FlowRfNodeDataWithToggle } from "./FlowNode";
 import { FlowNodeInspector } from "./FlowNodeInspector";
 
@@ -17,6 +29,8 @@ export function FlowDagView({ flow }: FlowDagViewProps) {
   const [nodes, setNodes] = useState<Node<FlowRfNodeData>[]>([]);
   const [edges, setEdges] = useState<Edge[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [direction, setDirection] = useState<FlowDirection>("DOWN");
+  const rfInstanceRef = useRef<ReactFlowInstance<Node<FlowRfNodeDataWithToggle>, Edge> | null>(null);
 
   const onToggle = useCallback((id: string) => {
     setCollapsed((prev) => {
@@ -41,7 +55,7 @@ export function FlowDagView({ flow }: FlowDagViewProps) {
 
   useEffect(() => {
     let cancelled = false;
-    layoutFlow(flow, collapsed).then((result) => {
+    layoutFlow(flow, collapsed, direction).then((result) => {
       if (cancelled) return;
       setNodes(result.nodes);
       setEdges(result.edges);
@@ -49,7 +63,14 @@ export function FlowDagView({ flow }: FlowDagViewProps) {
     return () => {
       cancelled = true;
     };
-  }, [flow, collapsed]);
+  }, [flow, collapsed, direction]);
+
+  // Recentraliza depois de qualquer mudança de layout (colapsar grupo,
+  // trocar direção) — sem isso o novo formato do grafo pode ficar cortado
+  // fora da viewport, já que `fitView` só roda sozinho na primeira carga.
+  useEffect(() => {
+    rfInstanceRef.current?.fitView({ padding: 0.2 });
+  }, [nodes]);
 
   const nodesWithToggle = useMemo<Node<FlowRfNodeDataWithToggle>[]>(
     () =>
@@ -75,9 +96,34 @@ export function FlowDagView({ flow }: FlowDagViewProps) {
         nodesConnectable={false}
         elementsSelectable={false}
         onPaneClick={() => setSelectedId(null)}
+        onInit={(instance) => {
+          rfInstanceRef.current = instance;
+        }}
       >
         <Background />
         <Controls showInteractive={false} />
+        <Panel position="top-right" className="flex gap-0.5 rounded-md border bg-card p-0.5 shadow-sm">
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            aria-label="De cima pra baixo"
+            title="De cima pra baixo"
+            onClick={() => setDirection("DOWN")}
+            className={cn(direction === "DOWN" && "bg-muted text-foreground")}
+          >
+            <ArrowDown />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            aria-label="Da esquerda pra direita"
+            title="Da esquerda pra direita"
+            onClick={() => setDirection("RIGHT")}
+            className={cn(direction === "RIGHT" && "bg-muted text-foreground")}
+          >
+            <ArrowRight />
+          </Button>
+        </Panel>
       </ReactFlow>
       {selectedFlowNode && <FlowNodeInspector flowNode={selectedFlowNode} onClose={() => setSelectedId(null)} />}
     </div>
