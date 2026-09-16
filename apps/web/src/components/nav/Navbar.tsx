@@ -3,6 +3,7 @@ import { SearchSparkleColor } from "@fluentui/react-icons";
 import { Download, FileText, Menu, Sparkles, TriangleAlert, UploadCloud } from "lucide-react";
 import { Button } from "../ui/button";
 import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupText } from "../ui/input-group";
+import { useI18n } from "@/lib/i18n/context";
 import { ThemeToggle } from "./ThemeToggle";
 import { FormatIcon } from "./FormatIcon";
 
@@ -32,6 +33,8 @@ function Navbar({
   onDownloadIr,
   onOpenAi,
 }: NavbarProps) {
+  const { t } = useI18n();
+
   return (
     <div className="grid h-12 w-full shrink-0 grid-cols-[auto_1fr_auto] items-center gap-3 bg-sidebar px-4">
       <div className="flex items-center gap-3">
@@ -40,7 +43,7 @@ function Navbar({
             variant="ghost"
             size="icon"
             className="md:hidden"
-            aria-label="Abrir navegação"
+            aria-label={t.navbar.openNav}
             onClick={onToggleSidebar}
           >
             <Menu />
@@ -51,7 +54,7 @@ function Navbar({
           <SearchSparkleColor className="size-5" />
           <div className="flex flex-col leading-none">
             <span className="font-heading text-sm font-semibold">Power Lens</span>
-            <span className="text-[10px] text-muted-foreground/70">Not afiliated with Microsoft</span>
+            <span className="text-[10px] text-muted-foreground/70">{t.navbar.notAffiliated}</span>
           </div>
         </div>
       </div>
@@ -65,12 +68,12 @@ function Navbar({
             <InputGroupText className="min-w-0 flex-1 justify-start">
               <span className="truncate">
                 <span className="font-medium text-foreground">{document.source.fileName}</span> ·{" "}
-                {document.source.detectedFormat} · {document.artifacts.length} artefato(s)
+                {document.source.detectedFormat} · {t.navbar.artifactsCount({ count: document.artifacts.length })}
               </span>
             </InputGroupText>
             <InputGroupAddon align="inline-end">
               <InputGroupButton onClick={onRequestImport}>
-                <UploadCloud /> Importar arquivo
+                <UploadCloud /> {t.navbar.importFile}
               </InputGroupButton>
             </InputGroupAddon>
           </InputGroup>
@@ -83,7 +86,7 @@ function Navbar({
             variant="ghost"
             size="sm"
             onClick={onOpenDiagnostics}
-            aria-label={`${document.diagnostics.length} diagnóstico(s)`}
+            aria-label={t.navbar.diagnosticsAria({ count: document.diagnostics.length })}
           >
             <TriangleAlert className="text-amber-500" />
             {document.diagnostics.length}
@@ -92,13 +95,13 @@ function Navbar({
         {document && (
           <>
             <Button variant="ghost" size="sm" onClick={onDownloadMarkdown}>
-              <FileText /> Baixar Doc
+              <FileText /> {t.navbar.downloadDoc}
             </Button>
             <Button variant="ghost" size="sm" onClick={onDownloadIr}>
-              <Download /> Baixar IR
+              <Download /> {t.navbar.downloadIr}
             </Button>
             <Button variant="default" size="sm" onClick={onOpenAi}>
-              <Sparkles /> Abrir IA
+              <Sparkles /> {t.navbar.openAi}
             </Button>
           </>
         )}

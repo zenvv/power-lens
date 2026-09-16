@@ -6,25 +6,30 @@ import {
   parsePbit,
   parseSolution,
   runHealthChecks,
+  DEFAULT_LOCALE,
   type Diagnostic,
+  type Locale,
   type PowerLensDocument,
 } from "@power-lens/core";
+import { en } from "./i18n/translations/en";
+import { pt } from "./i18n/translations/pt";
+import { es } from "./i18n/translations/es";
 
 export type AnalysisResult =
   | { status: "unrecognized"; fileName: string; diagnostics: Diagnostic[] }
   | { status: "parsed"; document: PowerLensDocument };
 
-const FORMAT_LABEL: Record<string, string> = {
-  msapp: "app canvas (.msapp)",
-  solution: "solution (.zip)",
-  flow: "definição de flow",
-  pbit: ".pbit/.pbip",
+const ANALYZE_MESSAGES: Record<Locale, (typeof en)["analyze"]> = {
+  en: en.analyze,
+  pt: pt.analyze,
+  es: es.analyze,
 };
 
 type AnalyzeOptions = {
   /** Rótulo da etapa real do pipeline em andamento — usado pela UI de
    * loading pra mostrar o que está acontecendo, não um progresso fabricado. */
   onStage?: (label: string) => void;
+  locale?: Locale;
 };
 
 /**
@@ -36,32 +41,34 @@ type AnalyzeOptions = {
  * produced it (spec seção 7: as regras são funções puras sobre o IR).
  */
 export async function analyzeFile(file: File, options: AnalyzeOptions = {}): Promise<AnalysisResult> {
-  const { onStage } = options;
-  onStage?.("Detectando formato do arquivo");
+  const { onStage, locale = DEFAULT_LOCALE } = options;
+  const messages = ANALYZE_MESSAGES[locale];
+  onStage?.(messages.stageDetecting);
   const buffer = await file.arrayBuffer();
   const bytes = new Uint8Array(buffer);
 
-  const detection = detectFormat(bytes, file.name);
+  const detection = detectFormat(bytes, file.name, locale);
   if (!detection.format) {
     return { status: "unrecognized", fileName: file.name, diagnostics: detection.diagnostics };
   }
 
-  onStage?.(`Lendo estrutura do ${FORMAT_LABEL[detection.format] ?? detection.format}`);
+  const formatLabel: Record<string, string> = messages.formatLabel;
+  onStage?.(messages.stageReadingStructure({ formatLabel: formatLabel[detection.format] ?? detection.format }));
   const source = { fileName: file.name, fileSize: file.size };
 
   let document: PowerLensDocument;
   switch (detection.format) {
     case "msapp":
-      document = parseMsapp(bytes, source);
+      document = parseMsapp(bytes, source, locale);
       break;
     case "solution":
-      document = parseSolution(bytes, source);
+      document = parseSolution(bytes, source, locale);
       break;
     case "flow":
-      document = parseFlow(bytes, source);
+      document = parseFlow(bytes, source, locale);
       break;
     case "pbit":
-      document = parsePbit(bytes, source);
+      document = parsePbit(bytes, source, locale);
       break;
     default:
       document = createEmptyDocument({ ...source, detectedFormat: detection.format });
@@ -69,12 +76,12 @@ export async function analyzeFile(file: File, options: AnalyzeOptions = {}): Pro
         {
           code: "PL210",
           severity: "warning",
-          message: `Formato "${detection.format}" detectado, mas o parser ainda não está implementado nesta fase.`,
+          message: messages.parserNotImplemented({ format: detection.format }),
         },
       ];
   }
 
-  onStage?.("Verificando integridade");
-  document.diagnostics = [...detection.diagnostics, ...document.diagnostics, ...runHealthChecks(document)];
+  onStage?.(messages.stageVerifyingIntegrity);
+  document.diagnostics = [...detection.diagnostics, ...document.diagnostics, ...runHealthChecks(document, undefined, locale)];
   return { status: "parsed", document };
 }

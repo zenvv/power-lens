@@ -13,6 +13,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { groupArtifactsByKind } from "@/lib/artifact-groups";
 import { cn } from "@/lib/utils";
+import { useI18n } from "@/lib/i18n/context";
 
 export type SectionId =
   | "home"
@@ -28,6 +29,10 @@ type SidebarProps = {
   document: PowerLensDocument | null;
   activeSection: SectionId;
   onSectionChange: (section: SectionId) => void;
+  /** Abre a confirmação de "importar outro arquivo" — hoje só a navbar tem UI
+   * pra isso; o rodapé de configurações (ver changelog) vai reusar o mesmo
+   * callback pro botão de resetar/limpar dados. */
+  onRequestImport: () => void;
   /** Controla o drawer em telas estreitas; em `md:` pra cima o rail fica
    * sempre visível e essas props não têm efeito. */
   mobileOpen: boolean;
@@ -91,9 +96,11 @@ export function Sidebar({
   document,
   activeSection,
   onSectionChange,
+  onRequestImport,
   mobileOpen,
   onMobileClose,
 }: SidebarProps) {
+  const { t } = useI18n();
   const { flows, models, canvasApps } = document
     ? groupArtifactsByKind(document)
     : { flows: [], models: [], canvasApps: [] };
@@ -108,7 +115,7 @@ export function Sidebar({
       {mobileOpen && (
         <button
           type="button"
-          aria-label="Fechar navegação"
+          aria-label={t.nav.closeNav}
           onClick={onMobileClose}
           className="fixed inset-0 z-40 bg-black/40 md:hidden"
         />
@@ -125,19 +132,19 @@ export function Sidebar({
       >
         {document && (
           <>
-            <NavGroupLabel>Análise</NavGroupLabel>
+            <NavGroupLabel>{t.nav.groupAnalysis}</NavGroupLabel>
             <NavItem
               active={activeSection === "summary"}
               onClick={() => go("summary")}
               icon={LayoutDashboard}
-              label="Resumo"
+              label={t.nav.summary}
             />
             {flows.length > 0 && (
               <NavItem
                 active={activeSection === "flows"}
                 onClick={() => go("flows")}
                 icon={Workflow}
-                label="Fluxos"
+                label={t.nav.flows}
                 count={flows.length}
               />
             )}
@@ -146,7 +153,7 @@ export function Sidebar({
                 active={activeSection === "models"}
                 onClick={() => go("models")}
                 icon={Database}
-                label="Modelos de dados"
+                label={t.nav.models}
                 count={models.length}
               />
             )}
@@ -155,7 +162,7 @@ export function Sidebar({
                 active={activeSection === "apps"}
                 onClick={() => go("apps")}
                 icon={AppWindow}
-                label="Apps"
+                label={t.nav.apps}
                 count={canvasApps.length}
               />
             )}
@@ -164,23 +171,23 @@ export function Sidebar({
                 active={activeSection === "diagnostics"}
                 onClick={() => go("diagnostics")}
                 icon={TriangleAlert}
-                label="Diagnósticos"
+                label={t.nav.diagnostics}
                 count={document.diagnostics.length}
               />
             )}
 
-            <NavGroupLabel>Saída</NavGroupLabel>
+            <NavGroupLabel>{t.nav.groupOutput}</NavGroupLabel>
             <NavItem
               active={activeSection === "docs"}
               onClick={() => go("docs")}
               icon={FileText}
-              label="Documentação"
+              label={t.nav.docs}
             />
             <NavItem
               active={activeSection === "ai"}
               onClick={() => go("ai")}
               icon={Sparkles}
-              label="Explicação por IA"
+              label={t.nav.ai}
             />
           </>
         )}

@@ -7,6 +7,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { useI18n } from "@/lib/i18n/context";
 
 type ConfirmDialogProps = {
   open: boolean;
@@ -28,9 +29,11 @@ export function ConfirmDialog({
   title,
   description,
   confirmLabel,
-  cancelLabel = "Cancelar",
+  cancelLabel,
   onConfirm,
 }: ConfirmDialogProps) {
+  const { t } = useI18n();
+  const resolvedCancelLabel = cancelLabel ?? t.confirmDialog.cancel;
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-sm">
@@ -40,7 +43,7 @@ export function ConfirmDialog({
         </DialogHeader>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            {cancelLabel}
+            {resolvedCancelLabel}
           </Button>
           <Button
             onClick={() => {

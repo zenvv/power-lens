@@ -1,4 +1,5 @@
 import { AnimatePresence, motion } from "motion/react";
+import { useI18n } from "@/lib/i18n/context";
 
 type LoadingStateProps = {
   fileName: string;
@@ -10,6 +11,8 @@ type LoadingStateProps = {
  * que troca aqui reflete as etapas reais do pipeline (analyze.ts), não um
  * progresso fabricado — só a duração mínima é uma escolha de design. */
 export function LoadingState({ fileName, stage }: LoadingStateProps) {
+  const { t } = useI18n();
+
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.94 }}
@@ -22,7 +25,7 @@ export function LoadingState({ fileName, stage }: LoadingStateProps) {
       </div>
       <div className="flex flex-col items-center gap-1 text-center">
         <p className="text-sm font-medium">
-          Lendo <span className="text-muted-foreground">{fileName}</span>
+          {t.loadingState.reading} <span className="text-muted-foreground">{fileName}</span>
         </p>
         <AnimatePresence mode="wait">
           <motion.p

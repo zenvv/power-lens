@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { FileStack, ShieldCheck, Wand } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useI18n } from "@/lib/i18n/context";
 import { Dropzone } from "./Dropzone";
 import { LoadingState } from "./LoadingState";
 import { OrbitField } from "./upload/OrbitField";
@@ -13,11 +14,7 @@ type HomeSectionProps = {
   onRetry: () => void;
 };
 
-const TRUST_FACTS = [
-  { icon: ShieldCheck, label: "100% local — nada sai da sua máquina" },
-  { icon: Wand, label: "Determinístico por padrão — IA é uma camada opcional" },
-  { icon: FileStack, label: ".msapp · solution .zip · flow · .pbit/.pbip" },
-];
+const TRUST_FACT_ICONS = [ShieldCheck, Wand, FileStack];
 
 type GatePhase = "idle" | "collapsing" | "done";
 
@@ -32,6 +29,7 @@ type GatePhase = "idle" | "collapsing" | "done";
  * a coreografia — ela só garante que a "porta de entrada" nunca desaparece
  * de um jeito abrupto, mesmo quando o parsing termina antes dela acabar. */
 export function HomeSection({ state, onFile, onRetry }: HomeSectionProps) {
+  const { t } = useI18n();
   const [phase, setPhase] = useState<GatePhase>("idle");
 
   useEffect(() => {
@@ -47,15 +45,16 @@ export function HomeSection({ state, onFile, onRetry }: HomeSectionProps) {
   const showGate = phase !== "done";
 
   return (
-    <div className="flex flex-1 flex-col items-center justify-center gap-10 px-6 py-16">
+    <div className="flex flex-1 flex-col items-center justify-center gap-10 px-6 py-12">
       <div className="flex max-w-lg flex-col items-center gap-2 text-center">
         <h1 className="font-heading text-2xl font-semibold text-balance">
-          Entenda um artefato da Power Platform
+          {t.home.titleBefore}
+          <b className="font-semibold text-sidebar-primary italic">
+            Power Platform
+          </b>
+          {t.home.titleAfter}
         </h1>
-        <p className="text-sm text-muted-foreground text-balance">
-          Solte um arquivo pra ver o resumo estrutural, a visualização e a documentação gerada — sem abrir o
-          Studio, sem ambiente.
-        </p>
+        <p className="text-sm text-muted-foreground text-balance">{t.home.subtitle}</p>
       </div>
 
       {/* Tamanho fixo (não fluxo normal): gate/loading/erro trocam por cima
@@ -72,7 +71,10 @@ export function HomeSection({ state, onFile, onRetry }: HomeSectionProps) {
               transition={{ duration: 0.15 }}
               className="absolute inset-0 flex items-center justify-center"
             >
-              <OrbitField collapsing={phase === "collapsing"} onCollapseComplete={() => setPhase("done")} />
+              <OrbitField
+                collapsing={phase === "collapsing"}
+                onCollapseComplete={() => setPhase("done")}
+              />
               <div
                 aria-hidden="true"
                 className="pointer-events-none absolute top-1/2 left-1/2 aspect-square w-[70%] -translate-x-1/2 -translate-y-1/2"
@@ -81,10 +83,16 @@ export function HomeSection({ state, onFile, onRetry }: HomeSectionProps) {
                     "radial-gradient(circle, var(--background) 0%, var(--background) 42%, transparent 74%)",
                 }}
               />
-              <Dropzone onFile={handleDroppedFile} disabled={phase !== "idle"} />
+              <Dropzone
+                onFile={handleDroppedFile}
+                disabled={phase !== "idle"}
+              />
             </motion.div>
           ) : state.status === "loading" ? (
-            <div key="loading" className="absolute inset-0 flex items-center justify-center">
+            <div
+              key="loading"
+              className="absolute inset-0 flex items-center justify-center"
+            >
               <LoadingState fileName={state.fileName} stage={state.stage} />
             </div>
           ) : state.status === "unrecognized" ? (
@@ -96,15 +104,21 @@ export function HomeSection({ state, onFile, onRetry }: HomeSectionProps) {
             >
               <div className="flex w-[min(480px,90vw)] flex-col gap-3 rounded-xl border border-destructive/30 bg-destructive/5 px-6 py-5">
                 <p className="text-sm">
-                  Não consegui reconhecer <strong>{state.fileName}</strong> como um arquivo suportado.
+                  {t.home.unrecognizedBefore}
+                  <strong>{state.fileName}</strong>
+                  {t.home.unrecognizedAfter}
                 </p>
                 <ul className="list-disc pl-5 text-sm text-muted-foreground">
                   {state.diagnostics.map((d, i) => (
                     <li key={i}>{d.message}</li>
                   ))}
                 </ul>
-                <Button variant="outline" className="self-start" onClick={onRetry}>
-                  Tentar outro arquivo
+                <Button
+                  variant="outline"
+                  className="self-start"
+                  onClick={onRetry}
+                >
+                  {t.home.tryAnotherFile}
                 </Button>
               </div>
             </motion.div>
@@ -114,12 +128,18 @@ export function HomeSection({ state, onFile, onRetry }: HomeSectionProps) {
 
       {phase === "idle" && (
         <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2">
-          {TRUST_FACTS.map(({ icon: Icon, label }) => (
-            <div key={label} className="flex items-center gap-1.5 text-xs text-muted-foreground">
-              <Icon className="size-3.5 shrink-0" />
-              {label}
-            </div>
-          ))}
+          {t.home.trustFacts.map((label, i) => {
+            const Icon = TRUST_FACT_ICONS[i]!;
+            return (
+              <div
+                key={label}
+                className="flex items-center gap-1.5 text-xs text-muted-foreground"
+              >
+                <Icon className="size-3.5 shrink-0" />
+                {label}
+              </div>
+            );
+          })}
         </div>
       )}
     </div>

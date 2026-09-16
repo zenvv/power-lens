@@ -1,6 +1,7 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { ThemeProvider } from "next-themes";
+import { I18nProvider } from "./lib/i18n/context.js";
 import { App } from "./App.js";
 import "./index.css";
 
@@ -12,7 +13,9 @@ if (!container) {
 createRoot(container).render(
   <StrictMode>
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-      <App />
+      <I18nProvider>
+        <App />
+      </I18nProvider>
     </ThemeProvider>
   </StrictMode>,
 );

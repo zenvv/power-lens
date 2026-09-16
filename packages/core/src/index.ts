@@ -1,5 +1,6 @@
 export { CORE_VERSION } from "./version.js";
 export * from "./ir/index.js";
+export { getMessages, DEFAULT_LOCALE, type Locale, type Messages } from "./i18n/index.js";
 export { parseMsapp, type MsappSource } from "./parsers/msapp/index.js";
 export { parseSolution, type SolutionSource } from "./parsers/solution/index.js";
 export { parseFlow, type FlowSource } from "./parsers/flow/index.js";
@@ -19,6 +20,7 @@ export {
   runHealthChecks,
   HEALTH_CHECK_RULES,
   RULE_REGISTRY,
+  getRuleRegistry,
   type HealthCheckRule,
   type RuleOptions,
   type RuleOptionDef,
