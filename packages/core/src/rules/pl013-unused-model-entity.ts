@@ -1,4 +1,6 @@
 import type { DataModel, Diagnostic, PowerLensDocument } from "../ir/index.js";
+import { DEFAULT_LOCALE, getMessages } from "../i18n/index.js";
+import type { RuleOptions } from "./index.js";
 
 function escapeRegExp(value: string): string {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -28,7 +30,8 @@ function collectExpressionHaystacks(model: DataModel): string[] {
 /** PL013 — tabela ou coluna do modelo de dados que não aparece em nenhum
  * relacionamento nem em nenhuma fórmula (medida, coluna calculada, expressão
  * de origem) encontrada no modelo. */
-export function pl013UnusedModelEntity(doc: PowerLensDocument): Diagnostic[] {
+export function pl013UnusedModelEntity(doc: PowerLensDocument, options?: RuleOptions): Diagnostic[] {
+  const messages = getMessages(options?.locale ?? DEFAULT_LOCALE).rules.pl013;
   const diagnostics: Diagnostic[] = [];
 
   for (const artifact of doc.artifacts) {
@@ -52,9 +55,9 @@ export function pl013UnusedModelEntity(doc: PowerLensDocument): Diagnostic[] {
         diagnostics.push({
           code: "PL013",
           severity: "warning",
-          message: `Tabela "${table.name}" não aparece em nenhum relacionamento nem fórmula encontrada no modelo.`,
+          message: messages.messageTable({ tableName: table.name }),
           artifactId: artifact.id,
-          hint: "A busca é textual, não um parser de DAX/M completo — confirme antes de remover, pode ser usada de um jeito que a análise não capturou.",
+          hint: messages.hintTable,
         });
         continue;
       }
@@ -68,10 +71,10 @@ export function pl013UnusedModelEntity(doc: PowerLensDocument): Diagnostic[] {
         diagnostics.push({
           code: "PL013",
           severity: "info",
-          message: `Coluna "${table.name}.${column.name}" não aparece em nenhum relacionamento nem fórmula encontrada no modelo.`,
+          message: messages.messageColumn({ tableName: table.name, columnName: column.name }),
           artifactId: artifact.id,
           path: `${table.name}.${column.name}`,
-          hint: "A busca é textual, não um parser de DAX/M completo — confirme antes de remover, pode ser usada só num visual do relatório.",
+          hint: messages.hintColumn,
         });
       }
     }

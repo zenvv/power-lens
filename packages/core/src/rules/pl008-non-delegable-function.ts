@@ -1,4 +1,6 @@
 import type { Diagnostic, PowerLensDocument } from "../ir/index.js";
+import { DEFAULT_LOCALE, getMessages } from "../i18n/index.js";
+import type { RuleOptions } from "./index.js";
 import { forEachExpression } from "./walk-canvas-app.js";
 
 /**
@@ -16,7 +18,8 @@ const NEVER_DELEGABLE_FUNCTIONS = new Set(["ForAll"]);
 
 /** PL008 — função sabidamente não-delegável aplicada sobre uma fonte de
  * dados remota (não uma collection local). */
-export function pl008NonDelegableFunction(doc: PowerLensDocument): Diagnostic[] {
+export function pl008NonDelegableFunction(doc: PowerLensDocument, options?: RuleOptions): Diagnostic[] {
+  const messages = getMessages(options?.locale ?? DEFAULT_LOCALE).rules.pl008;
   const diagnostics: Diagnostic[] = [];
 
   for (const artifact of doc.artifacts) {
@@ -32,10 +35,14 @@ export function pl008NonDelegableFunction(doc: PowerLensDocument): Diagnostic[] 
       diagnostics.push({
         code: "PL008",
         severity: "warning",
-        message: `${usedFunctions.map((f) => f.name).join(", ")} sobre ${usedDataSources.map((d) => d.name).join(", ")} em "${propertyName}" — nunca delega; só a primeira página da fonte remota é processada.`,
+        message: messages.message({
+          functions: usedFunctions.map((f) => f.name).join(", "),
+          dataSources: usedDataSources.map((d) => d.name).join(", "),
+          propertyName,
+        }),
         artifactId: artifact.id,
         path: `${path}.${propertyName}`,
-        hint: "Considere substituir por Filter/Sort (delegáveis, dependendo do conector) antes de percorrer o resultado.",
+        hint: messages.hint,
       });
     });
   }

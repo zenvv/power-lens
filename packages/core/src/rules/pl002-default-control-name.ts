@@ -1,4 +1,6 @@
 import type { Diagnostic, PowerLensDocument } from "../ir/index.js";
+import { DEFAULT_LOCALE, getMessages } from "../i18n/index.js";
+import type { RuleOptions } from "./index.js";
 import { forEachControl } from "./walk-canvas-app.js";
 
 function escapeRegExp(text: string): string {
@@ -13,7 +15,8 @@ function hasDefaultName(controlType: string, controlName: string): boolean {
 }
 
 /** PL002 — controle com nome default, nunca renomeado pelo autor do app. */
-export function pl002DefaultControlName(doc: PowerLensDocument): Diagnostic[] {
+export function pl002DefaultControlName(doc: PowerLensDocument, options?: RuleOptions): Diagnostic[] {
+  const messages = getMessages(options?.locale ?? DEFAULT_LOCALE).rules.pl002;
   const diagnostics: Diagnostic[] = [];
 
   for (const artifact of doc.artifacts) {
@@ -29,10 +32,10 @@ export function pl002DefaultControlName(doc: PowerLensDocument): Diagnostic[] {
       diagnostics.push({
         code: "PL002",
         severity: "info",
-        message: `Controle "${control.name}" está com o nome default do Studio, nunca renomeado.`,
+        message: messages.message({ controlName: control.name }),
         artifactId: artifact.id,
         path,
-        hint: "Nomes descritivos facilitam entender fórmulas que referenciam o controle depois.",
+        hint: messages.hint,
       });
     });
   }

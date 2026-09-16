@@ -1,4 +1,6 @@
 import type { CanvasApp, Diagnostic, PowerLensDocument } from "../ir/index.js";
+import { DEFAULT_LOCALE, getMessages } from "../i18n/index.js";
+import type { RuleOptions } from "./index.js";
 import { forEachExpression } from "./walk-canvas-app.js";
 
 function collectReferencedScreenNames(app: CanvasApp): Set<string> {
@@ -19,7 +21,8 @@ function collectReferencedScreenNames(app: CanvasApp): Set<string> {
  * tela de menor `order` é tratada como a tela inicial (aberta implicitamente
  * ao rodar o app, sem precisar de `Navigate`) e nunca é sinalizada.
  */
-export function pl001OrphanScreen(doc: PowerLensDocument): Diagnostic[] {
+export function pl001OrphanScreen(doc: PowerLensDocument, options?: RuleOptions): Diagnostic[] {
+  const messages = getMessages(options?.locale ?? DEFAULT_LOCALE).rules.pl001;
   const diagnostics: Diagnostic[] = [];
 
   for (const artifact of doc.artifacts) {
@@ -34,10 +37,10 @@ export function pl001OrphanScreen(doc: PowerLensDocument): Diagnostic[] {
       diagnostics.push({
         code: "PL001",
         severity: "warning",
-        message: `Tela "${screen.name}" não é referenciada por nenhuma navegação encontrada no app.`,
+        message: messages.message({ screenName: screen.name }),
         artifactId: artifact.id,
         path: screen.name,
-        hint: "A extração de referências é rasa (regex, não um parser de Power Fx completo) — confirme antes de remover a tela, pode haver um Navigate(...) em uma expressão que a análise não capturou.",
+        hint: messages.hint,
       });
     }
   }

@@ -1,4 +1,5 @@
 import type { Diagnostic, PowerLensDocument } from "../ir/index.js";
+import { DEFAULT_LOCALE, getMessages } from "../i18n/index.js";
 import type { RuleOptions } from "./index.js";
 
 /** Sem número "certo" documentado em nenhum lugar oficial — 25 linhas é um
@@ -11,6 +12,7 @@ export const MAX_ONSTART_LINES = 25;
  * `MAX_ONSTART_LINES`, ajustável via `options.maxLines`). */
 export function pl005LongOnStart(doc: PowerLensDocument, options?: RuleOptions): Diagnostic[] {
   const maxLines = options?.maxLines ?? MAX_ONSTART_LINES;
+  const messages = getMessages(options?.locale ?? DEFAULT_LOCALE).rules.pl005;
   const diagnostics: Diagnostic[] = [];
 
   for (const artifact of doc.artifacts) {
@@ -23,10 +25,10 @@ export function pl005LongOnStart(doc: PowerLensDocument, options?: RuleOptions):
     diagnostics.push({
       code: "PL005",
       severity: "info",
-      message: `App.OnStart tem ${lineCount} linhas (acima do limiar de ${maxLines}).`,
+      message: messages.message({ lineCount, maxLines }),
       artifactId: artifact.id,
       path: "App.OnStart",
-      hint: "Considere quebrar em componentes reutilizáveis ou mover parte da lógica pra funções nomeadas.",
+      hint: messages.hint,
     });
   }
 

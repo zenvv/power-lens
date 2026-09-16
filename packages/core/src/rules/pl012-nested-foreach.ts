@@ -1,4 +1,6 @@
 import type { Diagnostic, FlowNode, PowerLensDocument } from "../ir/index.js";
+import { DEFAULT_LOCALE, getMessages } from "../i18n/index.js";
+import type { RuleOptions } from "./index.js";
 
 /** Sobe a cadeia de `parentId` a partir de `node` e diz se algum ancestral é
  * um `Foreach` — cobre o caso comum de um `Foreach` aninhado dentro de um
@@ -19,7 +21,8 @@ function hasForeachAncestor(node: FlowNode, byId: Map<string, FlowNode>): boolea
  * deliberadamente restrito a esse caso único e bem documentado, não a outras
  * heurísticas de concorrência do `Foreach` que dependem de configuração não
  * capturada no IR. */
-export function pl012NestedForeach(doc: PowerLensDocument): Diagnostic[] {
+export function pl012NestedForeach(doc: PowerLensDocument, options?: RuleOptions): Diagnostic[] {
+  const messages = getMessages(options?.locale ?? DEFAULT_LOCALE).rules.pl012;
   const diagnostics: Diagnostic[] = [];
 
   for (const artifact of doc.artifacts) {
@@ -34,10 +37,10 @@ export function pl012NestedForeach(doc: PowerLensDocument): Diagnostic[] {
       diagnostics.push({
         code: "PL012",
         severity: "warning",
-        message: `"${node.name}" é um Foreach aninhado dentro de outro Foreach.`,
+        message: messages.message({ nodeName: node.name }),
         artifactId: artifact.id,
         path: node.name,
-        hint: "Foreach aninhado é sequencial por natureza e escala mal — considere achatar a lista com Select/Filter array antes de um único loop.",
+        hint: messages.hint,
       });
     }
   }

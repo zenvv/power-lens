@@ -1,4 +1,6 @@
 import type { Diagnostic, PowerLensDocument } from "../ir/index.js";
+import { DEFAULT_LOCALE, getMessages } from "../i18n/index.js";
+import type { RuleOptions } from "./index.js";
 import { forEachExpression } from "./walk-canvas-app.js";
 
 const GUID_RE = /\b[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}\b/g;
@@ -6,7 +8,8 @@ const GUID_RE = /\b[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[
 /** PL004 — GUID hardcoded em fórmula (ex.: ID de lista/tabela colado direto
  * em vez de vir de uma referência nomeada) — quebra ao mover o app entre
  * ambientes. */
-export function pl004HardcodedGuid(doc: PowerLensDocument): Diagnostic[] {
+export function pl004HardcodedGuid(doc: PowerLensDocument, options?: RuleOptions): Diagnostic[] {
+  const messages = getMessages(options?.locale ?? DEFAULT_LOCALE).rules.pl004;
   const diagnostics: Diagnostic[] = [];
 
   for (const artifact of doc.artifacts) {
@@ -20,10 +23,10 @@ export function pl004HardcodedGuid(doc: PowerLensDocument): Diagnostic[] {
       diagnostics.push({
         code: "PL004",
         severity: "warning",
-        message: `${matches.length > 1 ? `${matches.length} GUIDs hardcoded encontrados` : "GUID hardcoded encontrado"} em "${propertyName}".`,
+        message: messages.message({ count: matches.length, propertyName }),
         artifactId: artifact.id,
         path: `${path}.${propertyName}`,
-        hint: "GUIDs de lista/tabela/ambiente colados direto na fórmula não sobrevivem a uma migração entre ambientes.",
+        hint: messages.hint,
       });
     });
   }

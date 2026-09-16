@@ -12,7 +12,7 @@ describe("pl013UnusedModelEntity", () => {
     ];
 
     const diagnostics = pl013UnusedModelEntity(doc);
-    expect(diagnostics.filter((d) => d.message.includes("Tabela"))).toHaveLength(1);
+    expect(diagnostics.filter((d) => d.severity === "warning")).toHaveLength(1);
     expect(diagnostics[0]?.message).toContain("Staging");
   });
 
@@ -36,7 +36,7 @@ describe("pl013UnusedModelEntity", () => {
       }),
     ];
 
-    expect(pl013UnusedModelEntity(doc).filter((d) => d.message.includes("Tabela"))).toHaveLength(0);
+    expect(pl013UnusedModelEntity(doc).filter((d) => d.severity === "warning")).toHaveLength(0);
   });
 
   it("does not flag a table referenced only in a measure expression", () => {
@@ -68,7 +68,7 @@ describe("pl013UnusedModelEntity", () => {
       }),
     ];
 
-    const diagnostics = pl013UnusedModelEntity(doc).filter((d) => d.message.includes("Coluna"));
+    const diagnostics = pl013UnusedModelEntity(doc).filter((d) => d.severity === "info");
     expect(diagnostics).toHaveLength(1);
     expect(diagnostics[0]?.message).toContain("Sales.Notes");
   });
@@ -85,7 +85,7 @@ describe("pl013UnusedModelEntity", () => {
       }),
     ];
 
-    const tableDiagnostics = pl013UnusedModelEntity(doc).filter((d) => d.message.includes("Tabela"));
+    const tableDiagnostics = pl013UnusedModelEntity(doc).filter((d) => d.severity === "warning");
     expect(tableDiagnostics.some((d) => d.message.includes('"Order"'))).toBe(true);
     expect(tableDiagnostics.some((d) => d.message.includes('"Orders"'))).toBe(false);
   });

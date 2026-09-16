@@ -1,4 +1,6 @@
 import type { Diagnostic, PowerLensDocument } from "../ir/index.js";
+import { DEFAULT_LOCALE, getMessages } from "../i18n/index.js";
+import type { RuleOptions } from "./index.js";
 import { forEachControl } from "./walk-canvas-app.js";
 
 /** Tipos de controle sem texto visível próprio, onde um leitor de tela
@@ -11,7 +13,8 @@ const NEEDS_ACCESSIBLE_LABEL = new Set(["Icon", "Image", "Button", "Toggle", "Ra
  * ausente ou vazio. "Vazia" é lido de forma ampla (ausente conta como
  * vazia): a propriedade quase nunca é setada explicitamente como `""` — o
  * gap real de acessibilidade é o autor nunca ter setado ela. */
-export function pl007EmptyAccessibleLabel(doc: PowerLensDocument): Diagnostic[] {
+export function pl007EmptyAccessibleLabel(doc: PowerLensDocument, options?: RuleOptions): Diagnostic[] {
+  const messages = getMessages(options?.locale ?? DEFAULT_LOCALE).rules.pl007;
   const diagnostics: Diagnostic[] = [];
 
   for (const artifact of doc.artifacts) {
@@ -27,10 +30,10 @@ export function pl007EmptyAccessibleLabel(doc: PowerLensDocument): Diagnostic[] 
       diagnostics.push({
         code: "PL007",
         severity: "warning",
-        message: `Controle "${control.name}" (${control.type}) não tem AccessibleLabel — leitor de tela não consegue descrevê-lo.`,
+        message: messages.message({ controlName: control.name, controlType: control.type }),
         artifactId: artifact.id,
         path,
-        hint: "Setar AccessibleLabel com um texto curto descrevendo a ação/conteúdo do controle.",
+        hint: messages.hint,
       });
     });
   }

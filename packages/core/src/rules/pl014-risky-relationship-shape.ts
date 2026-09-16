@@ -1,9 +1,11 @@
 import type { Diagnostic, PowerLensDocument, Relationship } from "../ir/index.js";
+import { DEFAULT_LOCALE, getMessages, type Messages } from "../i18n/index.js";
+import type { RuleOptions } from "./index.js";
 
-function describeRisk(rel: Relationship): string[] {
+function describeRisk(rel: Relationship, reasonLabels: Messages["rules"]["pl014"]["reasons"]): string[] {
   const reasons: string[] = [];
-  if (rel.crossFilter === "both") reasons.push("filtragem cruzada bidirecional");
-  if (rel.cardinality === "manyToMany") reasons.push("cardinalidade muitos-para-muitos");
+  if (rel.crossFilter === "both") reasons.push(reasonLabels.bidirectional);
+  if (rel.cardinality === "manyToMany") reasons.push(reasonLabels.manyToMany);
   return reasons;
 }
 
@@ -13,22 +15,29 @@ function describeRisk(rel: Relationship): string[] {
  * mais de uma tabela de fatos) ou cardinalidade muitos-para-muitos (motor
  * trata como fraco, sem garantia de integridade referencial). Não é um erro
  * — em muitos modelos é intencional — por isso severidade "info". */
-export function pl014RiskyRelationshipShape(doc: PowerLensDocument): Diagnostic[] {
+export function pl014RiskyRelationshipShape(doc: PowerLensDocument, options?: RuleOptions): Diagnostic[] {
+  const messages = getMessages(options?.locale ?? DEFAULT_LOCALE).rules.pl014;
   const diagnostics: Diagnostic[] = [];
 
   for (const artifact of doc.artifacts) {
     if (artifact.kind !== "dataModel") continue;
 
     for (const rel of artifact.relationships) {
-      const reasons = describeRisk(rel);
+      const reasons = describeRisk(rel, messages.reasons);
       if (reasons.length === 0) continue;
 
       diagnostics.push({
         code: "PL014",
         severity: "info",
-        message: `Relacionamento ${rel.from.table}.${rel.from.column} → ${rel.to.table}.${rel.to.column} tem forma arriscada: ${reasons.join(", ")}.`,
+        message: messages.message({
+          fromTable: rel.from.table,
+          fromColumn: rel.from.column,
+          toTable: rel.to.table,
+          toColumn: rel.to.column,
+          reasons: reasons.join(", "),
+        }),
         artifactId: artifact.id,
-        hint: "Confirme se é intencional — filtro bidirecional e muitos-para-muitos são fontes comuns de resultado errado em medidas DAX.",
+        hint: messages.hint,
       });
     }
   }

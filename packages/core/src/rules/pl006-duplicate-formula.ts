@@ -1,4 +1,5 @@
 import type { Diagnostic, PowerLensDocument } from "../ir/index.js";
+import { DEFAULT_LOCALE, getMessages } from "../i18n/index.js";
 import type { RuleOptions } from "./index.js";
 import { forEachControl } from "./walk-canvas-app.js";
 
@@ -12,6 +13,7 @@ export const MIN_OCCURRENCES = 3;
  * variável. */
 export function pl006DuplicateFormula(doc: PowerLensDocument, options?: RuleOptions): Diagnostic[] {
   const minOccurrences = options?.minOccurrences ?? MIN_OCCURRENCES;
+  const messages = getMessages(options?.locale ?? DEFAULT_LOCALE).rules.pl006;
   const diagnostics: Diagnostic[] = [];
 
   for (const artifact of doc.artifacts) {
@@ -33,9 +35,9 @@ export function pl006DuplicateFormula(doc: PowerLensDocument, options?: RuleOpti
       diagnostics.push({
         code: "PL006",
         severity: "info",
-        message: `A fórmula ${preview} se repete em ${controls.size} controles diferentes.`,
+        message: messages.message({ preview, count: controls.size }),
         artifactId: artifact.id,
-        hint: `Controles: ${[...controls].join(", ")}`,
+        hint: messages.hint({ controls: [...controls] }),
       });
     }
   }

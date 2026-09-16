@@ -1,4 +1,6 @@
 import type { CanvasApp, Diagnostic, PowerLensDocument } from "../ir/index.js";
+import { DEFAULT_LOCALE, getMessages } from "../i18n/index.js";
+import type { RuleOptions } from "./index.js";
 import { forEachExpression } from "./walk-canvas-app.js";
 
 function collectReferencedDataSourceNames(app: CanvasApp): Set<string> {
@@ -16,7 +18,8 @@ function collectReferencedDataSourceNames(app: CanvasApp): Set<string> {
 
 /** PL003 — datasource declarado em References/DataSources.json mas nunca
  * usado em nenhuma fórmula encontrada. */
-export function pl003UnusedDataSource(doc: PowerLensDocument): Diagnostic[] {
+export function pl003UnusedDataSource(doc: PowerLensDocument, options?: RuleOptions): Diagnostic[] {
+  const messages = getMessages(options?.locale ?? DEFAULT_LOCALE).rules.pl003;
   const diagnostics: Diagnostic[] = [];
 
   for (const artifact of doc.artifacts) {
@@ -28,9 +31,9 @@ export function pl003UnusedDataSource(doc: PowerLensDocument): Diagnostic[] {
       diagnostics.push({
         code: "PL003",
         severity: "warning",
-        message: `Fonte de dados "${dataSource.name}" está declarada mas não foi encontrada em nenhuma fórmula do app.`,
+        message: messages.message({ dataSourceName: dataSource.name }),
         artifactId: artifact.id,
-        hint: "A extração de referências é rasa — confirme antes de remover a conexão, ela pode ser usada só dentro de um componente ou por uma expressão que a análise não capturou.",
+        hint: messages.hint,
       });
     }
   }

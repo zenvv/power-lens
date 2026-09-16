@@ -19,7 +19,7 @@ describe("pl014RiskyRelationshipShape", () => {
       }),
     ];
 
-    const diagnostics = pl014RiskyRelationshipShape(doc);
+    const diagnostics = pl014RiskyRelationshipShape(doc, { locale: "pt" });
     expect(diagnostics).toHaveLength(1);
     expect(diagnostics[0]?.message).toContain("bidirecional");
   });
@@ -40,7 +40,7 @@ describe("pl014RiskyRelationshipShape", () => {
       }),
     ];
 
-    const diagnostics = pl014RiskyRelationshipShape(doc);
+    const diagnostics = pl014RiskyRelationshipShape(doc, { locale: "pt" });
     expect(diagnostics).toHaveLength(1);
     expect(diagnostics[0]?.message).toContain("muitos-para-muitos");
   });

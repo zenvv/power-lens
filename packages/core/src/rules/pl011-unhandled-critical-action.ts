@@ -1,4 +1,6 @@
 import type { Diagnostic, FlowNode, PowerLensDocument } from "../ir/index.js";
+import { DEFAULT_LOCALE, getMessages } from "../i18n/index.js";
+import type { RuleOptions } from "./index.js";
 import { KNOWN_PREMIUM_CONNECTOR_IDS } from "./pl009-premium-connector.js";
 
 /** Statuses de `runAfter` que contam como "trata falha" — Workflow Definition
@@ -24,7 +26,8 @@ function isHandledBy(node: FlowNode, criticalId: string): boolean {
 
 /** PL011 — ação crítica (HTTP ou conector premium) sem nenhum outro passo do
  * mesmo fluxo tratando sua falha (`runAfter` com status Failed/TimedOut). */
-export function pl011UnhandledCriticalAction(doc: PowerLensDocument): Diagnostic[] {
+export function pl011UnhandledCriticalAction(doc: PowerLensDocument, options?: RuleOptions): Diagnostic[] {
+  const messages = getMessages(options?.locale ?? DEFAULT_LOCALE).rules.pl011;
   const diagnostics: Diagnostic[] = [];
 
   for (const artifact of doc.artifacts) {
@@ -38,10 +41,10 @@ export function pl011UnhandledCriticalAction(doc: PowerLensDocument): Diagnostic
       diagnostics.push({
         code: "PL011",
         severity: "warning",
-        message: `Ação "${node.name}" (${node.connectorName ?? node.type}) não tem nenhum passo tratando sua falha.`,
+        message: messages.message({ actionName: node.name, connectorOrType: node.connectorName ?? node.type }),
         artifactId: artifact.id,
         path: node.name,
-        hint: "Adicione um passo com \"Configurar execução após\" (runAfter Failed/TimedOut) pra essa ação, ou confirme que uma falha silenciosa aqui é aceitável.",
+        hint: messages.hint,
       });
     }
   }

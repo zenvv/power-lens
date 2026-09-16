@@ -1,4 +1,6 @@
 import type { Diagnostic, PowerLensDocument } from "../ir/index.js";
+import { DEFAULT_LOCALE, getMessages } from "../i18n/index.js";
+import type { RuleOptions } from "./index.js";
 import { resolveScreenLayout, type ResolvedControl } from "../render/wireframe/index.js";
 
 /** Limiar WCAG AA pra texto normal (4.5:1) — texto grande (~18px+) tem um
@@ -52,7 +54,8 @@ function walk(node: ResolvedControl, path: string, onLowContrast: (path: string,
  * mínimo recomendado pela WCAG, calculado só quando os dois resolvem pra
  * uma cor opaca (literal ou `RGBA(...)` com argumentos constantes — mesmo
  * resolvedor do wireframe, spec seção 7). */
-export function pl015LowContrast(doc: PowerLensDocument): Diagnostic[] {
+export function pl015LowContrast(doc: PowerLensDocument, options?: RuleOptions): Diagnostic[] {
+  const messages = getMessages(options?.locale ?? DEFAULT_LOCALE).rules.pl015;
   const diagnostics: Diagnostic[] = [];
 
   for (const artifact of doc.artifacts) {
@@ -64,10 +67,10 @@ export function pl015LowContrast(doc: PowerLensDocument): Diagnostic[] {
         diagnostics.push({
           code: "PL015",
           severity: "warning",
-          message: `Contraste de ${ratio.toFixed(2)}:1 entre texto e fundo em "${path}", abaixo do mínimo recomendado (4.5:1).`,
+          message: messages.message({ ratio: ratio.toFixed(2), path }),
           artifactId: artifact.id,
           path,
-          hint: "Calculado só quando Fill/Color resolvem pra uma cor totalmente opaca (literal ou RGBA constante) — texto grande tem um limite menor (3:1), não diferenciado aqui.",
+          hint: messages.hint,
         });
       });
     }

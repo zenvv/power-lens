@@ -1,4 +1,6 @@
 import type { Diagnostic, PowerLensDocument } from "../ir/index.js";
+import { DEFAULT_LOCALE, getMessages } from "../i18n/index.js";
+import type { RuleOptions } from "./index.js";
 
 /**
  * Lista deliberadamente curta e conservadora — só conectores que aparecem
@@ -21,7 +23,8 @@ export const KNOWN_PREMIUM_CONNECTOR_IDS = new Set([
 
 /** PL009 — fonte de dados que usa um conector premium conhecido (exige
  * licença acima do plano gratuito/per-app padrão). */
-export function pl009PremiumConnector(doc: PowerLensDocument): Diagnostic[] {
+export function pl009PremiumConnector(doc: PowerLensDocument, options?: RuleOptions): Diagnostic[] {
+  const messages = getMessages(options?.locale ?? DEFAULT_LOCALE).rules.pl009;
   const diagnostics: Diagnostic[] = [];
 
   for (const artifact of doc.artifacts) {
@@ -32,9 +35,9 @@ export function pl009PremiumConnector(doc: PowerLensDocument): Diagnostic[] {
       diagnostics.push({
         code: "PL009",
         severity: "info",
-        message: `Fonte de dados "${dataSource.name}" usa o conector "${dataSource.connectorId}", que é premium.`,
+        message: messages.message({ dataSourceName: dataSource.name, connectorId: dataSource.connectorId }),
         artifactId: artifact.id,
-        hint: "Confirme se todo usuário do app tem a licença necessária (Power Apps per-app/per-user ou equivalente) pra esse conector.",
+        hint: messages.hint,
       });
     }
   }
