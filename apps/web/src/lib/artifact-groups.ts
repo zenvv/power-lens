@@ -9,5 +9,6 @@ export function groupArtifactsByKind(document: PowerLensDocument) {
     flows: document.artifacts.filter((a) => a.kind === "cloudFlow"),
     models: document.artifacts.filter((a) => a.kind === "dataModel"),
     canvasApps: document.artifacts.filter((a) => a.kind === "canvasApp"),
+    reports: document.artifacts.filter((a) => a.kind === "report"),
   };
 }

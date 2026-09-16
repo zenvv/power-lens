@@ -1,11 +1,12 @@
 import { useMemo } from "react";
 import type { PowerLensDocument } from "@power-lens/core";
-import { Tabs, TabsContent } from "@/components/ui/tabs";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { groupArtifactsByKind } from "@/lib/artifact-groups";
 import { FlowDagView } from "@/components/flow/FlowDagView";
 import { FlowTriggerSummary } from "@/components/flow/FlowTriggerSummary";
 import { MerView } from "@/components/mer/MerView";
 import { MeasuresPanel } from "@/components/mer/MeasuresPanel";
+import { LineagePanel } from "@/components/mer/LineagePanel";
 import { DiagnosticsPanel } from "@/components/DiagnosticsPanel";
 import { WireframeView } from "@/components/wireframe/WireframeView";
 import { AiExplanationCard } from "@/components/ai/AiExplanationCard";
@@ -41,7 +42,7 @@ export function DocumentView({
   onAiAutoGenerateConsumed,
 }: DocumentViewProps) {
   const { t } = useI18n();
-  const { flows, models, canvasApps } = useMemo(
+  const { flows, models, canvasApps, reports } = useMemo(
     () => groupArtifactsByKind(document),
     [document],
   );
@@ -113,8 +114,19 @@ export function DocumentView({
                 <div className="min-w-0 flex-1">
                   <MerView model={model} />
                 </div>
-                <div className="h-[70vh] w-full shrink-0 rounded-lg border lg:w-70">
-                  <MeasuresPanel measures={model.measures} />
+                <div className="flex h-[70vh] w-full shrink-0 flex-col rounded-lg border lg:w-70">
+                  <Tabs defaultValue="measures" className="flex h-full flex-col gap-0">
+                    <TabsList className="w-full">
+                      <TabsTrigger value="measures">{t.mer.measuresTab}</TabsTrigger>
+                      <TabsTrigger value="lineage">{t.mer.lineageTab}</TabsTrigger>
+                    </TabsList>
+                    <TabsContent value="measures" className="min-h-0 flex-1">
+                      <MeasuresPanel measures={model.measures} />
+                    </TabsContent>
+                    <TabsContent value="lineage" className="min-h-0 flex-1">
+                      <LineagePanel model={model} report={reports.find((r) => r.id === `${model.id}-report`)} />
+                    </TabsContent>
+                  </Tabs>
                 </div>
               </>
             )}

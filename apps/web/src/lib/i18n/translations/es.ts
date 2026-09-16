@@ -231,6 +231,16 @@ export const es = {
   mer: {
     noMeasures: "No hay medidas en este modelo.",
     columnsAbbrev: "col.",
+    measuresTab: "Medidas",
+    lineageTab: "Lineage",
+  },
+  lineage: {
+    noReport: "Ningún informe asociado a este modelo — el lineage necesita el Report/Layout de un .pbit para saber qué visuales usan cada columna.",
+    unusedCount: (p: { count: number }) => `${p.count} sin usar`,
+    onlyUnusedToggle: "Solo sin usar",
+    kindMeasure: "medida",
+    kindColumn: "columna",
+    unused: "No aparece en ningún visual de este informe.",
   },
   analyze: {
     formatLabel: {
